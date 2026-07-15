@@ -20,7 +20,20 @@ ApplicationWindow {
     SnakeGame { id: game }
 
     property bool soundOn: true
+    property bool musicOn: true
+    // Selected music track: -1 == Random (shuffle), else an index into musicTracks.
+    property int  musicTrack: -1
     property bool settingsOpen: false
+
+    // The looping background tracks (procedurally generated — see tools/make_music.py).
+    readonly property var musicTracks: [
+        { name: qsTr("Canopy Calm"),   src: "qrc:/assets/sounds/music/canopy_calm.wav" },
+        { name: qsTr("Moonlit Vines"), src: "qrc:/assets/sounds/music/moonlit_vines.wav" },
+        { name: qsTr("Sunny Grove"),   src: "qrc:/assets/sounds/music/sunny_grove.wav" }
+    ]
+    // Index of the track actually loaded into the player (resolved from musicTrack;
+    // in Random mode this is chosen fresh each time playback (re)starts).
+    property int currentMusicIndex: 0
 
     // Opening settings while a run is live pauses it (pause menu); closing resumes.
     function openSettings() {
@@ -32,21 +45,75 @@ ApplicationWindow {
         if (game.status === SnakeGame.Playing) game.pause(false);
     }
 
+    // ── Background music control ──
+    // Pick a random track, avoiding an immediate repeat of the current one.
+    function pickRandomIndex() {
+        if (musicTracks.length <= 1) return 0;
+        var i = Math.floor(Math.random() * musicTracks.length);
+        if (i === currentMusicIndex) i = (i + 1) % musicTracks.length;
+        return i;
+    }
+    function resolveMusicIndex() {
+        if (win.musicTrack < 0) return pickRandomIndex();      // Random / shuffle
+        return Math.max(0, Math.min(win.musicTrack, musicTracks.length - 1));
+    }
+    // Play only while music is enabled and the window is on-screen (foreground).
+    function syncMusic() {
+        var shouldPlay = win.musicOn
+                      && win.visibility !== Window.Minimized
+                      && win.visibility !== Window.Hidden;
+        if (shouldPlay) {
+            if (!bgm.playing) {
+                win.currentMusicIndex = resolveMusicIndex();
+                bgm.source = musicTracks[win.currentMusicIndex].src;
+                bgm.play();
+            }
+        } else {
+            bgm.stop();
+        }
+    }
+    // Switch tracks live (e.g. the user changed the selection while playing).
+    function restartMusic() {
+        bgm.stop();
+        syncMusic();
+    }
+
+    onMusicOnChanged: syncMusic()
+    onMusicTrackChanged: restartMusic()
+    onVisibilityChanged: syncMusic()
+    onActiveChanged: syncMusic()
+
     // Persisted best score + preferences.
     Settings {
         category: "Snecko"
         property alias best: game.best
         property alias soundOn: win.soundOn
+        property alias musicOn: win.musicOn
+        property alias musicTrack: win.musicTrack
     }
-    Component.onCompleted: keyLayer.forceActiveFocus()
+    Component.onCompleted: { keyLayer.forceActiveFocus(); syncMusic(); }
 
     // ── Sound ──
     SoundEffect { id: sfxEat;   source: "qrc:/assets/sounds/eat.wav";   volume: 0.7 }
     SoundEffect { id: sfxCrash; source: "qrc:/assets/sounds/crash.wav"; volume: 0.8 }
+
+    // ── Background music: one looping SoundEffect (stays on the light QAudioSink
+    // path — no MediaPlayer/ffmpeg). The source is swapped by syncMusic(). ──
+    SoundEffect {
+        id: bgm
+        loops: SoundEffect.Infinite
+        volume: 0.35
+    }
+
     Connections {
         target: game
         function onAte()  { if (win.soundOn) sfxEat.play(); }
         function onDied() { if (win.soundOn) sfxCrash.play(); }
+        // On a fresh run in Random mode, reshuffle so each game can bring a new tune.
+        function onStatusChanged() {
+            if (game.status === SnakeGame.Playing && win.musicOn && win.musicTrack < 0)
+                win.restartMusic();
+        }
     }
 
     // ── Jungle backdrop: bright canopy up top → deep teal on the floor ──
@@ -285,8 +352,14 @@ ApplicationWindow {
 
     // ── Game Over overlay ──
     Rectangle {
+        id: overlay
         anchors.fill: parent
-        readonly property bool active: game.status === SnakeGame.Dead
+        readonly property bool dead: game.status === SnakeGame.Dead
+        // Hold the overlay back briefly on death so the board shake + head-burst
+        // play on the clear field first, then fade the Game Over card in.
+        property bool active: false
+        onDeadChanged: { if (dead) overDelay.restart(); else active = false; }
+        Timer { id: overDelay; interval: 430; onTriggered: overlay.active = true }
         color: Qt.rgba(Theme.bgDeep.r, Theme.bgDeep.g, Theme.bgDeep.b, 0.7)
         visible: opacity > 0
         opacity: active ? 1 : 0
@@ -296,7 +369,7 @@ ApplicationWindow {
         Column {
             anchors.centerIn: parent
             spacing: 22
-            scale: parent.active ? 1.0 : 0.9
+            scale: overlay.active ? 1.0 : 0.9
             Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutBack } }
 
             Text { anchors.horizontalCenter: parent.horizontalCenter
@@ -411,6 +484,55 @@ ApplicationWindow {
                 }
 
                 ToggleRow { label: qsTr("Sound"); checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
+                ToggleRow { label: qsTr("Music"); checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
+
+                // ── Track selector: Random + one chip per track ──
+                Item {
+                    width: parent.width
+                    implicitHeight: trackFlow.implicitHeight
+                    opacity: win.musicOn ? 1.0 : 0.4
+                    Behavior on opacity { NumberAnimation { duration: 160 } }
+
+                    Flow {
+                        id: trackFlow
+                        width: parent.width
+                        spacing: 8
+
+                        Repeater {
+                            model: [{ label: qsTr("Random"), idx: -1 }].concat(
+                                       win.musicTracks.map(function (t, i) {
+                                           return { label: t.name, idx: i };
+                                       }))
+                            delegate: Rectangle {
+                                required property var modelData
+                                readonly property bool sel: win.musicTrack === modelData.idx
+                                height: 32
+                                width: chipLabel.implicitWidth + 24
+                                radius: 16
+                                color: sel ? Theme.good
+                                           : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12)
+                                border.width: 2
+                                border.color: sel ? Qt.darker(Theme.good, 1.22)
+                                                  : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.24)
+                                Behavior on color { ColorAnimation { duration: 140 } }
+                                Text {
+                                    id: chipLabel
+                                    anchors.centerIn: parent
+                                    text: modelData.label
+                                    color: sel ? "white" : Theme.ink
+                                    font.pixelSize: 13
+                                    font.weight: Font.DemiBold
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    enabled: win.musicOn
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: win.musicTrack = modelData.idx
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Item { width: 1; height: 8 }
 
