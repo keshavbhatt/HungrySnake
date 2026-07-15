@@ -25,7 +25,7 @@ Item {
     readonly property real pad: cell * padFrac
     readonly property real frameW: boardW + (pad + gutter) * 2
     readonly property real frameH: boardH + (pad + gutter) * 2
-    readonly property int  bodySegs: 48   // gradient steps along the body tube
+    readonly property int  bodySegs: 64   // gradient steps along the body tube (finer = smoother)
 
     // ── Death effects: a decaying board shake + a particle burst at the head ──
     property real shakeT: 1   // 1 = at rest; animates 0→1 (decays)
@@ -53,18 +53,26 @@ Item {
         return out;
     }
 
-    // Slice the body into segment `i` of `n` (pixel points), with a one-point
-    // overlap so the round-capped strokes join seamlessly, and never fewer than
-    // two points so every segment renders even on a tiny snake.
+    // Slice the body into segment `i` of `n` (pixel points). Each slice is widened
+    // by a few points of overlap on both ends so every gradient segment is a proper
+    // multi-point stroke: its round joins smooth the corner and its round-capped
+    // ends are buried well inside its neighbours (instead of showing as flat facets
+    // at turns, which is what happened with a bare one-point overlap on a big/short
+    // snake). The overlap-drawn colours also blend the gradient rather than banding.
     function segPoints(i, n) {
         var b = game.body;
         var len = b.length;
         if (len < 2)
             return bodyPx();
-        var s = Math.round(i * (len - 1) / n);
-        var e = Math.round((i + 1) * (len - 1) / n);
-        if (e <= s) e = Math.min(s + 1, len - 1);
-        if (s >= len - 1) s = len - 2;
+        var s = Math.floor(i * (len - 1) / n);
+        var e = Math.ceil((i + 1) * (len - 1) / n);
+        var over = 3;                                  // points of overlap each side
+        s = Math.max(0, s - over);
+        e = Math.min(len - 1, e + over);
+        if (e - s < 4) {                               // keep a minimum stroke length
+            e = Math.min(len - 1, s + 4);
+            s = Math.max(0, e - 4);
+        }
         var out = [];
         for (var k = s; k <= e; k++)
             out.push(Qt.point(b[k].x * cell, b[k].y * cell));
@@ -366,7 +374,8 @@ Item {
             // ── Snake body: a wedge that fades neck-green → tail-teal ──
             // A run of round-capped Shape strokes (pixel space) stepping one linear
             // head→tail gradient; the width is full at the neck and tapers
-            // continuously to a soft point at the tail (per the design spec).
+            // continuously to a soft point at the tail (per the design spec). Slices
+            // overlap (see segPoints) so the corners stay smooth, not faceted.
             Repeater {
                 model: root.bodySegs
                 delegate: Shape {
@@ -439,7 +448,20 @@ Item {
                 // closes again once it moves away.
                 readonly property bool nearApple: game.status === SnakeGame.Playing
                     && Math.hypot(game.headX - game.appleX, game.headY - game.appleY) < 1.6
-                property real mouthOpen: nearApple ? 1 : 0
+                // ...and also when it's about to bite its OWN body — any body point
+                // past the neck coming within ~1.2 cells of the head.
+                readonly property bool nearSelf: {
+                    if (game.status !== SnakeGame.Playing) return false;
+                    var b = game.body, n = b.length;
+                    if (n < 12) return false;                 // too short to reach itself
+                    var hx = game.headX, hy = game.headY;
+                    for (var k = 8; k < n; k++) {             // skip ~2 cells of neck
+                        var dx = b[k].x - hx, dy = b[k].y - hy;
+                        if (dx * dx + dy * dy < 1.2 * 1.2) return true;
+                    }
+                    return false;
+                }
+                property real mouthOpen: (nearApple || nearSelf) ? 1 : 0
                 Behavior on mouthOpen { NumberAnimation { duration: 110; easing.type: Easing.OutQuad } }
 
                 // Blink: eyes squash shut briefly every few seconds.
@@ -466,7 +488,10 @@ Item {
                     anchors.fill: parent
                     radius: head.hr
                     color: Theme.headGreen
+                    antialiasing: true
                     layer.enabled: true
+                    layer.smooth: true
+                    layer.samples: 4
                     layer.effect: MultiEffect {
                         shadowEnabled: true; shadowColor: Theme.shadow
                         shadowBlur: 0.6; shadowOpacity: 0.28; shadowVerticalOffset: 3
@@ -509,12 +534,13 @@ Item {
                     readonly property real mh: head.hwid * (0.24 + 0.58 * head.mouthOpen)
                     readonly property real lipT: head.hwid * 0.055
 
-                    // Snake-skin lip — a deep-green rim so the opening belongs to the head.
+                    // Snake-skin lip — a lighter green rim so the opening belongs to the
+                    // head without reading as a heavy dark outline.
                     Rectangle {
                         x: mouth.cx - width / 2; y: mouth.cy - height / 2
                         width: mouth.mw + mouth.lipT * 2; height: mouth.mh + mouth.lipT * 2
                         radius: Math.min(width, height) / 2
-                        color: Theme.snakeNose
+                        color: Theme.snoutCap
                         antialiasing: true
                     }
                     // Red interior.

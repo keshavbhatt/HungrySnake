@@ -9,6 +9,7 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QSurfaceFormat>
 #include <QTimer>
 #include <QtMath>
 #include <cmath>
@@ -40,6 +41,12 @@ static void seekApple(SnakeGame *g)
 
 int main(int argc, char *argv[])
 {
+    // Scene-wide multisample antialiasing so rotated/clipped art (the turning
+    // head, snout cap, seam) renders with smooth edges instead of jagged pixels.
+    QSurfaceFormat fmt = QSurfaceFormat::defaultFormat();
+    fmt.setSamples(4);
+    QSurfaceFormat::setDefaultFormat(fmt);
+
     QGuiApplication app(argc, argv);
 
     // Identity — set before any QSettings-derived storage is touched.
@@ -130,6 +137,27 @@ int main(int argc, char *argv[])
                         });
                     }, Qt::QueuedConnection);
                     grabDelay = 60000;   // fallback only; the ate() handler grabs first
+                } else if (game && mode == "long") {
+                    // Grow a long, turning snake (autoplay eats), then grab so the
+                    // body's corners can be inspected.
+                    game->start();
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
+                    t->start();
+                    auto *eaten = new int(0);
+                    QObject::connect(game, &SnakeGame::ate, &app, [w, shot, &app, eaten]() {
+                        if (++(*eaten) >= 6) {
+                            static bool once = false;
+                            if (once) return;
+                            once = true;
+                            QTimer::singleShot(40, [w, shot, &app] {
+                                w->grabWindow().save(QString::fromUtf8(shot));
+                                app.quit();
+                            });
+                        }
+                    });
+                    grabDelay = 14000;
                 } else if (game && mode == "mouth") {
                     // Autoplay toward the apple; grab while the head is ~1 cell away
                     // (mouth open) but before the bite, to show the open maw.
