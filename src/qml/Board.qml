@@ -116,7 +116,7 @@ Item {
             height: boardH + gutter * 2
             radius: Theme.rsm + 2
             clip: true
-            color: Theme.tileA
+            color: Theme.tileGap        // dark seam colour shows between the tiles
 
             // Inset content layer: leaves a small margin so the snake head fits
             // fully at the edge cells instead of being clipped by the board edge.
@@ -126,17 +126,19 @@ Item {
                 width: boardW
                 height: boardH
 
-            // ── Checkerboard ──
+            // ── Checkerboard: rounded tiles inset over the dark seam background ──
             Repeater {
                 model: game.cols * game.rows
                 delegate: Rectangle {
                     required property int index
                     readonly property int col: index % game.cols
                     readonly property int rw: Math.floor(index / game.cols)
-                    x: col * cell
-                    y: rw * cell
-                    width: cell
-                    height: cell
+                    readonly property real g: cell * 0.03    // thin seam gap on each side
+                    x: col * cell + g
+                    y: rw * cell + g
+                    width: cell - g * 2
+                    height: cell - g * 2
+                    radius: cell * 0.2
                     color: (col + rw) % 2 === 0 ? Theme.tileA : Theme.tileB
                 }
             }
