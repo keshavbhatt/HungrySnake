@@ -130,6 +130,28 @@ int main(int argc, char *argv[])
                         });
                     }, Qt::QueuedConnection);
                     grabDelay = 60000;   // fallback only; the ate() handler grabs first
+                } else if (game && mode == "mouth") {
+                    // Autoplay toward the apple; grab while the head is ~1 cell away
+                    // (mouth open) but before the bite, to show the open maw.
+                    game->start();
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
+                    t->start();
+                    auto *poll = new QTimer(&app);
+                    poll->setInterval(16);
+                    QObject::connect(poll, &QTimer::timeout, &app, [w, shot, &app, game, poll]() {
+                        const double dx = game->appleX() - game->headX();
+                        const double dy = game->appleY() - game->headY();
+                        const double d = std::sqrt(dx * dx + dy * dy);
+                        if (d < 1.1 && d > 0.55) {           // mouth open, not yet eaten
+                            poll->stop();
+                            w->grabWindow().save(QString::fromUtf8(shot));
+                            app.quit();
+                        }
+                    });
+                    poll->start();
+                    grabDelay = 9000;   // fallback if the window is never hit
                 } else if (game && mode == "die") {
                     game->start();
                     auto *t = new QTimer(&app);

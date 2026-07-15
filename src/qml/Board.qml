@@ -464,27 +464,58 @@ Item {
                     }
                 }
 
-                // Eating mouth — a red band wrapping the leading edge with two white
-                // fang points on its inner edge; only visible while eating.
+                // Eating mouth — an open red maw framed by the snake's own skin (a
+                // deep-green lip) with a darkened throat for depth, so it reads as a
+                // real opening in the head rather than a flat red patch. Eating only.
                 Item {
                     id: mouth
                     visible: head.mouthOpen > 0.02
                     opacity: Math.min(1, head.mouthOpen * 1.8)
-                    x: head.hlen * 0.82; width: head.hlen * 0.20; height: head.hwid; clip: true
+                    anchors.fill: parent
+                    antialiasing: true
+
+                    readonly property real cx: head.hlen * 0.82
+                    readonly property real cy: head.hwid * 0.5
+                    readonly property real mw: head.hlen * (0.15 + 0.10 * head.mouthOpen)
+                    readonly property real mh: head.hwid * (0.24 + 0.58 * head.mouthOpen)
+                    readonly property real lipT: head.hwid * 0.055
+
+                    // Snake-skin lip — a deep-green rim so the opening belongs to the head.
                     Rectangle {
-                        x: -head.hlen * 0.82; width: head.hlen; height: head.hwid
-                        radius: head.hr; color: Theme.snakeCrest
+                        x: mouth.cx - width / 2; y: mouth.cy - height / 2
+                        width: mouth.mw + mouth.lipT * 2; height: mouth.mh + mouth.lipT * 2
+                        radius: Math.min(width, height) / 2
+                        color: Theme.snakeNose
+                        antialiasing: true
                     }
-                    Repeater {   // two white fang points on the inner edge
-                        model: [0.30, 0.70]
-                        delegate: Shape {
-                            required property real modelData
-                            anchors.fill: parent; antialiasing: true
-                            ShapePath {
-                                fillColor: "#ffffff"; strokeColor: "transparent"
-                                startX: mouth.width; startY: mouth.height * (modelData - 0.13)
-                                PathLine { x: 0; y: mouth.height * modelData }
-                                PathLine { x: mouth.width; y: mouth.height * (modelData + 0.13) }
+                    // Red interior.
+                    Rectangle {
+                        id: maw
+                        x: mouth.cx - width / 2; y: mouth.cy - height / 2
+                        width: mouth.mw; height: mouth.mh
+                        radius: Math.min(width, height) / 2
+                        color: "#d83a2c"
+                        antialiasing: true
+                        // Dark throat — a recessed centre gives the maw real depth.
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width * 0.66; height: parent.height * 0.7
+                            radius: Math.min(width, height) / 2
+                            color: "#5f120d"; opacity: 0.92
+                            antialiasing: true
+                        }
+                        // Fangs — two white points on the front lip, biting inward.
+                        Repeater {
+                            model: [0.34, 0.66]
+                            delegate: Shape {
+                                required property real modelData
+                                anchors.fill: parent; antialiasing: true
+                                ShapePath {
+                                    fillColor: "#fff3e2"; strokeColor: "transparent"
+                                    startX: maw.width * 0.82; startY: maw.height * (modelData - 0.15)
+                                    PathLine { x: maw.width * 0.50; y: maw.height * modelData }
+                                    PathLine { x: maw.width * 0.82; y: maw.height * (modelData + 0.15) }
+                                }
                             }
                         }
                     }
@@ -500,6 +531,7 @@ Item {
                         x: head.hlen * 0.72 - nr
                         y: head.hwid * modelData - nr
                         color: Theme.snakeNose
+                        opacity: 1 - head.mouthOpen   // clear the way as the maw opens
                     }
                 }
 
