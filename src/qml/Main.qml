@@ -141,16 +141,27 @@ ApplicationWindow {
             property real swayAmt: 3
             property int  swayMs: 2800
             property real sway: 0
+            // Subtle "breathing" scale that decouples from the sway (offset period
+            // so the canopy never pulses as one) — keeps the foliage feeling alive.
+            property real breatheAmt: 0.02
+            property int  breatheMs: swayMs + 1500
+            property real breathe: 0
             width: len; height: len
             fillMode: Image.PreserveAspectFit
             sourceSize.width: len; sourceSize.height: len
             smooth: true; mipmap: true; antialiasing: true
             transformOrigin: Item.Center
             rotation: baseRot + sway
+            scale: 1 + breathe
             SequentialAnimation on sway {
                 loops: Animation.Infinite; running: true
                 NumberAnimation { from: -swayAmt; to: swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
                 NumberAnimation { from: swayAmt; to: -swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
+            }
+            SequentialAnimation on breathe {
+                loops: Animation.Infinite; running: true
+                NumberAnimation { from: -breatheAmt; to: breatheAmt; duration: breatheMs; easing.type: Easing.InOutSine }
+                NumberAnimation { from: breatheAmt; to: -breatheAmt; duration: breatheMs; easing.type: Easing.InOutSine }
             }
         }
 
@@ -165,27 +176,27 @@ ApplicationWindow {
         // so the two sides never read as a mirror.
 
         // ── Canopy ferns (light, small, behind) ──
-        Leaf { source: parent.frond; len: 430; x: -150;                y: -180; baseRot: 150; opacity: 0.42; swayAmt: 2.4; swayMs: 3300 }
-        Leaf { source: parent.frond; len: 300; x: 60;                  y: -165; baseRot: 127; opacity: 0.35; swayAmt: 2.8; swayMs: 2700 }
-        Leaf { source: parent.frond; len: 400; x: parent.width - 270;  y: -185; baseRot: 214; opacity: 0.42; swayAmt: 2.4; swayMs: 3100 }
-        Leaf { source: parent.frond; len: 290; x: parent.width - 115;  y: -150; baseRot: 242; opacity: 0.35; swayAmt: 2.9; swayMs: 2500 }
+        Leaf { source: parent.frond; len: 430; x: -150;                y: -180; baseRot: 150; opacity: 0.42; swayAmt: 4.2; swayMs: 3300 }
+        Leaf { source: parent.frond; len: 300; x: 60;                  y: -165; baseRot: 127; opacity: 0.35; swayAmt: 4.8; swayMs: 2700 }
+        Leaf { source: parent.frond; len: 400; x: parent.width - 270;  y: -185; baseRot: 214; opacity: 0.42; swayAmt: 4.0; swayMs: 3150 }
+        Leaf { source: parent.frond; len: 290; x: parent.width - 115;  y: -150; baseRot: 242; opacity: 0.35; swayAmt: 5.0; swayMs: 2500 }
 
         // ── Vines hanging from the top canopy (rooted off the top edge) ──
-        Leaf { source: parent.vine;  len: 360; x: 180;                 y: -150; baseRot: 5;   opacity: 0.50; swayAmt: 4.2; swayMs: 2600 }
-        Leaf { source: parent.vine;  len: 320; x: parent.width * 0.44; y: -160; baseRot: -6;  opacity: 0.40; swayAmt: 4.6; swayMs: 3000 }
-        Leaf { source: parent.vine;  len: 380; x: parent.width - 345;  y: -145; baseRot: 8;   opacity: 0.50; swayAmt: 4.0; swayMs: 2850 }
+        Leaf { source: parent.vine;  len: 360; x: 180;                 y: -150; baseRot: 5;   opacity: 0.50; swayAmt: 7.8; swayMs: 2600 }
+        Leaf { source: parent.vine;  len: 320; x: parent.width * 0.44; y: -160; baseRot: -6;  opacity: 0.40; swayAmt: 8.6; swayMs: 3050 }
+        Leaf { source: parent.vine;  len: 380; x: parent.width - 345;  y: -145; baseRot: 8;   opacity: 0.50; swayAmt: 7.2; swayMs: 2850 }
 
         // ── Mid sides: LEFT monstera cluster, RIGHT fan palm ──
-        Leaf { source: parent.broad; len: 320; x: -95;                 y: parent.height * 0.13; baseRot: 98;  opacity: 0.50; swayAmt: 2.2; swayMs: 3500 }
-        Leaf { source: parent.fan;   len: 560; x: parent.width - 360;  y: parent.height * 0.10; baseRot: 196; opacity: 0.54; swayAmt: 1.8; swayMs: 3800 }
-        Leaf { source: parent.broad; len: 300; x: -135;                y: parent.height * 0.41; baseRot: 76;  opacity: 0.56; swayAmt: 2.4; swayMs: 3000 }
+        Leaf { source: parent.broad; len: 320; x: -95;                 y: parent.height * 0.13; baseRot: 98;  opacity: 0.50; swayAmt: 3.8; swayMs: 3500 }
+        Leaf { source: parent.fan;   len: 560; x: parent.width - 360;  y: parent.height * 0.10; baseRot: 196; opacity: 0.54; swayAmt: 3.2; swayMs: 3800 }
+        Leaf { source: parent.broad; len: 300; x: -135;                y: parent.height * 0.41; baseRot: 76;  opacity: 0.56; swayAmt: 4.2; swayMs: 3000 }
 
         // ── Floor leaves (dark, large, in front) ──
-        Leaf { source: parent.frond; len: 460; x: -175;                y: parent.height - 330; baseRot: 40;  opacity: 0.66; swayAmt: 2.4; swayMs: 2900 }
-        Leaf { source: parent.broad; len: 330; x: 20;                  y: parent.height - 250; baseRot: 20;  opacity: 0.66; swayAmt: 2.8; swayMs: 2400 }
-        Leaf { source: parent.broad; len: 300; x: parent.width * 0.47; y: parent.height - 200; baseRot: 8;   opacity: 0.70; swayAmt: 3.0; swayMs: 2200 }
-        Leaf { source: parent.frond; len: 480; x: parent.width - 330;  y: parent.height - 355; baseRot: -22; opacity: 0.68; swayAmt: 2.4; swayMs: 3200 }
-        Leaf { source: parent.broad; len: 350; x: parent.width - 165;  y: parent.height - 260; baseRot: -42; opacity: 0.64; swayAmt: 2.6; swayMs: 2600 }
+        Leaf { source: parent.frond; len: 460; x: -175;                y: parent.height - 330; baseRot: 40;  opacity: 0.66; swayAmt: 4.4; swayMs: 2900 }
+        Leaf { source: parent.broad; len: 330; x: 20;                  y: parent.height - 250; baseRot: 20;  opacity: 0.66; swayAmt: 5.2; swayMs: 2400 }
+        Leaf { source: parent.broad; len: 300; x: parent.width * 0.47; y: parent.height - 200; baseRot: 8;   opacity: 0.70; swayAmt: 5.6; swayMs: 2250 }
+        Leaf { source: parent.frond; len: 480; x: parent.width - 330;  y: parent.height - 355; baseRot: -22; opacity: 0.68; swayAmt: 4.4; swayMs: 3200 }
+        Leaf { source: parent.broad; len: 350; x: parent.width - 165;  y: parent.height - 260; baseRot: -42; opacity: 0.64; swayAmt: 4.8; swayMs: 2600 }
     }
 
     // ── Keyboard controls + the board ──

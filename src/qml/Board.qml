@@ -285,51 +285,80 @@ Item {
                     }
                 }
                 NumberAnimation { id: crushAnim; target: crush; property: "t"
-                                  from: 0; to: 1; duration: 520; easing.type: Easing.OutCubic }
+                                  from: 0; to: 1; duration: 360; easing.type: Easing.OutCubic }
 
-                // Central juicy splat — a few overlapping blobs, scattered off the
-                // exact centre (and squished to different aspect ratios) so the
-                // burst never reads as a tidy circle.
+                // A small juice puff as the apple is bitten — deliberately gentle so
+                // eating reads as a gulp, not a splatter. Asymmetric (index hash).
                 Repeater {
-                    model: 6
-                    delegate: Rectangle {
-                        required property int index
-                        readonly property real r1: Math.abs((Math.sin((index + 1) * 12.9898) * 43758.5453) % 1)
-                        readonly property real r2: Math.abs((Math.sin((index + 1) * 78.233)  * 43758.5453) % 1)
-                        readonly property real r3: Math.abs((Math.sin((index + 1) * 37.719)  * 43758.5453) % 1)
-                        readonly property real sz: cell * (0.34 + r3 * 0.4)
-                        width: sz; height: sz * (0.62 + r1 * 0.7); radius: Math.min(width, height) / 2
-                        antialiasing: true
-                        rotation: r2 * 90
-                        color: index % 2 === 0 ? Theme.apple : Qt.darker(Theme.apple, 1.3)
-                        x: (r1 - 0.5) * cell * 0.75 - width / 2
-                        y: (r2 - 0.5) * cell * 0.6 - height / 2 + crush.t * cell * 0.35
-                        scale: 0.35 + Math.min(1, crush.t * 5) * 1.0
-                        opacity: (1 - crush.t)
-                    }
-                }
-                // Juice + pulp droplets flung out at random angles, speeds and
-                // sizes (deterministic hash of the index — asymmetric, not a ring).
-                Repeater {
-                    model: 18
+                    model: 8
                     delegate: Rectangle {
                         required property int index
                         readonly property real r1: Math.abs((Math.sin((index + 3) * 12.9898) * 43758.5453) % 1)
                         readonly property real r2: Math.abs((Math.sin((index + 3) * 78.233)  * 43758.5453) % 1)
                         readonly property real r3: Math.abs((Math.sin((index + 3) * 37.719)  * 43758.5453) % 1)
                         readonly property real ang: r1 * 2 * Math.PI
-                        readonly property real reach: cell * (0.7 + r2 * 1.9)
-                        readonly property real sz: cell * (0.17 + r3 * 0.22)
-                        readonly property real de: Math.pow(crush.t, 0.5 + r1 * 0.7)   // varied speeds
+                        readonly property real reach: cell * (0.3 + r2 * 0.7)
+                        readonly property real sz: cell * (0.10 + r3 * 0.12)
+                        readonly property real de: Math.pow(crush.t, 0.6 + r1 * 0.5)
                         width: sz; height: sz; radius: sz / 2
                         antialiasing: true
-                        border.width: Math.max(1, sz * 0.18)
-                        border.color: Qt.rgba(1, 1, 1, 0.55)
-                        color: r3 > 0.76 ? Theme.appleLeaf : Theme.apple
+                        color: r3 > 0.7 ? Theme.appleLeaf : Theme.apple
                         x: Math.cos(ang) * reach * de - sz / 2
-                        y: Math.sin(ang) * reach * de - sz / 2
-                            + crush.t * crush.t * cell * (0.4 + r2 * 0.6)   // gravity, varied
-                        opacity: Math.min(1, (1 - crush.t) * 1.8)
+                        y: Math.sin(ang) * reach * de - sz / 2 + crush.t * crush.t * cell * 0.3
+                        opacity: Math.min(1, (1 - crush.t) * 1.6)
+                    }
+                }
+            }
+
+            // ── Swallow: the eaten apple is drawn into the mouth and gulped down,
+            // so eating reads as the snake taking the apple in rather than the fruit
+            // just vanishing. Captured on ate() (before the new apple spawns).
+            Item {
+                id: swallow
+                property real sx: 0
+                property real sy: 0
+                property real t: 1                 // 1 = done
+                z: 5                               // over the head, so it's seen going in
+                visible: t < 1
+                Connections {
+                    target: game
+                    function onAte() {
+                        swallow.sx = game.appleX;
+                        swallow.sy = game.appleY;
+                        swallowAnim.restart();
+                    }
+                }
+                NumberAnimation { id: swallowAnim; target: swallow; property: "t"
+                                  from: 0; to: 1; duration: 210; easing.type: Easing.InQuad }
+
+                // The apple sits in the open mouth (front of the head) then travels
+                // back to the head centre — down the throat — as it shrinks away, all
+                // while tracking the head so it stays with the snake, not left behind.
+                readonly property real mx: game.headX + Math.cos(game.heading) * 0.34
+                readonly property real my: game.headY + Math.sin(game.heading) * 0.34
+                readonly property real px: swallow.mx + (game.headX - swallow.mx) * swallow.t
+                readonly property real py: swallow.my + (game.headY - swallow.my) * swallow.t
+
+                Item {
+                    x: swallow.px * cell
+                    y: swallow.py * cell
+                    scale: 1 - swallow.t * 0.82
+                    opacity: swallow.t < 0.6 ? 1 : Math.max(0, (1 - swallow.t) / 0.4)
+                    Rectangle {   // apple body
+                        anchors.centerIn: parent
+                        width: game.appleRadius * cell * 2; height: width; radius: width / 2
+                        color: Theme.apple
+                        Rectangle {   // highlight
+                            x: parent.width * 0.22; y: parent.height * 0.18
+                            width: parent.width * 0.26; height: width; radius: width / 2
+                            color: Qt.rgba(1, 1, 1, 0.5)
+                        }
+                    }
+                    Rectangle {   // leaf
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: -game.appleRadius * cell * 1.0
+                        width: game.appleRadius * cell * 0.7; height: game.appleRadius * cell * 0.4
+                        radius: height / 2; rotation: -28; color: Theme.appleLeaf
                     }
                 }
             }
@@ -518,6 +547,14 @@ Item {
                                 }
                             }
                         }
+                        // Glossy sheen catching the light on the front (leading) lip.
+                        Rectangle {
+                            x: parent.width * 0.82; y: parent.height * 0.22
+                            width: parent.width * 0.13; height: parent.height * 0.56
+                            radius: width / 2; rotation: 7
+                            color: "#ffffff"; opacity: 0.4
+                            antialiasing: true
+                        }
                     }
                 }
 
@@ -567,25 +604,40 @@ Item {
                 Item {
                     id: tongue
                     visible: head.tongueOut > 0.02
-                    width: head.hwid * 0.72
-                    height: head.hwid * 0.32
+                    width: head.hwid * 0.80
+                    height: head.hwid * 0.42
                     x: head.hlen * 0.9
                     y: head.hwid / 2 - height / 2
                     transform: Scale { origin.x: 0; origin.y: tongue.height / 2; xScale: head.tongueOut }
-                    Rectangle {   // stalk
+                    Rectangle {   // stalk (thicker) + a glossy top streak
                         x: 0; anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width * 0.6; height: head.hwid * 0.1; radius: height / 2
+                        width: parent.width * 0.62; height: head.hwid * 0.17; radius: height / 2
                         color: Theme.snakeCrest
+                        Rectangle {
+                            x: parent.width * 0.12; y: parent.height * 0.18
+                            width: parent.width * 0.72; height: parent.height * 0.32; radius: height / 2
+                            color: "#ff988f"; opacity: 0.85; antialiasing: true
+                        }
                     }
-                    Rectangle {   // upper fork
+                    Rectangle {   // upper fork (thicker) + gloss
                         x: parent.width * 0.5; y: parent.height * 0.5 - height
-                        width: parent.width * 0.5; height: head.hwid * 0.08; radius: height / 2
-                        rotation: -24; transformOrigin: Item.Left; color: Theme.snakeCrest
+                        width: parent.width * 0.52; height: head.hwid * 0.13; radius: height / 2
+                        rotation: -22; transformOrigin: Item.Left; color: Theme.snakeCrest
+                        Rectangle {
+                            x: parent.width * 0.08; y: parent.height * 0.2
+                            width: parent.width * 0.7; height: parent.height * 0.34; radius: height / 2
+                            color: "#ff988f"; opacity: 0.8; antialiasing: true
+                        }
                     }
-                    Rectangle {   // lower fork
+                    Rectangle {   // lower fork (thicker) + gloss
                         x: parent.width * 0.5; y: parent.height * 0.5
-                        width: parent.width * 0.5; height: head.hwid * 0.08; radius: height / 2
-                        rotation: 24; transformOrigin: Item.Left; color: Theme.snakeCrest
+                        width: parent.width * 0.52; height: head.hwid * 0.13; radius: height / 2
+                        rotation: 22; transformOrigin: Item.Left; color: Theme.snakeCrest
+                        Rectangle {
+                            x: parent.width * 0.08; y: parent.height * 0.2
+                            width: parent.width * 0.7; height: parent.height * 0.34; radius: height / 2
+                            color: "#ff988f"; opacity: 0.8; antialiasing: true
+                        }
                     }
                 }
             }
