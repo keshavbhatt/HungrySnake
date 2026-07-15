@@ -29,7 +29,10 @@ ApplicationWindow {
     readonly property var musicTracks: [
         { name: qsTr("Canopy Calm"),   src: "qrc:/assets/sounds/music/canopy_calm.wav" },
         { name: qsTr("Moonlit Vines"), src: "qrc:/assets/sounds/music/moonlit_vines.wav" },
-        { name: qsTr("Sunny Grove"),   src: "qrc:/assets/sounds/music/sunny_grove.wav" }
+        { name: qsTr("Sunny Grove"),   src: "qrc:/assets/sounds/music/sunny_grove.wav" },
+        { name: qsTr("Dewdrop Swing"), src: "qrc:/assets/sounds/music/dewdrop_swing.wav" },
+        { name: qsTr("Dusky Hollow"),  src: "qrc:/assets/sounds/music/dusky_hollow.wav" },
+        { name: qsTr("Berry Bounce"),  src: "qrc:/assets/sounds/music/berry_bounce.wav" }
     ]
     // Index of the track actually loaded into the player (resolved from musicTrack;
     // in Random mode this is chosen fresh each time playback (re)starts).
@@ -102,7 +105,7 @@ ApplicationWindow {
     SoundEffect {
         id: bgm
         loops: SoundEffect.Infinite
-        volume: 0.35
+        volume: 0.7
     }
 
     Connections {

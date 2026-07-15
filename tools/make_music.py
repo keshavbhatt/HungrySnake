@@ -13,9 +13,12 @@ inside the loop, so the end meets the start with no click.
 To keep the bundle tiny the files are mono, 22050 Hz, 16-bit PCM.
 
 Outputs (assets/sounds/music/):
-    canopy_calm.wav   — bright C-major sway, pad + eighth-note arpeggio
-    moonlit_vines.wav — slow, wistful A-minor with a soft bell melody
-    sunny_grove.wav   — brisk, cheerful G-major with plucky arpeggios
+    canopy_calm.wav    — bright C-major sway, pad + eighth-note arpeggio
+    moonlit_vines.wav  — slow, wistful A-minor with a soft bell melody
+    sunny_grove.wav    — brisk, cheerful G-major with plucky arpeggios
+    dewdrop_swing.wav  — mellow lo-fi swing in F major, swung eighth plucks
+    dusky_hollow.wav   — slow, mysterious E-minor with a low, brooding bell
+    berry_bounce.wav   — playful, bouncy D-major with a hopping staccato bass
 """
 import math
 import os
@@ -196,7 +199,112 @@ def sunny_grove():
     return _finish(buf)
 
 
+# ── Track 4: Dewdrop Swing — F major, mellow lo-fi with a swung eighth feel ────
+def dewdrop_swing():
+    bpm = 76
+    beat, buf = _bars(bpm, 8)
+    bar = beat * 4
+    swing = 0.62  # long-short ratio inside each beat → lazy shuffle groove
+    prog = [  # (pad triad, bass root, arpeggio chord tones)
+        (["F3", "A3", "C4"],  "F2",  ["F3", "A3", "C4", "A3"]),
+        (["D3", "F3", "A3"],  "D2",  ["D3", "F3", "A3", "F3"]),
+        (["Bb2", "D3", "F3"], "Bb1", ["Bb3", "D4", "F4", "D4"]),
+        (["C4", "E4", "G4"],  "C2",  ["C4", "E4", "G4", "E4"]),
+        (["F3", "A3", "C4"],  "F2",  ["F3", "A3", "C4", "A3"]),
+        (["A3", "C4", "E4"],  "A2",  ["A3", "C4", "E4", "C4"]),
+        (["Bb2", "D3", "F3"], "Bb1", ["Bb3", "D4", "F4", "D4"]),
+        (["C4", "E4", "G4"],  "C2",  ["C4", "E4", "G4", "Bb4"]),
+    ]
+    for b, (chord, bass, arp) in enumerate(prog):
+        t0 = b * bar
+        for n in chord:  # warm, hazy pad held across the bar
+            add_note(buf, t0, bar, freq(n), 0.15, PAD, a=0.4, d=0.45, s=0.72, r=0.6)
+        # Soft, round bass — one relaxed note per half-bar.
+        add_note(buf, t0, bar * 0.5, freq(bass), 0.30, BASS, a=0.03, d=0.3, s=0.5, r=0.4)
+        add_note(buf, t0 + bar * 0.5, bar * 0.5, freq(bass), 0.24, BASS, a=0.03, d=0.3, s=0.42, r=0.4)
+        # Swung eighth-note plucks: on-beat notes are long, off-beats short & late.
+        for k in range(8):
+            bi, off = k // 2, k % 2
+            if off:
+                start = t0 + (bi + swing) * beat
+                dur = (1.0 - swing) * beat
+            else:
+                start = t0 + bi * beat
+                dur = swing * beat
+            n = arp[bi]
+            add_note(buf, start, dur, freq(n), 0.14, PLUCK,
+                     a=0.005, d=0.16, s=0.2, r=min(dur * 0.6, 0.12))
+    return _finish(buf)
+
+
+# ── Track 5: Dusky Hollow — E minor, slow, mysterious, brooding low bell ──────
+def dusky_hollow():
+    bpm = 66
+    beat, buf = _bars(bpm, 6)
+    bar = beat * 4
+    prog = [
+        (["E3", "G3", "B3"],  "E2"),
+        (["C3", "E3", "G3"],  "C2"),
+        (["A2", "C3", "E3"],  "A1"),
+        (["D3", "F#3", "A3"], "D2"),
+        (["E3", "G3", "B3"],  "E2"),
+        (["B2", "D#3", "F#3"], "B1"),  # dominant lift back to the top
+    ]
+    for b, (chord, bass) in enumerate(prog):
+        t0 = b * bar
+        for n in chord:  # dim, slow-swelling pad
+            add_note(buf, t0, bar, freq(n), 0.14, PAD, a=0.6, d=0.6, s=0.74, r=0.8)
+        add_note(buf, t0, bar, freq(bass), 0.30, BASS, a=0.05, d=0.5, s=0.55, r=0.55)
+    # Sparse, brooding bell melody sitting low in the mix (beat, dur, note).
+    mel = [
+        (0, 2, "B4"), (2, 2, "G4"),
+        (4, 3, "E4"), (7, 1, "G4"),
+        (8, 2, "A4"), (10, 2, "E4"),
+        (12, 2, "F#4"), (14, 1.5, "A4"), (15.5, 0.5, "G4"),
+        (16, 2, "G4"), (18, 2, "B4"),
+        (20, 2, "F#4"), (22, 1, "D#4"), (23, 1, "B3"),
+    ]
+    for start, dur, n in mel:
+        add_note(buf, start * beat, dur * beat, freq(n), 0.16, BELL,
+                 a=0.02, d=0.7, s=0.28, r=min(dur * beat * 0.5, 0.7))
+    return _finish(buf)
+
+
+# ── Track 6: Berry Bounce — D major, fast, playful, hopping staccato bass ─────
+def berry_bounce():
+    bpm = 116
+    beat, buf = _bars(bpm, 8)
+    bar = beat * 4
+    prog = [  # (pad triad, bass root, bass fifth, arpeggio chord tones)
+        (["D4", "F#4", "A4"], "D2", "A2", ["D4", "F#4", "A4", "F#4"]),
+        (["B3", "D4", "F#4"], "B1", "F#2", ["B3", "D4", "F#4", "D4"]),
+        (["G3", "B3", "D4"],  "G1", "D2", ["G4", "D4", "B3", "D4"]),
+        (["A3", "C#4", "E4"], "A1", "E2", ["A3", "C#4", "E4", "C#4"]),
+        (["D4", "F#4", "A4"], "D2", "A2", ["D4", "F#4", "A4", "F#4"]),
+        (["B3", "D4", "F#4"], "B1", "F#2", ["B3", "D4", "F#4", "D4"]),
+        (["G3", "B3", "D4"],  "G1", "D2", ["G4", "D4", "B3", "D4"]),
+        (["A3", "C#4", "E4"], "A1", "E2", ["E4", "C#4", "A3", "C#4"]),
+    ]
+    for b, (chord, bass, fifth, arp) in enumerate(prog):
+        t0 = b * bar
+        for n in chord:  # light, springy pad
+            add_note(buf, t0, bar, freq(n), 0.11, PAD, a=0.2, d=0.3, s=0.66, r=0.4)
+        # Hopping staccato bass: root on the beat, fifth on the off-beat.
+        for beatn in range(4):
+            add_note(buf, t0 + beatn * beat, beat * 0.4, freq(bass), 0.30, BASS,
+                     a=0.005, d=0.12, s=0.3, r=0.12)
+            add_note(buf, t0 + (beatn + 0.5) * beat, beat * 0.35, freq(fifth), 0.18, BASS,
+                     a=0.005, d=0.1, s=0.25, r=0.1)
+        for j, n in enumerate(arp * 2):  # bright, bouncy eighth plucks
+            add_note(buf, t0 + j * (beat * 0.5), beat * 0.5, freq(n), 0.15,
+                     PLUCK, a=0.004, d=0.13, s=0.22, r=0.1)
+    return _finish(buf)
+
+
 if __name__ == "__main__":
     _write("canopy_calm.wav", canopy_calm())
     _write("moonlit_vines.wav", moonlit_vines())
     _write("sunny_grove.wav", sunny_grove())
+    _write("dewdrop_swing.wav", dewdrop_swing())
+    _write("dusky_hollow.wav", dusky_hollow())
+    _write("berry_bounce.wav", berry_bounce())
