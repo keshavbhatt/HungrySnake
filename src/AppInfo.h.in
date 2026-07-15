@@ -1,0 +1,7 @@
+#pragma once
+
+// Generated from AppInfo.h.in by CMake — do not edit the generated copy.
+#define SN_APP_ID   "@SN_APP_ID@"
+#define SN_APP_NAME "@SN_APP_NAME@"
+#define SN_VERSION  "@PROJECT_VERSION@"
+#define SN_ORG_NAME "ktechpit"

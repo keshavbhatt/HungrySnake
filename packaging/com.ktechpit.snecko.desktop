@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Snecko
+GenericName=Snake Game
+Comment=A smooth, jungle-themed take on the classic Snake — eat apples, don't crash
+Exec=snecko
+Icon=com.ktechpit.snecko
+Terminal=false
+Categories=Game;ArcadeGame;Qt;
+Keywords=snake;arcade;snecko;retro;apples;
+StartupNotify=true
