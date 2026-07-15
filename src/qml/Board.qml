@@ -415,7 +415,7 @@ Item {
             // Local coords: x 0..hlen rear→front, y 0..hwid across.
             Item {
                 id: head
-                readonly property real hlen: cell * 0.98    // length along travel
+                readonly property real hlen: cell * 1.15    // length along travel (longer snout)
                 readonly property real hwid: cell * 1.0     // one grid-cell wide
                 readonly property real hr:   Math.min(hlen, hwid) * 0.30   // rounded-rect, not a capsule
                 width: hlen
@@ -448,19 +448,25 @@ Item {
                 // closes again once it moves away.
                 readonly property bool nearApple: game.status === SnakeGame.Playing
                     && Math.hypot(game.headX - game.appleX, game.headY - game.appleY) < 1.6
-                // ...and also when it's about to bite its OWN body — any body point
-                // past the neck coming within ~1.2 cells of the head.
+                // About to bite itself: a body segment is both close (<~1.2 cells) AND
+                // ahead of the head (positive dot with the travel direction). That
+                // directional test is what tells a real head-on bite apart from a mere
+                // close turn/coil (where the body sweeps past to the SIDE) — so the
+                // mouth opens for a self-bite but stays shut through tight turns.
                 readonly property bool nearSelf: {
                     if (game.status !== SnakeGame.Playing) return false;
                     var b = game.body, n = b.length;
                     if (n < 12) return false;                 // too short to reach itself
                     var hx = game.headX, hy = game.headY;
+                    var fx = Math.cos(game.heading), fy = Math.sin(game.heading);
                     for (var k = 8; k < n; k++) {             // skip ~2 cells of neck
                         var dx = b[k].x - hx, dy = b[k].y - hy;
-                        if (dx * dx + dy * dy < 1.2 * 1.2) return true;
+                        if (dx * dx + dy * dy < 1.2 * 1.2 && (dx * fx + dy * fy) > 0.35)
+                            return true;                      // near AND ahead → a bite
                     }
                     return false;
                 }
+                // Open near an apple or a head-on self-bite; shut otherwise (incl. turns).
                 property real mouthOpen: (nearApple || nearSelf) ? 1 : 0
                 Behavior on mouthOpen { NumberAnimation { duration: 110; easing.type: Easing.OutQuad } }
 
@@ -584,43 +590,51 @@ Item {
                     }
                 }
 
-                // Two tiny nostrils near the leading edge, spread across the snout.
+                // Two nostrils well forward on the snout, roughly in front of the eyes.
                 Repeater {
-                    model: [0.30, 0.70]
+                    model: [0.28, 0.72]
                     delegate: Rectangle {
                         required property real modelData
-                        readonly property real nr: head.hwid * 0.04
+                        readonly property real nr: head.hwid * 0.043
                         width: nr * 2; height: nr * 2; radius: nr
-                        x: head.hlen * 0.72 - nr
+                        x: head.hlen * 0.80 - nr
                         y: head.hwid * modelData - nr
                         color: Theme.snakeNose
                         opacity: 1 - head.mouthOpen   // clear the way as the maw opens
                     }
                 }
 
-                // Oversized yellow eyes (~45% head width) proud of the silhouette;
-                // orange pupils biased toward travel. Flat (no outline); they blink.
+                // Eyes: a touch smaller, soft off-white with a black "ball" pupil
+                // (biased toward travel) and a small catchlight. Flat; they blink.
                 Repeater {
                     model: [0.14, 0.86]
                     delegate: Item {
                         required property real modelData
-                        readonly property real er: head.hwid * 0.235
+                        readonly property real er: head.hwid * 0.20
                         x: head.hlen * 0.44 - er
                         y: head.hwid * modelData - er
                         width: er * 2
                         height: er * 2
-                        transform: Scale { origin.x: er; origin.y: er; yScale: head.blink }
-                        Rectangle { anchors.fill: parent; radius: width / 2; color: Theme.snakeEye }
-                        Rectangle {   // orange pupil — biased forward; rolls in circles while dead
-                            width: parent.width * 0.5; height: width; radius: width / 2
-                            color: Theme.snakePupil
-                            readonly property real orbitR: parent.width * 0.16
-                            x: head.rolling ? parent.width * 0.25 + orbitR * Math.cos(head.rollAngle)
-                                            : parent.width * 0.42
-                            y: head.rolling ? parent.height * 0.25 + orbitR * Math.sin(head.rollAngle)
-                                            : parent.height * 0.25
+                        // Slightly taller than wide → a natural oval, not a pure circle.
+                        // (Blink folds into the same vertical scale.)
+                        transform: Scale { origin.x: er; origin.y: er; yScale: head.blink * 1.16 }
+                        Rectangle { anchors.fill: parent; radius: width / 2; color: "#f3efe3"; antialiasing: true }
+                        Rectangle {   // black pupil — biased forward; rolls in circles while dead
+                            width: parent.width * 0.54; height: width; radius: width / 2
+                            color: "#1e1e1e"
+                            antialiasing: true
+                            readonly property real orbitR: parent.width * 0.14
+                            x: head.rolling ? parent.width * 0.23 + orbitR * Math.cos(head.rollAngle)
+                                            : parent.width * 0.38
+                            y: head.rolling ? parent.height * 0.23 + orbitR * Math.sin(head.rollAngle)
+                                            : parent.height * 0.23
                             Behavior on x { enabled: !head.rolling; NumberAnimation { duration: 200 } }
                             Behavior on y { enabled: !head.rolling; NumberAnimation { duration: 200 } }
+                            Rectangle {   // catchlight (glossy ball)
+                                width: parent.width * 0.34; height: width; radius: width / 2
+                                x: parent.width * 0.14; y: parent.height * 0.12
+                                color: "#ffffff"; antialiasing: true
+                            }
                         }
                     }
                 }
