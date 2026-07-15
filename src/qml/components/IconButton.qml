@@ -1,26 +1,29 @@
 import QtQuick
 import Snecko
 
-// A soft round icon button (top bar). `icon` is an SVG icon name (see Icon.qml).
+// A square icon button (kit style — 48px, 14px radius). Defaults to the tan
+// "secondary" surface; pass bg/bgBorder/color to place it on wood (HUD) etc.
+// `icon` is an SVG icon name (see Icon.qml).
 Item {
     id: root
     property string icon: ""
-    property real iconSize: 24
-    property color color: Theme.cardInk
-    property color bg: Theme.card
-    property color bgBorder: Theme.cardBorder
+    property real iconSize: 22
+    property color color: Theme.inkStrong
+    property color bg: Theme.insetTan
+    property color bgBorder: Theme.insetEdge
+    property real borderWidth: 2
     signal clicked
 
-    implicitWidth: 52
-    implicitHeight: 52
+    implicitWidth: 48
+    implicitHeight: 48
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.rsm + 4
+        radius: Theme.r
         color: ma.pressed ? Qt.darker(root.bg, 1.12)
              : ma.containsMouse ? Qt.lighter(root.bg, 1.05)
              : root.bg
-        border.width: 2
+        border.width: root.borderWidth
         border.color: root.bgBorder
         Behavior on color { ColorAnimation { duration: 120 } }
         scale: ma.pressed ? 0.94 : 1.0

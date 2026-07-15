@@ -231,9 +231,9 @@ ApplicationWindow {
                     property int value: 0
                     width: 132; height: 64
                     radius: Theme.r
-                    color: Theme.card
-                    border.width: 2.5
-                    border.color: Theme.cardBorder
+                    color: Theme.hudWood          // dark-wood HUD chip (over gameplay)
+                    border.width: 3
+                    border.color: Theme.hudEdge
                     layer.enabled: true
                     layer.effect: MultiEffect {
                         shadowEnabled: true; shadowColor: Theme.shadow; shadowBlur: 0.6
@@ -261,11 +261,10 @@ ApplicationWindow {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: value
-                            color: Theme.cardInk
+                            color: Theme.cream
+                            font.family: Theme.ui
                             font.pixelSize: 30
-                            font.weight: Font.Black
-                            style: Text.Outline
-                            styleColor: Qt.rgba(0, 0, 0, 0.22)
+                            font.weight: Font.Bold
                         }
                     }
                 }
@@ -278,6 +277,7 @@ ApplicationWindow {
                 id: menuBtn
                 anchors { right: parent.right; rightMargin: 24; verticalCenter: parent.verticalCenter }
                 icon: "menu"
+                bg: Theme.hudWood; bgBorder: Theme.hudEdge; borderWidth: 3; color: Theme.cream
                 onClicked: win.openSettings()
                 layer.enabled: true
                 layer.effect: MultiEffect {
@@ -314,41 +314,49 @@ ApplicationWindow {
         }
     }
 
-    // ── Ready overlay ──
+    // ── Ready overlay (kit tan dialog card over a 45% scrim) ──
     Rectangle {
         anchors.fill: parent
         readonly property bool active: game.status === SnakeGame.Ready
-        color: Qt.rgba(Theme.bgDeep.r, Theme.bgDeep.g, Theme.bgDeep.b, 0.62)
+        color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
         opacity: active ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 220 } }
         MouseArea { anchors.fill: parent; onClicked: game.start() }
 
-        // A solid panel behind the content so the resting snake doesn't show through.
         Rectangle {
             anchors.centerIn: parent
-            width: readyCol.implicitWidth + 96
-            height: readyCol.implicitHeight + 72
+            width: readyCol.implicitWidth + 88
+            height: readyCol.implicitHeight + 64
             radius: Theme.rlg
-            color: Qt.rgba(Theme.bgDeep.r, Theme.bgDeep.g, Theme.bgDeep.b, 0.96)
-            border.width: 2
-            border.color: Qt.rgba(Theme.frame.r, Theme.frame.g, Theme.frame.b, 0.7)
+            color: Theme.cardTan
+            border.width: 3
+            border.color: Theme.cardEdge
+            transformOrigin: Item.Center
+            scale: parent.active ? 1.0 : 0.92
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
+                shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
+            }
 
             Column {
                 id: readyCol
                 anchors.centerIn: parent
-                spacing: 20
+                spacing: 18
                 Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: "SNECKO"; color: Theme.title; font.pixelSize: 64; font.weight: Font.Black
-                       style: Text.Outline; styleColor: Qt.rgba(0,0,0,0.28) }
+                       text: "SNECKO"; color: Theme.primaryDeep
+                       font.family: Theme.ui; font.pixelSize: 56; font.weight: Font.Bold }
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("Eat apples · avoid the walls and yourself")
-                       color: Theme.text; font.pixelSize: 17 }
+                       color: Theme.inkSoft; font.pixelSize: 15 }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter
-                             text: qsTr("Play");  fill: Theme.good; onClicked: game.start() }
+                             text: qsTr("Play"); fontSize: 19; onClicked: game.start() }
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("Steer with the arrow keys or WASD")
-                       color: Theme.textDim; font.pixelSize: 13 }
+                       color: Qt.rgba(Theme.inkStrong.r, Theme.inkStrong.g, Theme.inkStrong.b, 0.55)
+                       font.pixelSize: 13 }
             }
         }
     }
@@ -363,67 +371,78 @@ ApplicationWindow {
         property bool active: false
         onDeadChanged: { if (dead) overDelay.restart(); else active = false; }
         Timer { id: overDelay; interval: 430; onTriggered: overlay.active = true }
-        color: Qt.rgba(Theme.bgDeep.r, Theme.bgDeep.g, Theme.bgDeep.b, 0.7)
+        color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
         opacity: active ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
         MouseArea { anchors.fill: parent }
 
-        Column {
+        Rectangle {
             anchors.centerIn: parent
-            spacing: 22
+            width: overCol.implicitWidth + 88
+            height: overCol.implicitHeight + 56
+            radius: Theme.rlg
+            color: Theme.cardTan
+            border.width: 3
+            border.color: Theme.cardEdge
+            transformOrigin: Item.Center
             scale: overlay.active ? 1.0 : 0.9
             Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutBack } }
-
-            Text { anchors.horizontalCenter: parent.horizontalCenter
-                   text: qsTr("GAME OVER"); color: Theme.title
-                   font.pixelSize: 58; font.weight: Font.Black
-                   style: Text.Outline; styleColor: Qt.rgba(0,0,0,0.3) }
-
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 16
-                component ScoreChip: Rectangle {
-                    property string glyph: ""
-                    property int value: 0
-                    width: 132; height: 78; radius: Theme.r
-                    color: Theme.card; border.width: 2.5; border.color: Theme.cardBorder
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        shadowEnabled: true; shadowColor: Theme.shadow; shadowBlur: 0.6
-                        shadowOpacity: 0.32; shadowVerticalOffset: 5; autoPaddingEnabled: true
-                    }
-                    Row {
-                        anchors.centerIn: parent; spacing: 12
-                        Item {
-                            width: 34; height: 34; anchors.verticalCenter: parent.verticalCenter
-                            Rectangle { visible: glyph === "apple"; anchors.centerIn: parent
-                                        width: 28; height: 28; radius: 14; color: Theme.apple }
-                            Icon { visible: glyph === "trophy"; anchors.centerIn: parent
-                                   name: "trophy"; size: 30; color: Theme.gold }
-                        }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: value
-                               color: Theme.cardInk; font.pixelSize: 32; font.weight: Font.Black
-                               style: Text.Outline; styleColor: Qt.rgba(0,0,0,0.22) }
-                    }
-                }
-                ScoreChip { glyph: "apple";  value: game.score }
-                ScoreChip { glyph: "trophy"; value: game.best }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
+                shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
             }
 
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 14
-                PillButton { text: qsTr("Continue"); fill: Theme.good; onClicked: game.restart() }
-                IconButton { icon: "restart"; onClicked: game.restart() }
+            Column {
+                id: overCol
+                anchors.centerIn: parent
+                spacing: 20
+
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: qsTr("Game Over"); color: Theme.inkStrong
+                       font.family: Theme.ui; font.pixelSize: 40; font.weight: Font.Bold }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 14
+                    component ScoreChip: Rectangle {
+                        property string glyph: ""
+                        property int value: 0
+                        width: 128; height: 74; radius: Theme.r
+                        color: Theme.insetTan          // inset panel — stat block in a dialog
+                        Row {
+                            anchors.centerIn: parent; spacing: 12
+                            Item {
+                                width: 34; height: 34; anchors.verticalCenter: parent.verticalCenter
+                                Rectangle { visible: glyph === "apple"; anchors.centerIn: parent
+                                            width: 28; height: 28; radius: 14; color: Theme.apple }
+                                Icon { visible: glyph === "trophy"; anchors.centerIn: parent
+                                       name: "trophy"; size: 30; color: Theme.gold }
+                            }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: value
+                                   color: Theme.inkStrong; font.family: Theme.ui
+                                   font.pixelSize: 32; font.weight: Font.Bold }
+                        }
+                    }
+                    ScoreChip { glyph: "apple";  value: game.score }
+                    ScoreChip { glyph: "trophy"; value: game.best }
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 12
+                    PillButton { text: qsTr("Continue"); fontSize: 18; onClicked: game.restart() }
+                    IconButton { icon: "restart"; onClicked: game.restart() }
+                }
             }
         }
     }
 
-    // ── Settings / pause dialog ──
+    // ── Settings / pause dialog (kit tan card) ──
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.42)
+        color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
         opacity: win.settingsOpen ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -431,15 +450,20 @@ ApplicationWindow {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 340
+            width: 348
             radius: Theme.rlg
-            color: Theme.card
-            border.width: 2.5
-            border.color: Theme.cardBorder
+            color: Theme.cardTan
+            border.width: 3
+            border.color: Theme.cardEdge
             implicitHeight: scol.implicitHeight + 44
             transformOrigin: Item.Center
             scale: win.settingsOpen ? 1.0 : 0.9
             Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
+                shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
+            }
             MouseArea { anchors.fill: parent }   // absorb clicks so they don't dismiss
 
             component ToggleRow: Item {
@@ -447,18 +471,23 @@ ApplicationWindow {
                 property bool checked: false
                 signal toggled
                 width: parent ? parent.width : 200
-                height: 52
+                height: 50
                 Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                       text: label; color: Theme.ink; font.pixelSize: 17; font.weight: Font.DemiBold }
+                       text: label; color: Theme.inkStrong; font.pixelSize: 17; font.weight: Font.DemiBold }
                 Rectangle {
                     anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    width: 54; height: 30; radius: 15
-                    color: checked ? Theme.good : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.28)
+                    width: 52; height: 28; radius: 14
+                    color: checked ? Theme.primary : "#a9825a"
                     Behavior on color { ColorAnimation { duration: 160 } }
                     Rectangle {
-                        width: 24; height: 24; radius: 12; color: "white"; y: 3
+                        width: 22; height: 22; radius: 11; color: "white"; y: 3
                         x: checked ? parent.width - width - 3 : 3
                         Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 0.4
+                            shadowOpacity: 0.28; shadowVerticalOffset: 2; autoPaddingEnabled: true
+                        }
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                 onClicked: parent.parent.toggled() }
@@ -476,12 +505,13 @@ ApplicationWindow {
                     Text {
                         anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                         text: game.status === SnakeGame.Playing ? qsTr("Paused") : qsTr("Settings")
-                        color: Theme.ink; font.pixelSize: 24; font.weight: Font.Black
+                        color: Theme.inkStrong; font.family: Theme.ui
+                        font.pixelSize: 24; font.weight: Font.Bold
                     }
                     IconButton {
                         anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                        icon: "close"; iconSize: 20
-                        bg: Theme.tileB; bgBorder: Theme.cardBorder; color: Theme.ink
+                        icon: "close"; iconSize: 18
+                        implicitWidth: 40; implicitHeight: 40
                         onClicked: win.closeSettings()
                     }
                 }
@@ -509,21 +539,19 @@ ApplicationWindow {
                             delegate: Rectangle {
                                 required property var modelData
                                 readonly property bool sel: win.musicTrack === modelData.idx
-                                height: 32
-                                width: chipLabel.implicitWidth + 24
-                                radius: 16
-                                color: sel ? Theme.good
-                                           : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12)
+                                height: 34
+                                width: chipLabel.implicitWidth + 30
+                                radius: height / 2
+                                color: sel ? Theme.primary : Theme.insetTan
                                 border.width: 2
-                                border.color: sel ? Qt.darker(Theme.good, 1.22)
-                                                  : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.24)
+                                border.color: sel ? Theme.primaryDeep : Theme.insetEdge
                                 Behavior on color { ColorAnimation { duration: 140 } }
                                 Text {
                                     id: chipLabel
                                     anchors.centerIn: parent
                                     text: modelData.label
-                                    color: sel ? "white" : Theme.ink
-                                    font.pixelSize: 13
+                                    color: sel ? "white" : Theme.inkStrong
+                                    font.pixelSize: 14
                                     font.weight: Font.DemiBold
                                 }
                                 MouseArea {
@@ -542,14 +570,15 @@ ApplicationWindow {
                 PillButton {
                     width: parent.width
                     text: game.status === SnakeGame.Playing ? qsTr("Resume") : qsTr("Close")
-                    fill: Theme.good
                     onClicked: win.closeSettings()
                 }
                 PillButton {
                     width: parent.width
                     text: qsTr("Restart")
-                    fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.16)
-                    ink: Theme.ink
+                    raised: false
+                    fill: Theme.insetTan
+                    ink: Theme.inkStrong
+                    weight: Font.DemiBold
                     onClicked: { game.restart(); win.closeSettings(); }
                 }
 
@@ -557,8 +586,8 @@ ApplicationWindow {
                     width: parent.width; horizontalAlignment: Text.AlignHCenter
                     topPadding: 2
                     text: qsTr("Space or Esc to resume")
-                    color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.6)
-                    font.pixelSize: 12
+                    color: Theme.inkSoft
+                    font.pixelSize: 13
                 }
             }
         }

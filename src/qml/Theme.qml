@@ -23,10 +23,32 @@ QtObject {
     readonly property color tileGap:  "#7f5838"   // seam / background between rounded tiles
     readonly property color shadow:   "#000000"   // drop shadows
 
-    // ── HUD cards ──
-    readonly property color card:       "#c99c62"
-    readonly property color cardBorder: "#8a5c30"
-    readonly property color cardInk:    "#fbf1d8"  // cream numerals
+    // ── UI kit (from the design-system "UI Kit" doc) ──
+    // Surfaces & controls chrome — distinct from the gameplay art above.
+    readonly property color primary:     "#46c08a"  // primary button face
+    readonly property color primaryDeep: "#33996c"  // its raised lip / pressed tone
+    readonly property color cardTan:     "#e9be80"  // dialog card
+    readonly property color cardEdge:    "#caa066"  // dialog card border
+    readonly property color insetTan:    "#c99a5f"  // inset panel / secondary button
+    readonly property color insetEdge:   "#b08a55"  // inset / chip border
+    readonly property color insetDeep:   "#b48347"  // secondary button pressed
+    readonly property color hudWood:     "#8a6238"  // HUD chip (floats over gameplay)
+    readonly property color hudEdge:     "#6f4d2a"  // HUD chip border
+    readonly property color danger:      "#d9534a"
+    readonly property color dangerDeep:  "#b03d36"
+    readonly property color warning:     "#f2a53a"
+    readonly property color disabled:    "#d9bd94"
+    readonly property color disabledInk: "#b09a77"
+
+    // Ink (dark on tan) & cream (light on wood/dark).
+    readonly property color inkStrong: "#4a2f14"
+    readonly property color inkSoft:   "#7a5530"
+    readonly property color cream:     "#f3dcb2"
+
+    // Legacy aliases kept so existing call sites resolve to the kit tokens.
+    readonly property color card:       cardTan
+    readonly property color cardBorder: cardEdge
+    readonly property color cardInk:    cream
 
     // ── Snake ──
     readonly property color snakeLight: "#2ad374"  // neck green (head end of body gradient)
@@ -44,19 +66,21 @@ QtObject {
     readonly property color appleStem: "#7a4a25"
 
     // ── Accents ──
-    readonly property color title:   "#7fca61"     // "GAME OVER" green
+    readonly property color title:   "#7fca61"     // "GAME OVER" brand green
     readonly property color gold:    "#e6a93a"      // trophy
-    readonly property color good:    "#57b98a"
+    readonly property color good:    primary        // alias → kit primary
 
     // ── Text ──
-    readonly property color text:    "#f3e7cd"
+    readonly property color text:    "#f3e7cd"       // light text on the jungle bg
     readonly property color textDim: "#d8c39c"
-    readonly property color ink:     "#5a3d22"
+    readonly property color ink:     inkStrong       // alias → kit ink
 
-    // ── Metrics ──
-    readonly property int rsm: 10
-    readonly property int r:   18
-    readonly property int rlg: 26
+    // ── Metrics (radii, kit-aligned) ──
+    readonly property int rsm:  10
+    readonly property int r:    14   // button / control radius
+    readonly property int rlg:  22   // dialog card radius
+    readonly property int rChip: 999 // pills & chips
 
-    readonly property string ui: Qt.application.font.family
+    // Bundled UI typeface (also set as the default app font in main.cpp).
+    readonly property string ui: "Fredoka"
 }

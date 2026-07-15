@@ -1,6 +1,8 @@
 #include "AppInfo.h"
 #include "SnakeGame.h"
 
+#include <QFont>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
@@ -51,6 +53,19 @@ int main(int argc, char *argv[])
     // Basic (non-native) Quick Controls style: full control over theming so the
     // game looks identical across platforms.
     QQuickStyle::setStyle(QStringLiteral("Basic"));
+
+    // Bundled UI font — Fredoka (the design-system typeface). Loading it as the
+    // default application font makes every QML Text render in it out of the box.
+    if (int id = QFontDatabase::addApplicationFont(
+            QStringLiteral(":/assets/fonts/Fredoka.ttf"));
+        id != -1) {
+        const QStringList fams = QFontDatabase::applicationFontFamilies(id);
+        if (!fams.isEmpty()) {
+            QFont f(fams.first());
+            f.setStyleStrategy(QFont::PreferAntialias);
+            QGuiApplication::setFont(f);
+        }
+    }
 
     QQmlApplicationEngine engine;
 

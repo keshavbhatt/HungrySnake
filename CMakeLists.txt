@@ -77,6 +77,9 @@ file(GLOB_RECURSE SN_SOUND_FILES CONFIGURE_DEPENDS
 file(GLOB SN_DECOR_FILES CONFIGURE_DEPENDS
      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} assets/decor/*.svg)
 
+file(GLOB SN_FONT_FILES CONFIGURE_DEPENDS
+     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} assets/fonts/*.ttf)
+
 qt_add_resources(snecko "appdata"
     PREFIX "/"
     BASE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -84,6 +87,7 @@ qt_add_resources(snecko "appdata"
         assets/icons/${SN_APP_ID}.svg
         ${SN_SOUND_FILES}
         ${SN_DECOR_FILES}
+        ${SN_FONT_FILES}
 )
 
 target_include_directories(snecko PRIVATE

@@ -1,37 +1,64 @@
 import QtQuick
 import Snecko
 
-// A soft filled pill/rounded button used for primary actions (Play, Continue).
+// The UI-kit action button. Primary/danger variants are "raised" — a solid face
+// over a darker bottom lip that the press pushes down onto (the border-bottom
+// trick). Secondary is flat and darkens/insets on press (set `raised:false`).
 Item {
     id: root
     property string text: ""
-    property color fill: Theme.good
-    property color ink: "#ffffff"
-    property real radius: Theme.rsm + 4
+    property color fill: Theme.primary          // face colour
+    property color lip:  Qt.darker(fill, 1.34)  // raised bottom edge
+    property color ink:  "#ffffff"
+    property real  radius: Theme.r
+    property bool  raised: true
+    property int   fontSize: 16
+    property int   weight: Font.Bold
+    readonly property int lift: raised ? 4 : 0
     signal clicked
 
     implicitWidth: label.implicitWidth + 52
-    implicitHeight: 54
+    implicitHeight: 46 + lift
 
+    // Raised lip (the "border-bottom") sits under the face.
     Rectangle {
+        visible: root.raised
         anchors.fill: parent
         radius: root.radius
-        color: ma.pressed ? Qt.darker(root.fill, 1.10)
-             : ma.containsMouse ? Qt.lighter(root.fill, 1.06)
+        color: root.lip
+    }
+
+    // The button face — drops onto the lip when pressed.
+    Rectangle {
+        id: face
+        width: parent.width
+        height: parent.height - root.lift
+        radius: root.radius
+        y: ma.pressed ? root.lift : 0
+        Behavior on y { NumberAnimation { duration: 60; easing.type: Easing.OutQuad } }
+        color: ma.pressed       ? Qt.darker(root.fill, 1.07)
+             : ma.containsMouse  ? Qt.lighter(root.fill, 1.04)
              : root.fill
-        border.width: 2
-        border.color: Qt.darker(root.fill, 1.22)
-        Behavior on color { ColorAnimation { duration: 120 } }
-        scale: ma.pressed ? 0.97 : 1.0
-        Behavior on scale { NumberAnimation { duration: 90 } }
+        Behavior on color { ColorAnimation { duration: 110 } }
+
+        // Flat buttons get a subtle inset darkening when pressed.
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            visible: !root.raised
+            color: "black"
+            opacity: ma.pressed ? 0.12 : 0
+            Behavior on opacity { NumberAnimation { duration: 90 } }
+        }
 
         Text {
             id: label
             anchors.centerIn: parent
             text: root.text
             color: root.ink
-            font.pixelSize: 19
-            font.weight: Font.Bold
+            font.family: Theme.ui
+            font.pixelSize: root.fontSize
+            font.weight: root.weight
         }
     }
 
