@@ -245,18 +245,7 @@ ApplicationWindow {
                         Item {
                             width: 34; height: 34
                             anchors.verticalCenter: parent.verticalCenter
-                            Rectangle {
-                                visible: glyph === "apple"
-                                anchors.centerIn: parent
-                                width: 28; height: 28; radius: 14
-                                color: Theme.apple
-                                Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: -4
-                                            width: 3.5; height: 6; radius: 2; rotation: 12; color: Theme.appleStem }
-                                Rectangle { x: parent.width/2; y: -3; width: 11; height: 7; radius: 3.5
-                                            rotation: -30; color: Theme.appleLeaf }
-                            }
-                            Icon { visible: glyph === "trophy"; anchors.centerIn: parent
-                                   name: "trophy"; size: 30; color: Theme.gold }
+                            Icon { anchors.centerIn: parent; name: glyph; size: 32 }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
@@ -348,9 +337,17 @@ ApplicationWindow {
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: "SNECKO"; color: Theme.primaryDeep
                        font.family: Theme.ui; font.pixelSize: 56; font.weight: Font.Bold }
-                Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: qsTr("Eat apples · avoid the walls and yourself")
-                       color: Theme.inkSoft; font.pixelSize: 15 }
+                // Separator is a drawn dot, not a "·" glyph — never depends on a font.
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                           text: qsTr("Eat apples"); color: Theme.inkSoft; font.pixelSize: 15 }
+                    Rectangle { anchors.verticalCenter: parent.verticalCenter
+                                width: 4; height: 4; radius: 2; color: Theme.inkSoft }
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                           text: qsTr("avoid the walls and yourself"); color: Theme.inkSoft; font.pixelSize: 15 }
+                }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter
                              text: qsTr("Play"); fontSize: 19; onClicked: game.start() }
                 Text { anchors.horizontalCenter: parent.horizontalCenter
@@ -414,11 +411,8 @@ ApplicationWindow {
                         Row {
                             anchors.centerIn: parent; spacing: 12
                             Item {
-                                width: 34; height: 34; anchors.verticalCenter: parent.verticalCenter
-                                Rectangle { visible: glyph === "apple"; anchors.centerIn: parent
-                                            width: 28; height: 28; radius: 14; color: Theme.apple }
-                                Icon { visible: glyph === "trophy"; anchors.centerIn: parent
-                                       name: "trophy"; size: 30; color: Theme.gold }
+                                width: 36; height: 36; anchors.verticalCenter: parent.verticalCenter
+                                Icon { anchors.centerIn: parent; name: glyph; size: 34 }
                             }
                             Text { anchors.verticalCenter: parent.verticalCenter; text: value
                                    color: Theme.inkStrong; font.family: Theme.ui
