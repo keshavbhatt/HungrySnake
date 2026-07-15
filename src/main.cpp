@@ -95,6 +95,26 @@ int main(int argc, char *argv[])
                     game->pause(true);               // paused pause-menu state
                     w->setProperty("settingsOpen", true);
                     grabDelay = 700;
+                } else if (game && mode == "eat") {
+                    // Autoplay toward the apple; grab shortly after the first bite
+                    // to catch the crush splat + the new apple popping in.
+                    game->start();
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
+                    t->start();
+                    QObject::connect(game, &SnakeGame::ate, &app, [w, shot, &app, t]() {
+                        static bool once = false;
+                        if (once) return;
+                        once = true;
+                        t->stop();
+                        const int d = qEnvironmentVariableIntValue("SN_DELAY");
+                        QTimer::singleShot(d > 0 ? d : 130, [w, shot, &app] {
+                            w->grabWindow().save(QString::fromUtf8(shot));
+                            app.quit();
+                        });
+                    }, Qt::QueuedConnection);
+                    grabDelay = 60000;   // fallback only; the ate() handler grabs first
                 } else if (game && mode == "die") {
                     game->start();
                     auto *t = new QTimer(&app);
@@ -111,6 +131,11 @@ int main(int argc, char *argv[])
                     QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
                     t->start();
                 }
+                // Dev-only: SN_DELAY=<ms> overrides when the grab fires (e.g. to
+                // catch a mid-animation frame like the death shake/burst).
+                const QByteArray delayEnv = qgetenv("SN_DELAY");
+                if (!delayEnv.isEmpty() && mode != "eat")   // "eat" grabs off the ate() signal
+                    grabDelay = delayEnv.toInt();
                 QTimer::singleShot(grabDelay, [w, shot, &app] {
                     w->grabWindow().save(QString::fromUtf8(shot));
                     app.quit();

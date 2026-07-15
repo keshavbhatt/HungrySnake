@@ -209,11 +209,30 @@ Item {
                 }
             }
 
-            // ── Apple (pixel space) ──
+            // ── Apple (pixel space) — pops in with a bounce, then wobbles gently ──
             Item {
+                id: apple
                 readonly property real r: game.appleRadius * cell
                 x: game.appleX * cell
                 y: game.appleY * cell
+                transformOrigin: Item.Center
+
+                property real pop: 1     // 0→1 spawn bounce
+                property real idle: 0    // -1..1 continuous wobble
+                scale: pop * (1 + 0.05 * idle)
+                rotation: 6 * idle
+
+                // Pop-in each time a fresh apple appears.
+                Connections { target: game; function onAppleChanged() { popAnim.restart() } }
+                NumberAnimation { id: popAnim; target: apple; property: "pop"
+                                  from: 0; to: 1; duration: 320; easing.type: Easing.OutBack }
+                // Idle: a little breathing wobble while it sits on the board.
+                SequentialAnimation on idle {
+                    loops: Animation.Infinite; running: true
+                    NumberAnimation { from: -1; to: 1; duration: 680; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1; to: -1; duration: 680; easing.type: Easing.InOutSine }
+                }
+
                 Rectangle {
                     anchors.centerIn: parent
                     width: parent.r * 2
@@ -243,6 +262,75 @@ Item {
                     radius: height / 2
                     rotation: -28
                     color: Theme.appleLeaf
+                }
+            }
+
+            // ── Fruit crush: a juice splat where an apple was just eaten ──
+            // ate() fires *before* the new apple spawns, so game.appleX/Y still
+            // holds the eaten apple's cell when we capture it here.
+            Item {
+                id: crush
+                property real cx: 0
+                property real cy: 0
+                property real t: 1               // 1 = done
+                x: cx * cell; y: cy * cell
+                z: 6                             // splatter over the snake's head, not under it
+                visible: t < 1
+                Connections {
+                    target: game
+                    function onAte() {
+                        crush.cx = game.appleX;
+                        crush.cy = game.appleY;
+                        crushAnim.restart();
+                    }
+                }
+                NumberAnimation { id: crushAnim; target: crush; property: "t"
+                                  from: 0; to: 1; duration: 520; easing.type: Easing.OutCubic }
+
+                // Central juicy splat — a few overlapping blobs, scattered off the
+                // exact centre (and squished to different aspect ratios) so the
+                // burst never reads as a tidy circle.
+                Repeater {
+                    model: 6
+                    delegate: Rectangle {
+                        required property int index
+                        readonly property real r1: Math.abs((Math.sin((index + 1) * 12.9898) * 43758.5453) % 1)
+                        readonly property real r2: Math.abs((Math.sin((index + 1) * 78.233)  * 43758.5453) % 1)
+                        readonly property real r3: Math.abs((Math.sin((index + 1) * 37.719)  * 43758.5453) % 1)
+                        readonly property real sz: cell * (0.34 + r3 * 0.4)
+                        width: sz; height: sz * (0.62 + r1 * 0.7); radius: Math.min(width, height) / 2
+                        antialiasing: true
+                        rotation: r2 * 90
+                        color: index % 2 === 0 ? Theme.apple : Qt.darker(Theme.apple, 1.3)
+                        x: (r1 - 0.5) * cell * 0.75 - width / 2
+                        y: (r2 - 0.5) * cell * 0.6 - height / 2 + crush.t * cell * 0.35
+                        scale: 0.35 + Math.min(1, crush.t * 5) * 1.0
+                        opacity: (1 - crush.t)
+                    }
+                }
+                // Juice + pulp droplets flung out at random angles, speeds and
+                // sizes (deterministic hash of the index — asymmetric, not a ring).
+                Repeater {
+                    model: 18
+                    delegate: Rectangle {
+                        required property int index
+                        readonly property real r1: Math.abs((Math.sin((index + 3) * 12.9898) * 43758.5453) % 1)
+                        readonly property real r2: Math.abs((Math.sin((index + 3) * 78.233)  * 43758.5453) % 1)
+                        readonly property real r3: Math.abs((Math.sin((index + 3) * 37.719)  * 43758.5453) % 1)
+                        readonly property real ang: r1 * 2 * Math.PI
+                        readonly property real reach: cell * (0.7 + r2 * 1.9)
+                        readonly property real sz: cell * (0.17 + r3 * 0.22)
+                        readonly property real de: Math.pow(crush.t, 0.5 + r1 * 0.7)   // varied speeds
+                        width: sz; height: sz; radius: sz / 2
+                        antialiasing: true
+                        border.width: Math.max(1, sz * 0.18)
+                        border.color: Qt.rgba(1, 1, 1, 0.55)
+                        color: r3 > 0.76 ? Theme.appleLeaf : Theme.apple
+                        x: Math.cos(ang) * reach * de - sz / 2
+                        y: Math.sin(ang) * reach * de - sz / 2
+                            + crush.t * crush.t * cell * (0.4 + r2 * 0.6)   // gravity, varied
+                        opacity: Math.min(1, (1 - crush.t) * 1.8)
+                    }
                 }
             }
 
@@ -307,6 +395,16 @@ Item {
 
                 property real blink: 1                        // 1 open, ~0 shut
                 property real tongueOut: 0                    // 0..1, flick after a meal
+
+                // Dizzy eye-roll: while dead the pupils spin in circles, and keep
+                // spinning until the run restarts.
+                readonly property bool rolling: game.status === SnakeGame.Dead
+                property real rollAngle: 0
+                NumberAnimation on rollAngle {
+                    running: head.rolling
+                    from: 0; to: 2 * Math.PI
+                    duration: 820; loops: Animation.Infinite
+                }
 
                 // The mouth opens as the head nears the apple (within ~1 cell) and
                 // closes again once it moves away.
@@ -418,10 +516,16 @@ Item {
                         height: er * 2
                         transform: Scale { origin.x: er; origin.y: er; yScale: head.blink }
                         Rectangle { anchors.fill: parent; radius: width / 2; color: Theme.snakeEye }
-                        Rectangle {   // orange pupil biased toward travel (+x)
+                        Rectangle {   // orange pupil — biased forward; rolls in circles while dead
                             width: parent.width * 0.5; height: width; radius: width / 2
                             color: Theme.snakePupil
-                            x: parent.width * 0.42; y: parent.height * 0.25
+                            readonly property real orbitR: parent.width * 0.16
+                            x: head.rolling ? parent.width * 0.25 + orbitR * Math.cos(head.rollAngle)
+                                            : parent.width * 0.42
+                            y: head.rolling ? parent.height * 0.25 + orbitR * Math.sin(head.rollAngle)
+                                            : parent.height * 0.25
+                            Behavior on x { enabled: !head.rolling; NumberAnimation { duration: 200 } }
+                            Behavior on y { enabled: !head.rolling; NumberAnimation { duration: 200 } }
                         }
                     }
                 }
@@ -456,22 +560,24 @@ Item {
 
             // ── Death burst: particles fly out from the head when the run ends ──
             Repeater {
-                model: 22
+                model: 26
                 delegate: Rectangle {
                     required property int index
                     visible: root.burstT < 1
-                    readonly property real ang: index / 22 * 2 * Math.PI + (index % 5) * 0.29
-                    readonly property real reach: cell * (1.5 + (index % 5) * 0.6)
-                    readonly property real sz: cell * (0.14 + (index % 3) * 0.06)
+                    readonly property real ang: index / 26 * 2 * Math.PI + (index % 5) * 0.29
+                    readonly property real reach: cell * (1.4 + (index % 5) * 0.7)
+                    readonly property real sz: cell * (0.22 + (index % 3) * 0.1)
                     readonly property real e: root.burstT       // 0 → 1 over the burst
                     width: sz; height: sz; radius: sz / 2
                     antialiasing: true
+                    border.width: Math.max(1, sz * 0.14)
+                    border.color: Qt.rgba(1, 1, 1, 0.55)        // bright rim so they pop
                     color: index % 4 === 0 ? Theme.snakeEye
                          : index % 4 === 1 ? Theme.snakeLight
-                         : index % 4 === 2 ? Theme.snakeDark : Theme.headGreen
+                         : index % 4 === 2 ? Theme.snakeCrest : Theme.headGreen
                     x: game.headX * cell + Math.cos(ang) * reach * e - sz / 2
                     y: game.headY * cell + Math.sin(ang) * reach * e - sz / 2
-                    opacity: (1 - e) * (1 - e)                  // fade out, easing
+                    opacity: Math.pow(1 - e, 0.7)               // hold brightness, fade late
                 }
             }
             }   // content

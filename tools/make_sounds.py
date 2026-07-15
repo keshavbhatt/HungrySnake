@@ -6,7 +6,7 @@ No external deps — pure stdlib. Re-run after tweaking to regenerate:
     python3 tools/make_sounds.py
 
 Outputs:
-    assets/sounds/eat.wav    — a short bright "blip" when an apple is eaten
+    assets/sounds/eat.wav    — a juicy "crunch" when an apple is eaten
     assets/sounds/crash.wav  — a soft descending "thud/buzz" on game over
 """
 import math
@@ -42,17 +42,41 @@ def _adsr(i, n, attack=0.01, release=0.25):
 
 
 def eat():
-    # Two quick rising tones — a cheerful "nom".
-    n = int(RATE * 0.16)
-    out = []
-    for i in range(n):
-        t = i / RATE
-        f = 660 + 520 * (i / n)            # sweep up
-        env = _adsr(i, n, 0.005, 0.10)
-        s = 0.5 * math.sin(2 * math.pi * f * t)
-        s += 0.25 * math.sin(2 * math.pi * 2 * f * t)   # a little sparkle
-        out.append(s * env)
-    return out
+    # A "bite/crunch": bandpassed noise (a lowpass to kill hiss + a highpass to
+    # kill boom) textured by an irregular sample-and-hold grain envelope, with a
+    # sharp attack and fast decay. Two overlapping snaps read as a proper bite.
+    n = int(RATE * 0.20)
+    out = [0.0] * n
+
+    def snap(start, amp, decay, seed0):
+        seed = seed0
+        lp = 0.0
+        hp_in = 0.0
+        hp_out = 0.0
+        sh = 0.0
+        sh_ctr = 0
+        sh_period = max(1, int(RATE / 300))   # grain rate ~300 Hz (irregular via S&H)
+        for i in range(start, n):
+            t = (i - start) / RATE
+            seed = (1103515245 * seed + 12345) & 0x7fffffff
+            noise = (seed / 0x7fffffff) * 2 - 1
+            lp += 0.4 * (noise - lp)                   # one-pole low-pass
+            hp = 0.9 * (hp_out + lp - hp_in)           # one-pole high-pass -> band
+            hp_in, hp_out = lp, hp
+            sh_ctr += 1
+            if sh_ctr >= sh_period:
+                sh_ctr = 0
+                seed = (1103515245 * seed + 12345) & 0x7fffffff
+                sh = seed / 0x7fffffff                 # 0..1 held amplitude
+            grain = 0.3 + 0.7 * sh
+            atk = min(1.0, t / 0.0015)                 # ~1.5 ms sharp attack
+            env = atk * math.exp(-t * decay)
+            out[i] += amp * hp * grain * env
+
+    snap(0, 1.5, 40, 22222)
+    snap(int(RATE * 0.05), 1.0, 55, 98765)             # second, smaller bite
+    peak = max(1e-6, max(abs(s) for s in out))
+    return [s / peak * 0.92 for s in out]              # normalize to a safe level
 
 
 def crash():
