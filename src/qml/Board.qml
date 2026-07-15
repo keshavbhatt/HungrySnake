@@ -27,6 +27,18 @@ Item {
     readonly property real frameH: boardH + (pad + gutter) * 2
     readonly property int  bodySegs: 48   // gradient steps along the body tube
 
+    // ── Death effects: a decaying board shake + a particle burst at the head ──
+    property real shakeT: 1   // 1 = at rest; animates 0→1 (decays)
+    property real burstT: 1   // 1 = done;   animates 0→1 (particles fly out + fade)
+    Connections {
+        target: game
+        function onDied() { shakeAnim.restart(); burstAnim.restart(); }
+    }
+    NumberAnimation { id: shakeAnim; target: root; property: "shakeT"
+                      from: 0; to: 1; duration: 480; easing.type: Easing.OutQuad }
+    NumberAnimation { id: burstAnim; target: root; property: "burstT"
+                      from: 0; to: 1; duration: 560; easing.type: Easing.OutCubic }
+
     function mix(a, b, f) {
         return Qt.rgba(a.r + (b.r - a.r) * f,
                        a.g + (b.g - a.g) * f,
@@ -97,16 +109,70 @@ Item {
         }
     }
 
-    // Wooden frame (top-bevel gradient).
+    // Wooden frame — lit from above: bright top fading to a dark bottom edge.
     Rectangle {
         id: frame
         anchors.centerIn: parent
         width: frameW; height: frameH
         radius: Theme.rlg
+        // Death shake: a decaying jitter driven by shakeT (0→1); at rest (1) → still.
+        transform: Translate {
+            x: (1 - root.shakeT) * 13 * Math.sin(root.shakeT * 52)
+            y: (1 - root.shakeT) * 10 * Math.sin(root.shakeT * 45 + 1.3)
+        }
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Theme.frameHi }
-            GradientStop { position: 0.5; color: Theme.frame }
-            GradientStop { position: 1.0; color: Qt.darker(Theme.frame, 1.12) }
+            GradientStop { position: 0.0;  color: Qt.lighter(Theme.frameHi, 1.12) }
+            GradientStop { position: 0.30; color: Theme.frame }
+            GradientStop { position: 1.0;  color: Qt.darker(Theme.frame, 1.42) }
+        }
+
+        // Wood grain — wavy streaks + a few knots, clipped to the frame; the field
+        // covers the centre so grain only reads on the wooden border.
+        Canvas {
+            id: woodGrain
+            anchors.fill: parent
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
+            Component.onCompleted: requestPaint()
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.reset();
+                var w = width, h = height, rad = frame.radius;
+                // clip to the rounded frame so grain never spills past the corners
+                ctx.beginPath();
+                ctx.moveTo(rad, 0);
+                ctx.arcTo(w, 0, w, h, rad);
+                ctx.arcTo(w, h, 0, h, rad);
+                ctx.arcTo(0, h, 0, 0, rad);
+                ctx.arcTo(0, 0, w, 0, rad);
+                ctx.closePath();
+                ctx.clip();
+                // horizontal wavy grain lines (alternating dark streaks + faint highlights)
+                var n = 26;
+                for (var i = 0; i < n; i++) {
+                    var y = (i + 0.5) / n * h;
+                    var dark = (i % 3 !== 1);
+                    ctx.strokeStyle = dark ? Qt.rgba(0, 0, 0, 0.13) : Qt.rgba(1, 1, 1, 0.06);
+                    ctx.lineWidth = dark ? 2.0 : 1.0;
+                    ctx.beginPath();
+                    ctx.moveTo(-6, y);
+                    var amp = 3 + (i % 4) * 2.5;
+                    for (var x = 0; x <= w + 6; x += 14)
+                        ctx.lineTo(x, y + Math.sin(x * 0.018 + i * 1.7) * amp);
+                    ctx.stroke();
+                }
+                // a few knots on the border
+                var knots = [[w * 0.09, h * 0.62], [w * 0.93, h * 0.30], [w * 0.62, h * 0.95], [w * 0.40, h * 0.05]];
+                for (var k = 0; k < knots.length; k++) {
+                    ctx.lineWidth = 1.4;
+                    for (var r = 3; r <= 13; r += 3.4) {
+                        ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.11 * (1 - r / 18));
+                        ctx.beginPath();
+                        ctx.arc(knots[k][0], knots[k][1], r, 0, 2 * Math.PI);
+                        ctx.stroke();
+                    }
+                }
+            }
         }
 
         Rectangle {
@@ -385,6 +451,27 @@ Item {
                         width: parent.width * 0.5; height: head.hwid * 0.08; radius: height / 2
                         rotation: 24; transformOrigin: Item.Left; color: Theme.snakeCrest
                     }
+                }
+            }
+
+            // ── Death burst: particles fly out from the head when the run ends ──
+            Repeater {
+                model: 22
+                delegate: Rectangle {
+                    required property int index
+                    visible: root.burstT < 1
+                    readonly property real ang: index / 22 * 2 * Math.PI + (index % 5) * 0.29
+                    readonly property real reach: cell * (1.5 + (index % 5) * 0.6)
+                    readonly property real sz: cell * (0.14 + (index % 3) * 0.06)
+                    readonly property real e: root.burstT       // 0 → 1 over the burst
+                    width: sz; height: sz; radius: sz / 2
+                    antialiasing: true
+                    color: index % 4 === 0 ? Theme.snakeEye
+                         : index % 4 === 1 ? Theme.snakeLight
+                         : index % 4 === 2 ? Theme.snakeDark : Theme.headGreen
+                    x: game.headX * cell + Math.cos(ang) * reach * e - sz / 2
+                    y: game.headY * cell + Math.sin(ang) * reach * e - sz / 2
+                    opacity: (1 - e) * (1 - e)                  // fade out, easing
                 }
             }
             }   // content
