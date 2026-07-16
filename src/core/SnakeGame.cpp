@@ -117,6 +117,14 @@ void SnakeGame::start()
     emit waitingChanged();
 }
 
+void SnakeGame::startSeeded(quint32 seed)
+{
+    // Reseed so the apple sequence is identical for everyone playing this seed
+    // (the daily challenge); the run itself then plays exactly like a normal one.
+    m_rng = QRandomGenerator(seed);
+    start();
+}
+
 void SnakeGame::pause(bool p)
 {
     if (p) {

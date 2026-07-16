@@ -20,6 +20,13 @@ ApplicationWindow {
     SnakeGame { id: game }
     Profile   { id: profile }   // persistent Berries currency + lifetime stats
     Cosmetics { id: cosmetics; profile: profile }   // equipped-skin palette resolver
+    Achievements { id: achievements; profile: profile; game: game }
+    Connections {
+        target: achievements
+        function onUnlocked(name) { achToast.show(qsTr("Achievement: ") + name, "medal"); }
+    }
+    // Re-check cosmetics-count achievements whenever the collection grows.
+    Connections { target: profile; function onOwnedChanged() { achievements.check(); } }
 
     property bool soundOn: true
     property bool musicOn: true
@@ -71,13 +78,45 @@ ApplicationWindow {
     }
     // Enter the board and start a fresh run.
     function playGame() {
-        win.settingsOpen = false; win.navStack = [];
+        win.settingsOpen = false; win.navStack = []; win.dailyActive = false;
         win.route = "game"; game.start();
     }
     // Quit to the menu (pauses a live run so its clock stops behind the hub).
     function goHome() {
         if (game.status === SnakeGame.Playing) game.pause(true);
-        win.settingsOpen = false; win.navStack = []; win.route = "home";
+        win.settingsOpen = false; win.navStack = []; win.dailyActive = false;
+        win.route = "home";
+    }
+
+    // ── Daily challenge ──
+    // Deterministic per calendar day: the same apple seed for everyone, and a
+    // target score to beat. Completing it (once/day) pays a streak-scaled reward.
+    property string dailyToday: ""
+    property string dailyYesterday: ""
+    property int    dailySeed: 0
+    property int    dailyTarget: 0
+    property bool   dailyActive: false                       // a daily run is in progress
+    readonly property bool dailyDone: profile.dailyLast === win.dailyToday && win.dailyToday !== ""
+    readonly property int  dailyReward: 30 + Math.min(profile.dailyStreak, 10) * 5
+
+    function _ymd(d) {
+        return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2)
+             + "-" + ("0" + d.getDate()).slice(-2);
+    }
+    function playDaily() {
+        win.settingsOpen = false; win.navStack = [];
+        win.dailyActive = true;
+        win.route = "game"; game.startSeeded(win.dailySeed);
+    }
+    // Called on each apple: complete the daily the moment the target is reached.
+    function tryCompleteDaily() {
+        if (!win.dailyActive || game.score < win.dailyTarget) return;
+        const got = profile.completeDaily(win.dailyToday, win.dailyYesterday, win.dailyReward);
+        win.dailyActive = false;
+        if (got > 0) {
+            achToast.show(qsTr("Daily done! +") + got, "calendar");
+            achievements.check();   // a longer streak may unlock Daily Devotee
+        }
     }
 
     // ── Background music control ──
@@ -127,7 +166,16 @@ ApplicationWindow {
         property alias musicOn: win.musicOn
         property alias musicTrack: win.musicTrack
     }
-    Component.onCompleted: { keyLayer.forceActiveFocus(); syncMusic(); }
+    Component.onCompleted: {
+        keyLayer.forceActiveFocus();
+        syncMusic();
+        // Resolve today's daily challenge (constant for the session).
+        var now = new Date();
+        win.dailyToday = win._ymd(now);
+        win.dailyYesterday = win._ymd(new Date(now.getTime() - 86400000));
+        win.dailySeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        win.dailyTarget = 8 + (win.dailySeed % 8);   // 8..15 apples
+    }
 
     // ── Sound ──
     SoundEffect { id: sfxEat;   source: "qrc:/assets/sounds/eat.wav";   volume: 0.7 }
@@ -143,11 +191,16 @@ ApplicationWindow {
 
     Connections {
         target: game
-        function onAte()  { if (win.soundOn) sfxEat.play(); }
+        function onAte()  {
+            if (win.soundOn) sfxEat.play();
+            win.tryCompleteDaily();               // finish the daily on reaching its target
+        }
         function onDied() {
             if (win.soundOn) sfxCrash.play();
             // Bank the Berries earned this run (apples + a new-best bonus).
             profile.recordRun(game.score, game.score > win.bestAtRunStart);
+            win.dailyActive = false;              // a daily attempt ends on death
+            achievements.check();                 // grant any newly-earned achievements
         }
         function onStatusChanged() {
             if (game.status === SnakeGame.Playing) {
@@ -321,6 +374,21 @@ ApplicationWindow {
             visible: win.route === "game"
             anchors { top: topBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom
                       topMargin: 6; leftMargin: 62; rightMargin: 62; bottomMargin: 44 }
+        }
+
+        // Daily-challenge progress banner while a daily run is live.
+        Row {
+            visible: win.route === "game" && win.dailyActive
+            anchors.horizontalCenter: boardView.horizontalCenter
+            y: boardView.y + 10
+            spacing: 7
+            Icon { name: "calendar"; color: Theme.text; size: 20; anchors.verticalCenter: parent.verticalCenter }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("Daily  ") + game.score + " / " + win.dailyTarget
+                color: Theme.text; font.family: Theme.ui; font.pixelSize: 17; font.weight: Font.Bold
+                style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.5)
+            }
         }
 
         // "Primed — press a key" hint: shown while the run is set up but not yet
@@ -557,8 +625,155 @@ ApplicationWindow {
             }
         }
 
-        StubScreen { key: "daily";        title: qsTr("Daily Challenge") }
-        StubScreen { key: "achievements"; title: qsTr("Achievements") }
+        // ── Daily challenge ──
+        Item {
+            id: dailyScr
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === "daily" ? 1 : 0
+            enabled: win.route === "daily"
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.5) }
+            ScreenHeader {
+                id: dhdr
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: qsTr("Daily Challenge"); onBack: win.back()
+            }
+            CoinBalance {
+                anchors { verticalCenter: dhdr.verticalCenter; right: parent.right; rightMargin: 32 }
+                value: profile.berries; ink: Theme.text
+            }
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 22
+                Icon { anchors.horizontalCenter: parent.horizontalCenter
+                       name: "calendar"; color: Theme.text; size: 60 }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Reach a score of ") + win.dailyTarget
+                    color: Theme.text; font.family: Theme.ui; font.pixelSize: 28; font.weight: Font.Bold
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter; spacing: 40
+                    Column {
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: profile.dailyStreak
+                               color: Theme.title; font.family: Theme.ui; font.pixelSize: 34; font.weight: Font.Bold }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("day streak")
+                               color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 14 }
+                    }
+                    Column {
+                        Row {
+                            anchors.horizontalCenter: parent.horizontalCenter; spacing: 5
+                            Icon { name: "berry"; size: 28; anchors.verticalCenter: parent.verticalCenter }
+                            Text { text: win.dailyReward; color: Theme.text; font.family: Theme.ui
+                                   font.pixelSize: 34; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                        }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("reward")
+                               color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 14 }
+                    }
+                }
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: !win.dailyDone
+                    text: qsTr("Play Daily"); fontSize: 20; onClicked: win.playDaily()
+                }
+                Row {
+                    visible: win.dailyDone
+                    anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
+                    Icon { name: "check"; color: Theme.success; size: 26; anchors.verticalCenter: parent.verticalCenter }
+                    Text { text: qsTr("Completed today!"); color: Theme.success
+                           font.family: Theme.ui; font.pixelSize: 20; font.weight: Font.Bold
+                           anchors.verticalCenter: parent.verticalCenter }
+                }
+            }
+        }
+
+        // ── Achievements ──
+        Item {
+            id: achScr
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === "achievements" ? 1 : 0
+            enabled: win.route === "achievements"
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.55) }
+            ScreenHeader {
+                id: ahdr
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: qsTr("Achievements"); onBack: win.back()
+            }
+            CoinBalance {
+                anchors { verticalCenter: ahdr.verticalCenter; right: parent.right; rightMargin: 32 }
+                value: profile.berries; ink: Theme.text
+            }
+
+            Flickable {
+                anchors { top: ahdr.bottom; topMargin: 12; horizontalCenter: parent.horizontalCenter
+                          bottom: parent.bottom; bottomMargin: 20 }
+                width: Math.min(win.width - 80, 620)
+                contentHeight: achCol.implicitHeight
+                clip: true
+                Column {
+                    id: achCol
+                    width: parent.width
+                    spacing: 10
+                    Repeater {
+                        model: achievements.list
+                        delegate: Rectangle {
+                            width: parent.width; height: 74; radius: Theme.r
+                            readonly property int cur:
+                                  modelData.stat === "apples"    ? profile.lifetimeApples
+                                : modelData.stat === "games"     ? profile.gamesPlayed
+                                : modelData.stat === "best"      ? game.best
+                                : modelData.stat === "streak"    ? profile.bestStreak
+                                : modelData.stat === "cosmetics" ? profile.owned.length : 0
+                            readonly property bool done: profile.claimed.indexOf(modelData.id) >= 0
+                            color: done ? Qt.rgba(Theme.success.r, Theme.success.g, Theme.success.b, 0.18)
+                                        : Theme.insetTan
+                            border.width: 2
+                            border.color: done ? Theme.success : Theme.insetEdge
+
+                            Rectangle {
+                                id: badge
+                                anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                                width: 46; height: 46; radius: Theme.rsm
+                                color: done ? Theme.success : Theme.hudWood
+                                Icon { anchors.centerIn: parent; name: modelData.icon; color: Theme.cream; size: 26 }
+                            }
+                            Column {
+                                id: rewardCol
+                                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                                spacing: 2
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter; spacing: 3
+                                    Icon { name: "berry"; size: 16; anchors.verticalCenter: parent.verticalCenter }
+                                    Text { text: modelData.reward; color: Theme.inkStrong; font.family: Theme.ui
+                                           font.pixelSize: 15; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                                }
+                                Text { visible: done; text: qsTr("owned"); color: Theme.success
+                                       font.family: Theme.ui; font.pixelSize: 11; anchors.horizontalCenter: parent.horizontalCenter }
+                            }
+                            Column {
+                                anchors { left: badge.right; leftMargin: 14; right: rewardCol.left; rightMargin: 12
+                                          verticalCenter: parent.verticalCenter }
+                                spacing: 6
+                                Text { text: modelData.name; color: Theme.inkStrong; font.family: Theme.ui
+                                       font.pixelSize: 16; font.weight: Font.Bold }
+                                Text { text: modelData.desc; color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 12 }
+                                ProgressBar {
+                                    width: 250
+                                    value: Math.min(parent.parent.cur, modelData.target); to: modelData.target
+                                    fill: parent.parent.done ? Theme.success : Theme.primary
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         StubScreen { key: "about";        title: qsTr("Support Snecko") }
     }
 
@@ -819,5 +1034,12 @@ ApplicationWindow {
         onEntered: hideTimer.restart()
         onExited: hideTimer.stop()
         Timer { id: hideTimer; interval: 2500; running: true; onTriggered: cursorHider.hidden = true }
+    }
+
+    // Transient notification (achievement unlocked / daily complete) — topmost.
+    Toast {
+        id: achToast
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 22
     }
 }

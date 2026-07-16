@@ -74,6 +74,7 @@ public:
     // ── Actions driven from QML / dev hooks ──
     Q_INVOKABLE void start();               // (re)start a fresh run
     Q_INVOKABLE void restart() { start(); }
+    Q_INVOKABLE void startSeeded(quint32 seed);   // deterministic apples (daily challenge)
     Q_INVOKABLE void pause(bool p);         // pause/resume the clock
     Q_INVOKABLE void steer(Direction dir);  // queue a turn (applied on the next cell)
 
