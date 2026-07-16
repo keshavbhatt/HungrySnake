@@ -60,6 +60,14 @@ QtObject {
     readonly property color snakeNose:  "#14603f"  // nostril
     readonly property color snakeCrest: "#e63a3a"  // tongue / eating-mouth red
 
+    // ── Berries (soft currency) ──
+    readonly property color berry:     "#8360e0"
+    readonly property color berryDeep: "#5a3fb0"
+
+    // ── Store / progression state colours ──
+    readonly property color success:   "#46c08a"  // owned / equipped / completed (= primary)
+    readonly property color locked:     "#9c7d56"  // locked-cosmetic tint
+
     // ── Apple ──
     readonly property color apple:     "#e23b2c"
     readonly property color appleLeaf: "#57b845"

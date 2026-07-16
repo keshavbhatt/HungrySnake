@@ -25,7 +25,17 @@ Item {
         "mute":    '<polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"/><line x1="16" y1="9" x2="21" y2="15"/><line x1="21" y1="9" x2="16" y2="15"/>',
         "sun":     '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
         "moon":    '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
-        "trophy":  '<path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>'
+        "trophy":  '<path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
+        "home":    '<path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
+        "gear":    '<circle cx="12" cy="12" r="3.1"/><path d="M19.4 12a7.4 7.4 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2.2-1.3L14.3 2h-4l-.4 2.4a7.3 7.3 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 2.2 1.3l.4 2.4h4l.4-2.4a7.3 7.3 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.3z"/>',
+        "store":   '<path d="M5.5 8.5h13l-1 11.5H6.5l-1-11.5z"/><path d="M9 8.5V6a3 3 0 0 1 6 0v2.5"/>',
+        "medal":   '<circle cx="12" cy="14.5" r="5"/><circle cx="12" cy="14.5" r="1.9"/><path d="M8.7 10.2 5.9 3.6M15.3 10.2 18.1 3.6"/>',
+        "calendar":'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/>',
+        "lock":    '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+        "check":   '<polyline points="5 12.5 10 17.5 19 6.5"/>',
+        "heart":   '<path d="M12 20.5C6.5 16.2 3.5 12.9 3.5 9 3.5 6.4 5.5 4.5 8 4.5c1.7 0 3.2.9 4 2.3.8-1.4 2.3-2.3 4-2.3 2.5 0 4.5 1.9 4.5 4.5 0 3.9-3 7.2-8.5 11.5z"/>',
+        "chevron": '<polyline points="9 6 15 12 9 18"/>',
+        "sparkle": '<path d="M12 3l1.7 5.5L19 10l-5.3 1.5L12 17l-1.7-5.5L5 10l5.3-1.5L12 3z"/>'
     })
 
     // Filled, full-colour icons that match the game art (flat + saturated) — used
@@ -45,7 +55,14 @@ Item {
           + '<path d="M9 5 a2.6 4 0 0 0 0 4" fill="none" stroke="#fff3cf" stroke-width="1.2" stroke-linecap="round" opacity="0.65"/>'
           + '<rect x="10.9" y="12.2" width="2.2" height="3.3" fill="#c98a2a"/>'
           + '<rect x="8.2" y="15.2" width="7.6" height="1.9" rx="0.9" fill="#e6a93a"/>'
-          + '<rect x="6.9" y="17.1" width="10.2" height="2.5" rx="1.2" fill="#c98a2a"/>'
+          + '<rect x="6.9" y="17.1" width="10.2" height="2.5" rx="1.2" fill="#c98a2a"/>',
+        "berry":   // the Berries currency glyph — a plump purple berry (distinct from the red apple)
+            '<circle cx="12" cy="13.8" r="6.7" fill="#8360e0"/>'
+          + '<path d="M12 7.6 C12 5.6 12.7 4.3 13.8 3.7" fill="none" stroke="#7a4a25" stroke-width="1.5" stroke-linecap="round"/>'
+          + '<ellipse cx="14.9" cy="5.4" rx="2.9" ry="1.5" fill="#57b845" transform="rotate(-30 14.9 5.4)"/>'
+          + '<ellipse cx="9.5" cy="11" rx="1.8" ry="2.6" fill="#ffffff" fill-opacity="0.5" transform="rotate(-25 9.5 11)"/>'
+          + '<circle cx="13.6" cy="15.3" r="0.9" fill="#5a3fb0" fill-opacity="0.55"/>'
+          + '<circle cx="11" cy="16.3" r="0.7" fill="#5a3fb0" fill-opacity="0.45"/>'
     })
 
     // SVG only understands #RRGGBB (not Qt's #AARRGGBB), so pass the opaque RGB

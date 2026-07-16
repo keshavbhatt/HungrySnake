@@ -18,12 +18,16 @@ ApplicationWindow {
     color: Theme.bg
 
     SnakeGame { id: game }
+    Profile   { id: profile }   // persistent Berries currency + lifetime stats
 
     property bool soundOn: true
     property bool musicOn: true
     // Selected music track: -1 == Random (shuffle), else an index into musicTracks.
     property int  musicTrack: -1
     property bool settingsOpen: false
+    // The best score at the moment the current run began — so, on death, we can
+    // tell whether this run set a new best (game.best is already bumped by then).
+    property int  bestAtRunStart: 0
 
     // The looping background tracks (procedurally generated — see tools/make_music.py).
     readonly property var musicTracks: [
@@ -112,11 +116,18 @@ ApplicationWindow {
     Connections {
         target: game
         function onAte()  { if (win.soundOn) sfxEat.play(); }
-        function onDied() { if (win.soundOn) sfxCrash.play(); }
-        // On a fresh run in Random mode, reshuffle so each game can bring a new tune.
+        function onDied() {
+            if (win.soundOn) sfxCrash.play();
+            // Bank the Berries earned this run (apples + a new-best bonus).
+            profile.recordRun(game.score, game.score > win.bestAtRunStart);
+        }
         function onStatusChanged() {
-            if (game.status === SnakeGame.Playing && win.musicOn && win.musicTrack < 0)
-                win.restartMusic();
+            if (game.status === SnakeGame.Playing) {
+                win.bestAtRunStart = game.best;            // snapshot for the new-best check
+                // On a fresh run in Random mode, reshuffle for a new tune.
+                if (win.musicOn && win.musicTrack < 0)
+                    win.restartMusic();
+            }
         }
     }
 
@@ -249,40 +260,9 @@ ApplicationWindow {
                 anchors { left: parent.left; leftMargin: 24; verticalCenter: parent.verticalCenter }
                 spacing: 12
 
-                component StatCard: Rectangle {
-                    property string glyph: ""     // "apple" or "trophy"
-                    property int value: 0
-                    width: 132; height: 64
-                    radius: Theme.r
-                    color: Theme.hudWood          // dark-wood HUD chip (over gameplay)
-                    border.width: 3
-                    border.color: Theme.hudEdge
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        shadowEnabled: true; shadowColor: Theme.shadow; shadowBlur: 0.6
-                        shadowOpacity: 0.3; shadowVerticalOffset: 4; autoPaddingEnabled: true
-                    }
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 12
-                        Item {
-                            width: 34; height: 34
-                            anchors.verticalCenter: parent.verticalCenter
-                            Icon { anchors.centerIn: parent; name: glyph; size: 32 }
-                        }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: value
-                            color: Theme.cream
-                            font.family: Theme.ui
-                            font.pixelSize: 30
-                            font.weight: Font.Bold
-                        }
-                    }
-                }
-
                 StatCard { glyph: "apple";  value: game.score }
                 StatCard { glyph: "trophy"; value: game.best }
+                StatCard { glyph: "berry";  value: profile.berries }
             }
 
             IconButton {
@@ -389,8 +369,15 @@ ApplicationWindow {
         // Hold the overlay back briefly on death so the board shake + head-burst
         // play on the clear field first, then fade the Game Over card in.
         property bool active: false
+        // Berries-earned count-up shown on the card (animates 0 → what this run earned).
+        property int shownBerries: 0
         onDeadChanged: { if (dead) overDelay.restart(); else active = false; }
+        onActiveChanged: if (active) berryCount.restart()
         Timer { id: overDelay; interval: 430; onTriggered: overlay.active = true }
+        NumberAnimation {
+            id: berryCount; target: overlay; property: "shownBerries"
+            from: 0; to: profile.lastRunBerries; duration: 650; easing.type: Easing.OutCubic
+        }
         color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
         opacity: active ? 1 : 0
@@ -446,6 +433,28 @@ ApplicationWindow {
                     ScoreChip { glyph: "trophy"; value: game.best }
                 }
 
+                // Berries earned this run (hidden on a fruitless run).
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
+                    visible: profile.lastRunBerries > 0
+                    Item {
+                        width: 30; height: 30; anchors.verticalCenter: parent.verticalCenter
+                        Icon { anchors.centerIn: parent; name: "berry"; size: 28 }
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "+" + overlay.shownBerries
+                        color: Theme.berryDeep; font.family: Theme.ui
+                        font.pixelSize: 26; font.weight: Font.Bold
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("berries earned")
+                        color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 17
+                    }
+                }
+
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 12
@@ -482,34 +491,6 @@ ApplicationWindow {
                 shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
             }
             MouseArea { anchors.fill: parent }   // absorb clicks so they don't dismiss
-
-            component ToggleRow: Item {
-                property string label: ""
-                property bool checked: false
-                signal toggled
-                width: parent ? parent.width : 200
-                height: 50
-                Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                       text: label; color: Theme.inkStrong; font.pixelSize: 17; font.weight: Font.DemiBold }
-                Rectangle {
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    width: 52; height: 28; radius: 14
-                    color: checked ? Theme.primary : "#a9825a"
-                    Behavior on color { ColorAnimation { duration: 160 } }
-                    Rectangle {
-                        width: 22; height: 22; radius: 11; color: "white"; y: 3
-                        x: checked ? parent.width - width - 3 : 3
-                        Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 0.4
-                            shadowOpacity: 0.28; shadowVerticalOffset: 2; autoPaddingEnabled: true
-                        }
-                    }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                onClicked: parent.parent.toggled() }
-                }
-            }
 
             Column {
                 id: scol

@@ -49,6 +49,15 @@ set(SN_QML_FILES
     components/Icon.qml
     components/IconButton.qml
     components/PillButton.qml
+    components/StatCard.qml
+    components/ToggleRow.qml
+    components/CoinBalance.qml
+    components/ProgressBar.qml
+    components/Badge.qml
+    components/SegmentedControl.qml
+    components/ScreenHeader.qml
+    components/StoreCard.qml
+    components/Toast.qml
 )
 set(SN_QML_PATHS "")
 foreach(qml IN LISTS SN_QML_FILES)
@@ -68,6 +77,7 @@ qt_add_qml_module(snecko
     QML_FILES ${SN_QML_PATHS}
     SOURCES
         src/core/SnakeGame.h  src/core/SnakeGame.cpp
+        src/core/Profile.h    src/core/Profile.cpp
 )
 
 # ── Bundled assets: app icon + sound effects + decorative foliage ─────────────
