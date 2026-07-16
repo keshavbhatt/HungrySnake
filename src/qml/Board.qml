@@ -606,45 +606,61 @@ Item {
                     readonly property real cx: head.hlen * 0.82
                     readonly property real cy: head.hwid * 0.5
                     readonly property real mw: head.hlen * (0.15 + 0.10 * head.mouthOpen)
-                    readonly property real mh: head.hwid * (0.24 + 0.58 * head.mouthOpen)
+                    readonly property real mh: head.hwid * (0.24 + 0.54 * head.mouthOpen)
                     readonly property real lipT: head.hwid * 0.055
 
-                    // Snake-skin lip — a lighter green rim so the opening belongs to the
-                    // head without reading as a heavy dark outline.
-                    Rectangle {
-                        x: mouth.cx - width / 2; y: mouth.cy - height / 2
-                        width: mouth.mw + mouth.lipT * 2; height: mouth.mh + mouth.lipT * 2
-                        radius: Math.min(width, height) / 2
-                        color: Theme.snoutCap
-                        antialiasing: true
-                    }
-                    // Red interior.
-                    Rectangle {
+                    // Mouth — a wide rounded 'D': flat at the back (the upper-jaw
+                    // hinge), bulging out toward the apple, ringed by a green skin
+                    // lip. Matches the reference's wide, rounded open mouth.
+                    Item {
                         id: maw
                         x: mouth.cx - width / 2; y: mouth.cy - height / 2
                         width: mouth.mw; height: mouth.mh
-                        radius: Math.min(width, height) / 2
-                        color: "#e5392b"
                         antialiasing: true
+                        Shape {
+                            anchors.fill: parent; antialiasing: true; smooth: true
+                            ShapePath {
+                                fillColor: "#e5392b"
+                                strokeColor: Theme.snoutCap
+                                strokeWidth: mouth.lipT * 1.7
+                                joinStyle: ShapePath.RoundJoin
+                                capStyle: ShapePath.RoundCap
+                                startX: 0; startY: maw.height * 0.14
+                                PathLine { x: 0; y: maw.height * 0.86 }
+                                PathCubic {
+                                    control1X: maw.width * 0.60; control1Y: maw.height * 1.05
+                                    control2X: maw.width * 1.20; control2Y: maw.height * 0.74
+                                    x: maw.width; y: maw.height * 0.5
+                                }
+                                PathCubic {
+                                    control1X: maw.width * 1.20; control1Y: maw.height * 0.26
+                                    control2X: maw.width * 0.60; control2Y: maw.height * -0.05
+                                    x: 0; y: maw.height * 0.14
+                                }
+                            }
+                        }
                         // Dark throat — a recessed centre gives the maw real depth.
                         Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width * 0.64; height: parent.height * 0.68
+                            x: parent.width * 0.16; y: parent.height * 0.2
+                            width: parent.width * 0.66; height: parent.height * 0.6
                             radius: Math.min(width, height) / 2
                             color: "#5f120d"; opacity: 0.9
                             antialiasing: true
                         }
-                        // Fangs — a row of white teeth biting inward from the front lip.
+                        // Teeth — two fangs hanging from the UPPER jaw (the back/body
+                        // edge of the maw), each pointing toward the apple (+x), one at
+                        // either corner. Matches the reference: two teeth, points down.
                         Repeater {
-                            model: [0.27, 0.5, 0.73]
+                            model: [ 0.27, 0.73 ]   // the two corners across the mouth
                             delegate: Shape {
                                 required property real modelData
+                                readonly property real hw: 0.075   // base half-width along the jaw
                                 anchors.fill: parent; antialiasing: true
                                 ShapePath {
                                     fillColor: "#fff3e2"; strokeColor: "transparent"
-                                    startX: maw.width * 0.86; startY: maw.height * (modelData - 0.085)
-                                    PathLine { x: maw.width * 0.44; y: maw.height * modelData }
-                                    PathLine { x: maw.width * 0.86; y: maw.height * (modelData + 0.085) }
+                                    startX: maw.width * 0.10; startY: maw.height * (modelData - hw)
+                                    PathLine { x: maw.width * 0.78; y: maw.height * modelData }
+                                    PathLine { x: maw.width * 0.10; y: maw.height * (modelData + hw) }
                                 }
                             }
                         }
@@ -664,7 +680,7 @@ Item {
                     model: [0.28, 0.72]
                     delegate: Rectangle {
                         required property real modelData
-                        readonly property real nr: head.hwid * 0.043
+                        readonly property real nr: head.hwid * 0.055
                         width: nr * 2; height: nr * 2; radius: nr
                         x: head.hlen * 0.80 - nr
                         y: head.hwid * modelData - nr
@@ -684,15 +700,16 @@ Item {
                         y: head.hwid * modelData - er
                         width: er * 2
                         height: er * 2
-                        // Slightly taller than wide → a natural oval, not a pure circle.
-                        // (Blink folds into the same vertical scale.)
-                        transform: Scale { origin.x: er; origin.y: er; yScale: head.blink * 1.16 }
+                        // Oval on the head's cross-axis (yScale); the blink squashes
+                        // along the head's LENGTH axis (xScale) so, e.g. facing right,
+                        // the eye closes along X — matching the head's orientation.
+                        transform: Scale { origin.x: er; origin.y: er; xScale: head.blink; yScale: 1.16 }
                         // Glossy white eyeball — top-lit gradient for a shiny dome.
                         Rectangle {
                             anchors.fill: parent; radius: width / 2; antialiasing: true
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: "#ffffff" }
-                                GradientStop { position: 1.0; color: "#d6d8e0" }
+                                GradientStop { position: 0.0; color: "#eef6e3" }   // pale green-white
+                                GradientStop { position: 1.0; color: "#c7deb0" }   // light green
                             }
                         }
                         Rectangle {   // black pupil — biased forward; rolls in circles while dead

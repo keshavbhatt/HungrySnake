@@ -142,9 +142,15 @@ ApplicationWindow {
             property real swayAmt: 3
             property int  swayMs: 2800
             property real sway: 0
+            // A second, faster/smaller sway on an INCOMMENSURATE period — summed with
+            // the primary, the total never repeats, so it reads as natural gusting
+            // rather than a metronome.
+            property real sway2: 0
+            readonly property real sway2Amt: swayAmt * 0.5
+            readonly property int  sway2Ms: Math.round(swayMs * 0.53) + 310
             // Subtle "breathing" scale that decouples from the sway (offset period
             // so the canopy never pulses as one) — keeps the foliage feeling alive.
-            property real breatheAmt: 0.02
+            property real breatheAmt: 0.026
             property int  breatheMs: swayMs + 1500
             property real breathe: 0
             width: len; height: len
@@ -152,12 +158,17 @@ ApplicationWindow {
             sourceSize.width: len; sourceSize.height: len
             smooth: true; mipmap: true; antialiasing: true
             transformOrigin: Item.Center
-            rotation: baseRot + sway
+            rotation: baseRot + sway + sway2
             scale: 1 + breathe
             SequentialAnimation on sway {
                 loops: Animation.Infinite; running: true
                 NumberAnimation { from: -swayAmt; to: swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
                 NumberAnimation { from: swayAmt; to: -swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
+            }
+            SequentialAnimation on sway2 {
+                loops: Animation.Infinite; running: true
+                NumberAnimation { from: -sway2Amt; to: sway2Amt; duration: sway2Ms; easing.type: Easing.InOutSine }
+                NumberAnimation { from: sway2Amt; to: -sway2Amt; duration: sway2Ms; easing.type: Easing.InOutSine }
             }
             SequentialAnimation on breathe {
                 loops: Animation.Infinite; running: true
@@ -597,5 +608,22 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    // Auto-hide the mouse cursor after a moment of stillness (it distracts during
+    // play); any mouse movement brings it straight back. Sits on top but ignores
+    // buttons (Qt.NoButton) so clicks still reach the UI beneath.
+    MouseArea {
+        id: cursorHider
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: true
+        propagateComposedEvents: true
+        property bool hidden: false
+        cursorShape: hidden ? Qt.BlankCursor : Qt.ArrowCursor
+        onPositionChanged: { hidden = false; hideTimer.restart(); }
+        onEntered: hideTimer.restart()
+        onExited: hideTimer.stop()
+        Timer { id: hideTimer; interval: 2500; running: true; onTriggered: cursorHider.hidden = true }
     }
 }
