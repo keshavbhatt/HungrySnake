@@ -105,6 +105,16 @@ int main(int argc, char *argv[])
                     const auto parts = QString::fromUtf8(sz).split('x');
                     if (parts.size() == 2) { w->setWidth(parts[0].toInt()); w->setHeight(parts[1].toInt()); }
                 }
+                // Dev-only: SN_SCREEN=<home|game|store|daily|achievements|about>
+                // jumps the router straight to a screen for screenshot verification.
+                const QByteArray scr = qgetenv("SN_SCREEN");
+                if (!scr.isEmpty())
+                    w->setProperty("route", QString::fromUtf8(scr));
+                // The gameplay screenshot modes live on the board, so put the router
+                // there (the app otherwise launches to the "home" hub).
+                else if (mode == "waiting" || mode == "eat" || mode == "die"
+                      || mode == "mouth" || mode == "long" || mode == "settings")
+                    w->setProperty("route", "game");
                 auto *game = w->findChild<SnakeGame *>();
                 int grabDelay = 2200;
                 if (game && mode == "ready") {

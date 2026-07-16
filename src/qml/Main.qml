@@ -52,6 +52,33 @@ ApplicationWindow {
         if (game.status === SnakeGame.Playing) game.pause(false);
     }
 
+    // ── Screen router ──
+    // Screens: "home" (landing hub), "game" (board + HUD), "store",
+    // "achievements", "daily", "about". Settings/pause stays an overlay
+    // (settingsOpen), reachable from any screen. A tiny back-stack drives the
+    // back button on sub-screens.
+    property string route: "home"
+    property var navStack: []
+    function navigate(s) { win.navStack = win.navStack.concat([win.route]); win.route = s; }
+    function back() {
+        if (win.navStack.length > 0) {
+            win.route = win.navStack[win.navStack.length - 1];
+            win.navStack = win.navStack.slice(0, -1);
+        } else {
+            win.route = "home";
+        }
+    }
+    // Enter the board and start a fresh run.
+    function playGame() {
+        win.settingsOpen = false; win.navStack = [];
+        win.route = "game"; game.start();
+    }
+    // Quit to the menu (pauses a live run so its clock stops behind the hub).
+    function goHome() {
+        if (game.status === SnakeGame.Playing) game.pause(true);
+        win.settingsOpen = false; win.navStack = []; win.route = "home";
+    }
+
     // ── Background music control ──
     // Pick a random track, avoiding an immediate repeat of the current one.
     function pickRandomIndex() {
@@ -228,22 +255,26 @@ ApplicationWindow {
         anchors.fill: parent
         focus: true
         Keys.onPressed: (e) => {
-            // Ignore steering while the pause menu is open.
+            // Steering is only live on the board (not the hub / sub-screens / pause).
+            const inGame = win.route === "game" && !win.settingsOpen;
             switch (e.key) {
-            case Qt.Key_Up:    case Qt.Key_W: if (!win.settingsOpen) game.steer(SnakeGame.Up);    e.accepted = true; break;
-            case Qt.Key_Down:  case Qt.Key_S: if (!win.settingsOpen) game.steer(SnakeGame.Down);  e.accepted = true; break;
-            case Qt.Key_Left:  case Qt.Key_A: if (!win.settingsOpen) game.steer(SnakeGame.Left);  e.accepted = true; break;
-            case Qt.Key_Right: case Qt.Key_D: if (!win.settingsOpen) game.steer(SnakeGame.Right); e.accepted = true; break;
+            case Qt.Key_Up:    case Qt.Key_W: if (inGame) game.steer(SnakeGame.Up);    e.accepted = true; break;
+            case Qt.Key_Down:  case Qt.Key_S: if (inGame) game.steer(SnakeGame.Down);  e.accepted = true; break;
+            case Qt.Key_Left:  case Qt.Key_A: if (inGame) game.steer(SnakeGame.Left);  e.accepted = true; break;
+            case Qt.Key_Right: case Qt.Key_D: if (inGame) game.steer(SnakeGame.Right); e.accepted = true; break;
             case Qt.Key_Space:
                 if (win.settingsOpen) win.closeSettings();
-                else if (game.status === SnakeGame.Playing) win.openSettings();
-                else game.start();
+                else if (win.route === "home") win.playGame();
+                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openSettings();
                 e.accepted = true; break;
             case Qt.Key_Return: case Qt.Key_Enter:
-                if (game.status === SnakeGame.Dead || game.status === SnakeGame.Ready) game.start();
+                if (win.route === "home") win.playGame();
+                else if (win.route === "game" && (game.status === SnakeGame.Dead || game.status === SnakeGame.Ready)) game.start();
                 e.accepted = true; break;
             case Qt.Key_Escape:
                 if (win.settingsOpen) win.closeSettings();
+                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openSettings();
+                else if (win.route !== "home") win.back();
                 e.accepted = true; break;
             }
         }
@@ -255,6 +286,7 @@ ApplicationWindow {
             id: topBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: 96
+            visible: win.route === "game"
 
             Row {
                 anchors { left: parent.left; leftMargin: 24; verticalCenter: parent.verticalCenter }
@@ -284,6 +316,7 @@ ApplicationWindow {
             id: boardView
             objectName: "boardView"
             game: game
+            visible: win.route === "game"
             anchors { top: topBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom
                       topMargin: 6; leftMargin: 62; rightMargin: 62; bottomMargin: 44 }
         }
@@ -293,7 +326,7 @@ ApplicationWindow {
         Text {
             anchors.horizontalCenter: boardView.horizontalCenter
             y: boardView.y + boardView.height * 0.72
-            visible: game.waiting
+            visible: game.waiting && win.route === "game"
             text: qsTr("Press an arrow key to start")
             color: Theme.text
             font.pixelSize: 18; font.weight: Font.DemiBold
@@ -306,66 +339,123 @@ ApplicationWindow {
         }
     }
 
-    // ── Ready overlay (kit tan dialog card over a 45% scrim) ──
-    Rectangle {
+    // ── Home hub (landing screen) — over the jungle backdrop ──
+    Item {
+        id: homeScreen
         anchors.fill: parent
-        readonly property bool active: game.status === SnakeGame.Ready
-        color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
-        opacity: active ? 1 : 0
+        opacity: win.route === "home" ? 1 : 0
+        enabled: win.route === "home"
         Behavior on opacity { NumberAnimation { duration: 220 } }
-        MouseArea { anchors.fill: parent; onClicked: game.start() }
 
-        Rectangle {
-            anchors.centerIn: parent
-            width: readyCol.implicitWidth + 88
-            height: readyCol.implicitHeight + 64
-            radius: Theme.rlg
-            color: Theme.cardTan
-            border.width: 3
-            border.color: Theme.cardEdge
-            transformOrigin: Item.Center
-            scale: parent.active ? 1.0 : 0.92
-            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
-                shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
-            }
-
-            Column {
-                id: readyCol
-                anchors.centerIn: parent
-                spacing: 18
-                Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: "SNECKO"; color: Theme.primaryDeep
-                       font.family: Theme.ui; font.pixelSize: 56; font.weight: Font.Bold }
-                // Separator is a drawn dot, not a "·" glyph — never depends on a font.
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 8
-                    Text { anchors.verticalCenter: parent.verticalCenter
-                           text: qsTr("Eat apples"); color: Theme.inkSoft; font.pixelSize: 15 }
-                    Rectangle { anchors.verticalCenter: parent.verticalCenter
-                                width: 4; height: 4; radius: 2; color: Theme.inkSoft }
-                    Text { anchors.verticalCenter: parent.verticalCenter
-                           text: qsTr("avoid the walls and yourself"); color: Theme.inkSoft; font.pixelSize: 15 }
+        // A vertical icon tile for the hub's secondary actions.
+        component HomeTile: Item {
+            id: tile
+            property string icon: ""
+            property string label: ""
+            signal clicked
+            width: 96; height: 94
+            Rectangle {
+                id: tileBg
+                anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter
+                width: 66; height: 66; radius: Theme.r
+                color: tileMa.pressed ? Theme.insetDeep
+                     : tileMa.containsMouse ? Qt.lighter(Theme.insetTan, 1.06) : Theme.insetTan
+                border.width: 2; border.color: Theme.insetEdge
+                Icon { anchors.centerIn: parent; name: tile.icon; color: Theme.inkStrong; size: 30 }
+                MouseArea {
+                    id: tileMa; anchors.fill: parent; hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor; onClicked: tile.clicked()
                 }
-                PillButton { anchors.horizontalCenter: parent.horizontalCenter
-                             text: qsTr("Play"); fontSize: 19; onClicked: game.start() }
-                Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: qsTr("Steer with the arrow keys or WASD")
-                       color: Qt.rgba(Theme.inkStrong.r, Theme.inkStrong.g, Theme.inkStrong.b, 0.55)
-                       font.pixelSize: 13 }
+            }
+            Text {
+                anchors.top: tileBg.bottom; anchors.topMargin: 7
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tile.label; color: Theme.text
+                font.family: Theme.ui; font.pixelSize: 12; font.weight: Font.DemiBold
             }
         }
+
+        CoinBalance {
+            anchors { top: parent.top; right: parent.right; topMargin: 30; rightMargin: 32 }
+            value: profile.berries; iconSize: 30; ink: Theme.text
+        }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 24
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "SNECKO"; color: Theme.title
+                font.family: Theme.ui; font.pixelSize: 78; font.weight: Font.Bold
+                style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Eat apples • grow • don't bite yourself")
+                color: Theme.text; font.family: Theme.ui; font.pixelSize: 16
+            }
+            PillButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Play"); fontSize: 22; onClicked: win.playGame()
+            }
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 12
+                HomeTile { icon: "store";    label: qsTr("Store");    onClicked: win.navigate("store") }
+                HomeTile { icon: "calendar"; label: qsTr("Daily");    onClicked: win.navigate("daily") }
+                HomeTile { icon: "medal";    label: qsTr("Awards");   onClicked: win.navigate("achievements") }
+                HomeTile { icon: "gear";     label: qsTr("Settings"); onClicked: win.openSettings() }
+                HomeTile { icon: "heart";    label: qsTr("Support");  onClicked: win.navigate("about") }
+            }
+        }
+    }
+
+    // ── Sub-screens (Store / Daily / Achievements / About) — Stage-3 stubs.
+    // Navigation is fully wired now; the bodies are filled in Stages 4–5. ──
+    Item {
+        id: subScreens
+        anchors.fill: parent
+
+        component StubScreen: Item {
+            id: scr
+            property string key: ""
+            property string title: ""
+            property string note: qsTr("Coming soon")
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === scr.key ? 1 : 0
+            enabled: win.route === scr.key
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.4) }
+            ScreenHeader {
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: scr.title
+                onBack: win.back()
+            }
+            CoinBalance {
+                anchors { top: parent.top; right: parent.right; topMargin: 34; rightMargin: 32 }
+                value: profile.berries; ink: Theme.text
+            }
+            Text {
+                anchors.centerIn: parent
+                text: scr.note; color: Theme.textDim
+                font.family: Theme.ui; font.pixelSize: 22
+            }
+        }
+
+        StubScreen { key: "store";        title: qsTr("Store") }
+        StubScreen { key: "daily";        title: qsTr("Daily Challenge") }
+        StubScreen { key: "achievements"; title: qsTr("Achievements") }
+        StubScreen { key: "about";        title: qsTr("Support Snecko") }
     }
 
     // ── Game Over overlay ──
     Rectangle {
         id: overlay
         anchors.fill: parent
-        readonly property bool dead: game.status === SnakeGame.Dead
+        readonly property bool dead: game.status === SnakeGame.Dead && win.route === "game"
         // Hold the overlay back briefly on death so the board shake + head-burst
         // play on the clear field first, then fade the Game Over card in.
         property bool active: false
@@ -460,6 +550,7 @@ ApplicationWindow {
                     spacing: 12
                     PillButton { text: qsTr("Continue"); fontSize: 18; onClicked: game.restart() }
                     IconButton { icon: "restart"; onClicked: game.restart() }
+                    IconButton { icon: "home"; onClicked: win.goHome() }
                 }
             }
         }
@@ -572,12 +663,23 @@ ApplicationWindow {
                 }
                 PillButton {
                     width: parent.width
+                    visible: win.route === "game"     // restarting only makes sense mid-game
                     text: qsTr("Restart")
                     raised: false
                     fill: Theme.insetTan
                     ink: Theme.inkStrong
                     weight: Font.DemiBold
                     onClicked: { game.restart(); win.closeSettings(); }
+                }
+                PillButton {
+                    width: parent.width
+                    visible: win.route === "game"     // quit the run back to the hub
+                    text: qsTr("Main Menu")
+                    raised: false
+                    fill: Theme.insetTan
+                    ink: Theme.inkStrong
+                    weight: Font.DemiBold
+                    onClicked: win.goHome()
                 }
 
                 Text {
