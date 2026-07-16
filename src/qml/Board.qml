@@ -99,6 +99,7 @@ Item {
         return center.concat(edge.reverse());
     }
 
+
     // Soft drop shadow cast by the board (static caster, blurred once).
     Rectangle {
         anchors.centerIn: parent
@@ -470,6 +471,17 @@ Item {
                     duration: 820; loops: Animation.Infinite
                 }
 
+                // Look at the apple: a unit vector to it in the head's LOCAL frame
+                // (x = forward, y = across), so the pupils point at the fruit whichever
+                // way the head faces. Falls back to looking straight ahead.
+                readonly property real _adx: game.appleX - game.headX
+                readonly property real _ady: game.appleY - game.headY
+                readonly property real _alen: Math.max(0.001, Math.hypot(_adx, _ady))
+                readonly property real lookX: game.status === SnakeGame.Playing
+                    ? (_adx * Math.cos(game.heading) + _ady * Math.sin(game.heading)) / _alen : 1
+                readonly property real lookY: game.status === SnakeGame.Playing
+                    ? (-_adx * Math.sin(game.heading) + _ady * Math.cos(game.heading)) / _alen : 0
+
                 // The mouth opens as the head nears the apple (within ~1 cell) and
                 // closes again once it moves away.
                 readonly property bool nearApple: game.status === SnakeGame.Playing
@@ -520,12 +532,17 @@ Item {
                     NumberAnimation { target: head; property: "tongueOut"; to: 0.0;  duration: 120; easing.type: Easing.InQuad }
                 }
 
-                // Head capsule (flat head green) + a soft drop shadow on the board.
+                // Head capsule — a glossy dome: top-lit gradient (bright top → dark
+                // bottom) + a soft drop shadow on the board.
                 Rectangle {
                     anchors.fill: parent
                     radius: head.hr
-                    color: Theme.headGreen
                     antialiasing: true
+                    gradient: Gradient {
+                        GradientStop { position: 0.0;  color: Qt.lighter(Theme.headGreen, 1.24) }
+                        GradientStop { position: 0.42; color: Theme.headGreen }
+                        GradientStop { position: 1.0;  color: Qt.darker(Theme.headGreen, 1.28) }
+                    }
                     layer.enabled: true
                     layer.smooth: true
                     layer.samples: 4
@@ -553,6 +570,27 @@ Item {
                         y: -head.hwid * 0.5; width: head.hlen; height: head.hwid
                         radius: head.hr; color: Qt.rgba(0, 0, 0, 0.13)
                     }
+                }
+
+                // Glossy sheen — a soft bright reflection + a small hot glare on the dome.
+                Rectangle {
+                    x: head.hlen * 0.13; y: head.hwid * 0.05
+                    width: head.hlen * 0.64; height: head.hwid * 0.36
+                    radius: height / 2
+                    rotation: -4
+                    transformOrigin: Item.Center
+                    antialiasing: true
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.5) }
+                        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+                    }
+                }
+                Rectangle {   // small hot glare spot (top-rear of the dome)
+                    x: head.hlen * 0.2; y: head.hwid * 0.11
+                    width: head.hlen * 0.15; height: head.hwid * 0.14
+                    radius: Math.min(width, height) / 2
+                    color: "#ffffff"; opacity: 0.6
+                    antialiasing: true
                 }
 
                 // Eating mouth — an open red maw framed by the snake's own skin (a
@@ -649,22 +687,35 @@ Item {
                         // Slightly taller than wide → a natural oval, not a pure circle.
                         // (Blink folds into the same vertical scale.)
                         transform: Scale { origin.x: er; origin.y: er; yScale: head.blink * 1.16 }
-                        Rectangle { anchors.fill: parent; radius: width / 2; color: "#f3efe3"; antialiasing: true }
+                        // Glossy white eyeball — top-lit gradient for a shiny dome.
+                        Rectangle {
+                            anchors.fill: parent; radius: width / 2; antialiasing: true
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "#ffffff" }
+                                GradientStop { position: 1.0; color: "#d6d8e0" }
+                            }
+                        }
                         Rectangle {   // black pupil — biased forward; rolls in circles while dead
-                            width: parent.width * 0.54; height: width; radius: width / 2
-                            color: "#1e1e1e"
+                            width: parent.width * 0.56; height: width; radius: width / 2
+                            color: "#161616"
                             antialiasing: true
                             readonly property real orbitR: parent.width * 0.14
-                            x: head.rolling ? parent.width * 0.23 + orbitR * Math.cos(head.rollAngle)
-                                            : parent.width * 0.38
-                            y: head.rolling ? parent.height * 0.23 + orbitR * Math.sin(head.rollAngle)
-                                            : parent.height * 0.23
-                            Behavior on x { enabled: !head.rolling; NumberAnimation { duration: 200 } }
-                            Behavior on y { enabled: !head.rolling; NumberAnimation { duration: 200 } }
-                            Rectangle {   // catchlight (glossy ball)
-                                width: parent.width * 0.34; height: width; radius: width / 2
-                                x: parent.width * 0.14; y: parent.height * 0.12
+                            // Track the apple: offset the pupil toward it within the eye.
+                            x: head.rolling ? parent.width * 0.22 + orbitR * Math.cos(head.rollAngle)
+                                            : parent.width * 0.22 + head.lookX * parent.width * 0.17
+                            y: head.rolling ? parent.height * 0.22 + orbitR * Math.sin(head.rollAngle)
+                                            : parent.height * 0.22 + head.lookY * parent.height * 0.17
+                            Behavior on x { enabled: !head.rolling; NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Behavior on y { enabled: !head.rolling; NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
+                            Rectangle {   // big glossy catchlight
+                                width: parent.width * 0.42; height: width; radius: width / 2
+                                x: parent.width * 0.1; y: parent.height * 0.08
                                 color: "#ffffff"; antialiasing: true
+                            }
+                            Rectangle {   // small secondary catchlight
+                                width: parent.width * 0.19; height: width; radius: width / 2
+                                x: parent.width * 0.52; y: parent.height * 0.58
+                                color: "#ffffff"; opacity: 0.8; antialiasing: true
                             }
                         }
                     }
