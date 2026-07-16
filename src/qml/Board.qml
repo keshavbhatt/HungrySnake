@@ -13,6 +13,24 @@ Item {
     id: root
     property SnakeGame game
 
+    // Equipped-cosmetics palette (set by Main). Board reads these instead of the
+    // fixed Theme colours so skins/board-themes/apple-skins restyle the art live.
+    // Falls back to the Theme defaults when no cosmetics object is bound.
+    property var cosmetics: null
+    readonly property color cHeadGreen:  cosmetics ? cosmetics.headGreen  : Theme.headGreen
+    readonly property color cSnoutCap:   cosmetics ? cosmetics.snoutCap   : Theme.snoutCap
+    readonly property color cSnakeLight: cosmetics ? cosmetics.snakeLight : Theme.snakeLight
+    readonly property color cSnakeDark:  cosmetics ? cosmetics.snakeDark  : Theme.snakeDark
+    readonly property color cSnakeNose:  cosmetics ? cosmetics.snakeNose  : Theme.snakeNose
+    readonly property color cTileA:      cosmetics ? cosmetics.tileA      : Theme.tileA
+    readonly property color cTileB:      cosmetics ? cosmetics.tileB      : Theme.tileB
+    readonly property color cTileGap:    cosmetics ? cosmetics.tileGap    : Theme.tileGap
+    readonly property color cFrame:      cosmetics ? cosmetics.frame      : Theme.frame
+    readonly property color cFrameHi:    cosmetics ? cosmetics.frameHi    : Theme.frameHi
+    readonly property color cApple:      cosmetics ? cosmetics.apple      : Theme.apple
+    readonly property color cAppleLeaf:  cosmetics ? cosmetics.appleLeaf  : Theme.appleLeaf
+    readonly property color cAppleStem:  cosmetics ? cosmetics.appleStem  : Theme.appleStem
+
     // Size the cell so the whole *frame* (board + padding) fits — otherwise the
     // padded frame overflows its bounds and can slide up under the HUD buttons.
     readonly property real padFrac: 0.44   // wooden frame thickness
@@ -105,7 +123,7 @@ Item {
         anchors.centerIn: parent
         width: frameW; height: frameH
         radius: Theme.rlg
-        color: Theme.frame
+        color: root.cFrame
         layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
@@ -130,9 +148,9 @@ Item {
             y: (1 - root.shakeT) * 10 * Math.sin(root.shakeT * 45 + 1.3)
         }
         gradient: Gradient {
-            GradientStop { position: 0.0;  color: Qt.lighter(Theme.frameHi, 1.12) }
-            GradientStop { position: 0.30; color: Theme.frame }
-            GradientStop { position: 1.0;  color: Qt.darker(Theme.frame, 1.42) }
+            GradientStop { position: 0.0;  color: Qt.lighter(root.cFrameHi, 1.12) }
+            GradientStop { position: 0.30; color: root.cFrame }
+            GradientStop { position: 1.0;  color: Qt.darker(root.cFrame, 1.42) }
         }
 
         // Wood grain — wavy streaks + a few knots, clipped to the frame; the field
@@ -191,7 +209,7 @@ Item {
             height: boardH + gutter * 2
             radius: Theme.rsm + 2
             clip: true
-            color: Theme.tileGap        // dark seam colour shows between the tiles
+            color: root.cTileGap        // dark seam colour shows between the tiles
 
             // Inset content layer: leaves a small margin so the snake head fits
             // fully at the edge cells instead of being clipped by the board edge.
@@ -210,7 +228,7 @@ Item {
                     readonly property int col: index % game.cols
                     readonly property int rw: Math.floor(index / game.cols)
                     readonly property real g: cell * 0.04    // seam gap on each side
-                    readonly property color base: (col + rw) % 2 === 0 ? Theme.tileA : Theme.tileB
+                    readonly property color base: (col + rw) % 2 === 0 ? root.cTileA : root.cTileB
                     readonly property real r: cell * 0.22
                     x: col * cell + g
                     y: rw * cell + g
@@ -273,7 +291,7 @@ Item {
                     width: parent.r * 2
                     height: parent.r * 2
                     radius: width / 2
-                    color: Theme.apple
+                    color: root.cApple
                     Rectangle {   // highlight
                         x: parent.width * 0.22; y: parent.height * 0.18
                         width: parent.width * 0.26; height: width; radius: width / 2
@@ -287,7 +305,7 @@ Item {
                     height: parent.r * 0.55
                     radius: width / 2
                     rotation: 10
-                    color: Theme.appleStem
+                    color: root.cAppleStem
                 }
                 Rectangle {   // leaf
                     x: parent.r * 0.1
@@ -296,7 +314,7 @@ Item {
                     height: parent.r * 0.34
                     radius: height / 2
                     rotation: -28
-                    color: Theme.appleLeaf
+                    color: root.cAppleLeaf
                 }
             }
 
@@ -337,7 +355,7 @@ Item {
                         readonly property real de: Math.pow(crush.t, 0.6 + r1 * 0.5)
                         width: sz; height: sz; radius: sz / 2
                         antialiasing: true
-                        color: r3 > 0.7 ? Theme.appleLeaf : Theme.apple
+                        color: r3 > 0.7 ? root.cAppleLeaf : root.cApple
                         x: Math.cos(ang) * reach * de - sz / 2
                         y: Math.sin(ang) * reach * de - sz / 2 + crush.t * crush.t * cell * 0.3
                         opacity: Math.min(1, (1 - crush.t) * 1.6)
@@ -405,9 +423,9 @@ Item {
                                 centerX: appleBody.d * 0.38; centerY: appleBody.d * 0.32
                                 centerRadius: appleBody.d * 0.78
                                 focalX: appleBody.d * 0.38; focalY: appleBody.d * 0.32
-                                GradientStop { position: 0.0;  color: Qt.lighter(Theme.apple, 1.55) }
-                                GradientStop { position: 0.45; color: Theme.apple }
-                                GradientStop { position: 1.0;  color: Qt.darker(Theme.apple, 1.7) }
+                                GradientStop { position: 0.0;  color: Qt.lighter(root.cApple, 1.55) }
+                                GradientStop { position: 0.45; color: root.cApple }
+                                GradientStop { position: 1.0;  color: Qt.darker(root.cApple, 1.7) }
                             }
                             startX: appleBody.d; startY: appleBody.d / 2
                             PathAngleArc {
@@ -432,7 +450,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: -game.appleRadius * cell * 1.0
                         width: game.appleRadius * cell * 0.7; height: game.appleRadius * cell * 0.4
-                        radius: height / 2; rotation: -28; color: Theme.appleLeaf
+                        radius: height / 2; rotation: -28; color: root.cAppleLeaf
                     }
                 }
             }
@@ -450,7 +468,7 @@ Item {
                     antialiasing: true
                     readonly property real t: (index + 0.5) / root.bodySegs
                     ShapePath {
-                        strokeColor: root.mix(Theme.snakeLight, Theme.snakeDark, Math.pow(t, 0.85))
+                        strokeColor: root.mix(root.cSnakeLight, root.cSnakeDark, Math.pow(t, 0.85))
                         strokeWidth: game.bodyWidth * cell * Math.max(0.2, 1.0 - 0.75 * t)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
@@ -581,9 +599,9 @@ Item {
                     radius: head.hr
                     antialiasing: true
                     gradient: Gradient {
-                        GradientStop { position: 0.0;  color: Qt.lighter(Theme.headGreen, 1.24) }
-                        GradientStop { position: 0.42; color: Theme.headGreen }
-                        GradientStop { position: 1.0;  color: Qt.darker(Theme.headGreen, 1.28) }
+                        GradientStop { position: 0.0;  color: Qt.lighter(root.cHeadGreen, 1.24) }
+                        GradientStop { position: 0.42; color: root.cHeadGreen }
+                        GradientStop { position: 1.0;  color: Qt.darker(root.cHeadGreen, 1.28) }
                     }
                     layer.enabled: true
                     layer.smooth: true
@@ -606,7 +624,7 @@ Item {
                     x: head.hlen * 0.6; width: head.hlen * 0.4; height: head.hwid; clip: true
                     Rectangle {
                         x: -head.hlen * 0.6; width: head.hlen; height: head.hwid
-                        radius: head.hr; color: Theme.snoutCap
+                        radius: head.hr; color: root.cSnoutCap
                     }
                 }
 
@@ -668,7 +686,7 @@ Item {
                             anchors.fill: parent; antialiasing: true; smooth: true
                             ShapePath {
                                 fillColor: "#e5392b"
-                                strokeColor: Theme.snoutCap
+                                strokeColor: root.cSnoutCap
                                 strokeWidth: mouth.lipT * 1.7
                                 joinStyle: ShapePath.RoundJoin
                                 capStyle: ShapePath.RoundCap
@@ -731,7 +749,7 @@ Item {
                         width: nr * 2; height: nr * 2; radius: nr
                         x: head.hlen * 0.80 - nr
                         y: head.hwid * modelData - nr
-                        color: Theme.snakeNose
+                        color: root.cSnakeNose
                         opacity: 1 - head.mouthOpen   // clear the way as the maw opens
                     }
                 }
@@ -839,7 +857,7 @@ Item {
                         width: head.hwid * 0.19                               // the brow length
                         height: Math.max(3, head.hwid * 0.055)               // thickness
                         radius: height / 2
-                        color: Theme.snakeNose
+                        color: root.cSnakeNose
                         antialiasing: true
                         x: head.hlen * 0.22 - width / 2                       // well behind the eye (tail side)
                         y: head.hwid * modelData - dir * head.hwid * 0.03 - height / 2
@@ -864,8 +882,8 @@ Item {
                     border.width: Math.max(1, sz * 0.14)
                     border.color: Qt.rgba(1, 1, 1, 0.55)        // bright rim so they pop
                     color: index % 4 === 0 ? Theme.snakeEye
-                         : index % 4 === 1 ? Theme.snakeLight
-                         : index % 4 === 2 ? Theme.snakeCrest : Theme.headGreen
+                         : index % 4 === 1 ? root.cSnakeLight
+                         : index % 4 === 2 ? Theme.snakeCrest : root.cHeadGreen
                     x: game.headX * cell + Math.cos(ang) * reach * e - sz / 2
                     y: game.headY * cell + Math.sin(ang) * reach * e - sz / 2
                     opacity: Math.pow(1 - e, 0.7)               // hold brightness, fade late

@@ -46,6 +46,7 @@ set(SN_QML_FILES
     Main.qml
     Theme.qml
     Board.qml
+    Cosmetics.qml
     components/Icon.qml
     components/IconButton.qml
     components/PillButton.qml

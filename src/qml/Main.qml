@@ -19,6 +19,7 @@ ApplicationWindow {
 
     SnakeGame { id: game }
     Profile   { id: profile }   // persistent Berries currency + lifetime stats
+    Cosmetics { id: cosmetics; profile: profile }   // equipped-skin palette resolver
 
     property bool soundOn: true
     property bool musicOn: true
@@ -316,6 +317,7 @@ ApplicationWindow {
             id: boardView
             objectName: "boardView"
             game: game
+            cosmetics: cosmetics
             visible: win.route === "game"
             anchors { top: topBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom
                       topMargin: 6; leftMargin: 62; rightMargin: 62; bottomMargin: 44 }
@@ -445,7 +447,116 @@ ApplicationWindow {
             }
         }
 
-        StubScreen { key: "store";        title: qsTr("Store") }
+        // ── Store — browse cosmetics by slot; buy with Berries and equip. ──
+        Item {
+            id: store
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === "store" ? 1 : 0
+            enabled: win.route === "store"
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+            property int catIndex: 0
+            readonly property string catSlot: cosmetics.slotList[catIndex]
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.55) }
+
+            ScreenHeader {
+                id: storeHdr
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: qsTr("Store")
+                onBack: win.back()
+            }
+            CoinBalance {
+                anchors { verticalCenter: storeHdr.verticalCenter; right: parent.right; rightMargin: 32 }
+                value: profile.berries; ink: Theme.text
+            }
+
+            Column {
+                anchors { top: storeHdr.bottom; topMargin: 16; horizontalCenter: parent.horizontalCenter }
+                spacing: 22
+
+                SegmentedControl {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    model: [qsTr("Snake"), qsTr("Board"), qsTr("Apple")]
+                    currentIndex: store.catIndex
+                    onActivated: store.catIndex = index
+                }
+
+                Flow {
+                    width: Math.min(win.width - 96, 700)
+                    spacing: 16
+                    Repeater {
+                        model: cosmetics.catalogue(store.catSlot)
+                        delegate: StoreCard {
+                            readonly property string eqId:
+                                (profile.equipped[store.catSlot] && profile.equipped[store.catSlot] !== "")
+                                    ? profile.equipped[store.catSlot]
+                                    : cosmetics.catalogue(store.catSlot)[0].id
+                            name: modelData.name
+                            price: modelData.price
+                            owned: modelData.price === 0 || profile.owned.indexOf(modelData.id) >= 0
+                            equipped: eqId === modelData.id
+                            affordable: profile.berries >= modelData.price
+                            onBuy: {
+                                if (profile.buy(modelData.id, modelData.price))
+                                    profile.equip(store.catSlot, modelData.id);
+                            }
+                            onEquip: profile.equip(store.catSlot, modelData.id)
+                            preview: Component {
+                                Item {
+                                    id: sw
+                                    anchors.fill: parent
+                                    property var def: modelData      // capture the outer cosmetic def
+                                    Rectangle {                      // snake swatch
+                                        visible: store.catSlot === "snake"
+                                        anchors.centerIn: parent
+                                        width: parent.width * 0.62; height: 22; radius: 11
+                                        gradient: Gradient {
+                                            orientation: Gradient.Horizontal
+                                            GradientStop { position: 0.0; color: sw.def.dark  || "#00000000" }
+                                            GradientStop { position: 1.0; color: sw.def.light || "#00000000" }
+                                        }
+                                        Rectangle {
+                                            anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                            width: 30; height: 30; radius: 9
+                                            color: sw.def.head || "#00000000"
+                                        }
+                                    }
+                                    Grid {                           // board 2×2 checker
+                                        visible: store.catSlot === "board"
+                                        anchors.centerIn: parent
+                                        rows: 2; columns: 2; spacing: 0
+                                        Repeater {
+                                            model: 4
+                                            delegate: Rectangle {
+                                                width: 30; height: 30
+                                                color: ((index + Math.floor(index / 2)) % 2 === 0)
+                                                       ? (sw.def.a || "#00000000") : (sw.def.b || "#00000000")
+                                            }
+                                        }
+                                    }
+                                    Item {                           // apple swatch
+                                        visible: store.catSlot === "apple"
+                                        anchors.centerIn: parent; width: 46; height: 50
+                                        Rectangle {
+                                            anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
+                                            width: 40; height: 40; radius: 20
+                                            color: sw.def.body || "#00000000"
+                                        }
+                                        Rectangle {
+                                            anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter
+                                            width: 16; height: 9; radius: 4.5; rotation: -25
+                                            color: sw.def.leaf || "#00000000"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         StubScreen { key: "daily";        title: qsTr("Daily Challenge") }
         StubScreen { key: "achievements"; title: qsTr("Achievements") }
         StubScreen { key: "about";        title: qsTr("Support Snecko") }

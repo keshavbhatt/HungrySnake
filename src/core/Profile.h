@@ -2,6 +2,8 @@
 
 #include <QObject>
 #include <QSettings>
+#include <QStringList>
+#include <QVariantMap>
 #include <QtQmlIntegration/qqmlintegration.h>
 
 // Profile — the player's persistent meta-progression store, backed by QSettings
@@ -21,6 +23,10 @@ class Profile : public QObject
     Q_PROPERTY(int gamesPlayed    READ gamesPlayed    NOTIFY statsChanged)
     Q_PROPERTY(int lifetimeApples READ lifetimeApples NOTIFY statsChanged)
     Q_PROPERTY(int lastRunBerries READ lastRunBerries NOTIFY lastRunChanged)
+    // Cosmetics: the set of purchased cosmetic ids, and the id equipped per slot
+    // (slot → id). Free/default cosmetics aren't stored in `owned` (price 0 ⇒ owned).
+    Q_PROPERTY(QStringList owned  READ owned          NOTIFY ownedChanged)
+    Q_PROPERTY(QVariantMap equipped READ equipped     NOTIFY equippedChanged)
 
 public:
     explicit Profile(QObject *parent = nullptr);
@@ -29,6 +35,8 @@ public:
     int gamesPlayed()    const { return m_gamesPlayed; }
     int lifetimeApples() const { return m_lifetimeApples; }
     int lastRunBerries() const { return m_lastRunBerries; }
+    QStringList owned()  const { return m_owned; }
+    QVariantMap equipped() const { return m_equipped; }
 
     // Award Berries outright (daily/achievement rewards, the Supporter bundle).
     Q_INVOKABLE void grant(int berries);
@@ -38,10 +46,22 @@ public:
     // Game Over tally). Returns the Berries earned this run.
     Q_INVOKABLE int recordRun(int apples, bool newBest);
 
+    // ── Cosmetics store ──
+    Q_INVOKABLE bool owns(const QString &id) const { return m_owned.contains(id); }
+    Q_INVOKABLE QString equippedIn(const QString &slot) const
+        { return m_equipped.value(slot).toString(); }
+    // Purchase a cosmetic: no-op success if free/already owned; deducts Berries and
+    // records ownership if affordable. Returns whether the item is (now) owned.
+    Q_INVOKABLE bool buy(const QString &id, int price);
+    // Equip a cosmetic id into its slot (caller ensures it's owned).
+    Q_INVOKABLE void equip(const QString &slot, const QString &id);
+
 signals:
     void berriesChanged();
     void statsChanged();
     void lastRunChanged();
+    void ownedChanged();
+    void equippedChanged();
 
 private:
     void load();
@@ -52,4 +72,6 @@ private:
     int m_gamesPlayed = 0;
     int m_lifetimeApples = 0;
     int m_lastRunBerries = 0;
+    QStringList m_owned;
+    QVariantMap m_equipped;   // slot → cosmetic id
 };
