@@ -11,9 +11,11 @@ Rectangle {
     property bool   owned: false
     property bool   equipped: false
     property bool   affordable: true
+    property bool   locked: false        // a Supporter-only item, not yet unlocked
     property Component preview: null
     signal buy()
     signal equip()
+    signal unlock()                      // locked item tapped → go redeem Supporter
 
     implicitWidth: 150
     implicitHeight: 178
@@ -43,20 +45,23 @@ Rectangle {
         }
         Rectangle {                              // state-driven action pill
             width: parent.width; height: 34; radius: Theme.r
-            readonly property bool actionable: !root.equipped && (root.owned || root.affordable)
-            color: root.equipped   ? Theme.insetTan
+            readonly property bool actionable: root.locked || (!root.equipped && (root.owned || root.affordable))
+            color: root.locked     ? Theme.locked
+                 : root.equipped   ? Theme.insetTan
                  : root.owned      ? Theme.primary
                  : root.affordable ? Theme.primaryDeep : Theme.disabled
             Row {
                 anchors.centerIn: parent; spacing: 5
                 Item {
-                    visible: !root.owned
+                    visible: root.locked || !root.owned
                     width: 18; height: 18; anchors.verticalCenter: parent.verticalCenter
-                    Icon { anchors.centerIn: parent; name: "berry"; size: 18 }
+                    Icon { anchors.centerIn: parent; name: root.locked ? "lock" : "berry"
+                           color: Theme.cream; size: root.locked ? 15 : 18 }
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.equipped ? qsTr("Equipped")
+                    text: root.locked   ? qsTr("Supporter")
+                        : root.equipped ? qsTr("Equipped")
                         : root.owned    ? qsTr("Equip")
                         : root.price
                     color: root.equipped ? Theme.success : "#ffffff"
@@ -67,7 +72,7 @@ Rectangle {
                 anchors.fill: parent
                 enabled: parent.actionable
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.owned ? root.equip() : root.buy()
+                onClicked: root.locked ? root.unlock() : (root.owned ? root.equip() : root.buy())
             }
         }
     }

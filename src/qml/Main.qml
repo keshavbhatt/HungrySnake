@@ -88,6 +88,13 @@ ApplicationWindow {
         win.route = "home";
     }
 
+    // Redeem the Supporter unlock (generous Berry bundle + exclusive cosmetics).
+    // On a real build the KTechpit AccountAndLicense purchase gates this call.
+    function becomeSupporter() {
+        profile.unlockSupporter(500, cosmetics.supporterIds);
+        achToast.show(qsTr("Thanks for supporting Snecko!"), "heart");
+    }
+
     // ── Daily challenge ──
     // Deterministic per calendar day: the same apple seed for everyone, and a
     // target score to beat. Completing it (once/day) pays a streak-scaled reward.
@@ -562,7 +569,10 @@ ApplicationWindow {
                                     : cosmetics.catalogue(store.catSlot)[0].id
                             name: modelData.name
                             price: modelData.price
-                            owned: modelData.price === 0 || profile.owned.indexOf(modelData.id) >= 0
+                            locked: modelData.supporter === true && !profile.supporter
+                            owned: modelData.supporter === true
+                                   ? profile.supporter
+                                   : (modelData.price === 0 || profile.owned.indexOf(modelData.id) >= 0)
                             equipped: eqId === modelData.id
                             affordable: profile.berries >= modelData.price
                             onBuy: {
@@ -570,6 +580,7 @@ ApplicationWindow {
                                     profile.equip(store.catSlot, modelData.id);
                             }
                             onEquip: profile.equip(store.catSlot, modelData.id)
+                            onUnlock: win.navigate("about")   // go redeem Supporter
                             preview: Component {
                                 Item {
                                     id: sw
@@ -774,7 +785,94 @@ ApplicationWindow {
                 }
             }
         }
-        StubScreen { key: "about";        title: qsTr("Support Snecko") }
+        // ── About / Supporter ──
+        Item {
+            id: aboutScr
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === "about" ? 1 : 0
+            enabled: win.route === "about"
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.55) }
+            ScreenHeader {
+                id: abhdr
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: qsTr("Support Snecko"); onBack: win.back()
+            }
+
+            Column {
+                anchors.centerIn: parent
+                width: Math.min(win.width - 120, 520)
+                spacing: 18
+
+                Icon { anchors.horizontalCenter: parent.horizontalCenter
+                       name: "heart"; color: Theme.danger; size: 54 }
+                Text {
+                    width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                    text: qsTr("Snecko is free — and always will be. If you're enjoying it, become a Supporter to unlock exclusive skins and a big Berry bundle, and help fund new updates.")
+                    color: Theme.text; font.family: Theme.ui; font.pixelSize: 16
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width; radius: Theme.rlg
+                    color: Theme.cardTan; border.width: 2; border.color: Theme.cardEdge
+                    implicitHeight: perkCol.implicitHeight + 32
+
+                    Column {
+                        id: perkCol
+                        anchors { top: parent.top; topMargin: 16; horizontalCenter: parent.horizontalCenter }
+                        width: parent.width - 40
+                        spacing: 12
+
+                        Column {                                   // not yet a supporter
+                            visible: !profile.supporter
+                            width: parent.width; spacing: 12
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
+                                Icon { name: "berry"; size: 24; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: qsTr("500 Berry bundle"); color: Theme.inkStrong; font.family: Theme.ui
+                                       font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
+                                Icon { name: "sparkle"; color: Theme.gold; size: 24; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: qsTr("3 exclusive Supporter cosmetics"); color: Theme.inkStrong; font.family: Theme.ui
+                                       font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            PillButton {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: qsTr("Become a Supporter"); fontSize: 18
+                                onClicked: win.becomeSupporter()
+                            }
+                        }
+
+                        Column {                                   // already a supporter
+                            visible: profile.supporter
+                            width: parent.width; spacing: 8
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
+                                Icon { name: "heart"; color: Theme.success; size: 26; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: qsTr("You're a Supporter — thank you!"); color: Theme.success; font.family: Theme.ui
+                                       font.pixelSize: 18; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: qsTr("Your exclusive cosmetics are waiting in the Store.")
+                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 14
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Made by KTechpit • Built with Qt Quick")
+                    color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 13
+                }
+            }
+        }
     }
 
     // ── Game Over overlay ──

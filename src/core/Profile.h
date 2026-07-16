@@ -109,4 +109,5 @@ private:
     int m_dailyStreak = 0;
     int m_bestStreak = 0;
     QString m_dailyLast;      // date string of the last daily completion
+    bool m_supporter = false;
 };

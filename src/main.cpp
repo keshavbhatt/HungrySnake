@@ -199,7 +199,9 @@ int main(int argc, char *argv[])
                     });
                     t->start();
                     grabDelay = 2600;                // long enough to crash
-                } else if (game) {
+                } else if (game && scr.isEmpty()) {
+                    // Default: autoplay toward apples. Skipped when SN_SCREEN targets a
+                    // non-game screen, so menu/store/about grabs don't run a hidden game.
                     game->start();
                     auto *t = new QTimer(&app);
                     t->setInterval(16);

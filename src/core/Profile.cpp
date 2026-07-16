@@ -19,6 +19,7 @@ constexpr auto kKeyClaimed     = "claimed";
 constexpr auto kKeyStreak      = "dailyStreak";
 constexpr auto kKeyBestStreak  = "bestStreak";
 constexpr auto kKeyDailyLast   = "dailyLast";
+constexpr auto kKeySupporter   = "supporter";
 constexpr auto kEquipGroup     = "profile/equipped";
 } // namespace
 
@@ -39,6 +40,7 @@ void Profile::load()
     m_dailyStreak    = m_store.value(QLatin1String(kKeyStreak), 0).toInt();
     m_bestStreak     = m_store.value(QLatin1String(kKeyBestStreak), 0).toInt();
     m_dailyLast      = m_store.value(QLatin1String(kKeyDailyLast)).toString();
+    m_supporter      = m_store.value(QLatin1String(kKeySupporter), false).toBool();
     m_store.endGroup();
 
     // Equipped ids live in their own group (slot = key, id = value).
@@ -62,6 +64,7 @@ void Profile::persist()
     m_store.setValue(QLatin1String(kKeyStreak), m_dailyStreak);
     m_store.setValue(QLatin1String(kKeyBestStreak), m_bestStreak);
     m_store.setValue(QLatin1String(kKeyDailyLast), m_dailyLast);
+    m_store.setValue(QLatin1String(kKeySupporter), m_supporter);
     m_store.endGroup();
 
     m_store.beginGroup(QLatin1String(kEquipGroup));
@@ -145,4 +148,19 @@ int Profile::completeDaily(const QString &today, const QString &yesterday, int r
     emit dailyChanged();
     emit berriesChanged();
     return r;
+}
+
+void Profile::unlockSupporter(int bundle, const QStringList &exclusiveIds)
+{
+    if (m_supporter)
+        return;
+    m_supporter = true;
+    m_berries += std::max(0, bundle);
+    for (const QString &id : exclusiveIds)
+        if (!m_owned.contains(id))
+            m_owned.append(id);
+    persist();
+    emit supporterChanged();
+    emit berriesChanged();
+    emit ownedChanged();
 }
