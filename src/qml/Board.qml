@@ -432,7 +432,7 @@ Item {
                 transformOrigin: Item.Center
 
                 property real blink: 1                        // 1 open, ~0 shut
-                property real tongueOut: 0                    // 0..1, flick after a meal
+                property real tongueOut: 0                    // 0..1, tongue extension after a meal
 
                 // Dizzy eye-roll: while dead the pupils spin in circles, and keep
                 // spinning until the run restarts.
@@ -478,15 +478,20 @@ Item {
                     NumberAnimation { to: 1.0;  duration: 95; easing.type: Easing.OutQuad }
                 }
 
-                // Flick the tongue a couple of times just after each meal.
+                // Forked pink tongue flick (matches the original): a quick double
+                // flick out the snout, after each meal AND on a slow idle timer.
                 Connections { target: game; function onAte() { tongueAnim.restart() } }
+                Timer {
+                    interval: 2600; repeat: true
+                    running: game.status === SnakeGame.Playing
+                    onTriggered: if (!tongueAnim.running) tongueAnim.restart()
+                }
                 SequentialAnimation {
                     id: tongueAnim
-                    PauseAnimation  { duration: 300 }   // let the mouth flash finish first
-                    NumberAnimation { target: head; property: "tongueOut"; to: 1.0; duration: 85;  easing.type: Easing.OutQuad }
-                    NumberAnimation { target: head; property: "tongueOut"; to: 0.35; duration: 85 }
-                    NumberAnimation { target: head; property: "tongueOut"; to: 1.0; duration: 85 }
-                    NumberAnimation { target: head; property: "tongueOut"; to: 0.0; duration: 110; easing.type: Easing.InQuad }
+                    NumberAnimation { target: head; property: "tongueOut"; to: 1.0;  duration: 90; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: head; property: "tongueOut"; to: 0.45; duration: 80 }
+                    NumberAnimation { target: head; property: "tongueOut"; to: 1.0;  duration: 80 }
+                    NumberAnimation { target: head; property: "tongueOut"; to: 0.0;  duration: 120; easing.type: Easing.InQuad }
                 }
 
                 // Head capsule (flat head green) + a soft drop shadow on the board.
@@ -555,27 +560,27 @@ Item {
                         x: mouth.cx - width / 2; y: mouth.cy - height / 2
                         width: mouth.mw; height: mouth.mh
                         radius: Math.min(width, height) / 2
-                        color: "#d83a2c"
+                        color: "#e5392b"
                         antialiasing: true
                         // Dark throat — a recessed centre gives the maw real depth.
                         Rectangle {
                             anchors.centerIn: parent
-                            width: parent.width * 0.66; height: parent.height * 0.7
+                            width: parent.width * 0.64; height: parent.height * 0.68
                             radius: Math.min(width, height) / 2
-                            color: "#5f120d"; opacity: 0.92
+                            color: "#5f120d"; opacity: 0.9
                             antialiasing: true
                         }
-                        // Fangs — two white points on the front lip, biting inward.
+                        // Fangs — a row of white teeth biting inward from the front lip.
                         Repeater {
-                            model: [0.34, 0.66]
+                            model: [0.27, 0.5, 0.73]
                             delegate: Shape {
                                 required property real modelData
                                 anchors.fill: parent; antialiasing: true
                                 ShapePath {
                                     fillColor: "#fff3e2"; strokeColor: "transparent"
-                                    startX: maw.width * 0.82; startY: maw.height * (modelData - 0.15)
-                                    PathLine { x: maw.width * 0.50; y: maw.height * modelData }
-                                    PathLine { x: maw.width * 0.82; y: maw.height * (modelData + 0.15) }
+                                    startX: maw.width * 0.86; startY: maw.height * (modelData - 0.085)
+                                    PathLine { x: maw.width * 0.44; y: maw.height * modelData }
+                                    PathLine { x: maw.width * 0.86; y: maw.height * (modelData + 0.085) }
                                 }
                             }
                         }
@@ -639,45 +644,50 @@ Item {
                     }
                 }
 
-                // Forked red tongue — hidden at rest; flicks out the snout just
-                // after a meal (driven by head.tongueOut). Extends from the base.
+                // Forked bright-pink tongue that flicks out the snout (matches the
+                // original game). Extends from the base via tongueOut.
                 Item {
                     id: tongue
                     visible: head.tongueOut > 0.02
-                    width: head.hwid * 0.80
-                    height: head.hwid * 0.42
-                    x: head.hlen * 0.9
+                    width: head.hwid * 0.72
+                    height: head.hwid * 0.46
+                    x: head.hlen * 0.90
                     y: head.hwid / 2 - height / 2
-                    transform: Scale { origin.x: 0; origin.y: tongue.height / 2; xScale: head.tongueOut }
-                    Rectangle {   // stalk (thicker) + a glossy top streak
+                    transform: Scale { origin.x: 0; origin.y: height / 2; xScale: head.tongueOut }
+                    readonly property color pink: "#ef2b7d"
+                    Rectangle {   // stalk
                         x: 0; anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width * 0.62; height: head.hwid * 0.17; radius: height / 2
-                        color: Theme.snakeCrest
-                        Rectangle {
-                            x: parent.width * 0.12; y: parent.height * 0.18
-                            width: parent.width * 0.72; height: parent.height * 0.32; radius: height / 2
-                            color: "#ff988f"; opacity: 0.85; antialiasing: true
-                        }
+                        width: parent.width * 0.56; height: head.hwid * 0.15; radius: height / 2
+                        color: tongue.pink; antialiasing: true
                     }
-                    Rectangle {   // upper fork (thicker) + gloss
-                        x: parent.width * 0.5; y: parent.height * 0.5 - height
-                        width: parent.width * 0.52; height: head.hwid * 0.13; radius: height / 2
-                        rotation: -22; transformOrigin: Item.Left; color: Theme.snakeCrest
-                        Rectangle {
-                            x: parent.width * 0.08; y: parent.height * 0.2
-                            width: parent.width * 0.7; height: parent.height * 0.34; radius: height / 2
-                            color: "#ff988f"; opacity: 0.8; antialiasing: true
-                        }
+                    Rectangle {   // upper fork
+                        x: parent.width * 0.46; y: parent.height * 0.5 - height
+                        width: parent.width * 0.54; height: head.hwid * 0.115; radius: height / 2
+                        rotation: -26; transformOrigin: Item.Left; color: tongue.pink; antialiasing: true
                     }
-                    Rectangle {   // lower fork (thicker) + gloss
-                        x: parent.width * 0.5; y: parent.height * 0.5
-                        width: parent.width * 0.52; height: head.hwid * 0.13; radius: height / 2
-                        rotation: 22; transformOrigin: Item.Left; color: Theme.snakeCrest
-                        Rectangle {
-                            x: parent.width * 0.08; y: parent.height * 0.2
-                            width: parent.width * 0.7; height: parent.height * 0.34; radius: height / 2
-                            color: "#ff988f"; opacity: 0.8; antialiasing: true
-                        }
+                    Rectangle {   // lower fork
+                        x: parent.width * 0.46; y: parent.height * 0.5
+                        width: parent.width * 0.54; height: head.hwid * 0.115; radius: height / 2
+                        rotation: 26; transformOrigin: Item.Left; color: tongue.pink; antialiasing: true
+                    }
+                }
+
+                // Eyebrows — since the head looks FORWARD (+x), "above the eyes" is the
+                // tail side: one brow just behind each eye, angled to arc over it.
+                Repeater {
+                    model: [0.14, 0.86]
+                    delegate: Rectangle {
+                        required property real modelData
+                        readonly property real dir: modelData < 0.5 ? -1 : 1   // -1 top, +1 bottom
+                        width: head.hwid * 0.19                               // the brow length
+                        height: Math.max(3, head.hwid * 0.055)               // thickness
+                        radius: height / 2
+                        color: Theme.snakeNose
+                        antialiasing: true
+                        x: head.hlen * 0.22 - width / 2                       // well behind the eye (tail side)
+                        y: head.hwid * modelData - dir * head.hwid * 0.03 - height / 2
+                        rotation: dir * 74                                    // near-vertical, tilted toward centre
+                        transformOrigin: Item.Center
                     }
                 }
             }

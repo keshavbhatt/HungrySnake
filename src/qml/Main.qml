@@ -63,6 +63,7 @@ ApplicationWindow {
     // Play only while music is enabled and the window is on-screen (foreground).
     function syncMusic() {
         var shouldPlay = win.musicOn
+                      && win.active                       // window has focus
                       && win.visibility !== Window.Minimized
                       && win.visibility !== Window.Hidden;
         if (shouldPlay) {
