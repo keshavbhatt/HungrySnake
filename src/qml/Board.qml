@@ -383,6 +383,19 @@ Item {
                         anchors.centerIn: parent
                         width: game.appleRadius * cell * 2; height: width; radius: width / 2
                         color: Theme.apple
+                        // Real drop shadow, straight down in screen space (the apple
+                        // never rotates), matching the head and eyes.
+                        layer.enabled: true
+                        layer.smooth: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: "#000000"
+                            shadowBlur: 0.9
+                            blurMax: 28
+                            shadowOpacity: 0.6
+                            shadowVerticalOffset: 8
+                            autoPaddingEnabled: true
+                        }
                         Rectangle {   // highlight
                             x: parent.width * 0.22; y: parent.height * 0.18
                             width: parent.width * 0.26; height: width; radius: width / 2
@@ -533,7 +546,10 @@ Item {
                 }
 
                 // Head capsule — a glossy dome: top-lit gradient (bright top → dark
-                // bottom) + a soft drop shadow on the board.
+                // bottom) + a real drop shadow. The capsule fills the head, which
+                // rotates with the heading, so counter-rotate the offset by the heading
+                // — the shadow always falls straight DOWN in screen space (light from
+                // above), just like the eyes, instead of swinging as the snake turns.
                 Rectangle {
                     anchors.fill: parent
                     radius: head.hr
@@ -547,8 +563,13 @@ Item {
                     layer.smooth: true
                     layer.samples: 4
                     layer.effect: MultiEffect {
-                        shadowEnabled: true; shadowColor: Theme.shadow
-                        shadowBlur: 0.6; shadowOpacity: 0.28; shadowVerticalOffset: 3
+                        shadowEnabled: true
+                        shadowColor: "#000000"
+                        shadowBlur: 0.8
+                        blurMax: 24
+                        shadowOpacity: 0.4
+                        shadowHorizontalOffset: 6 * Math.sin(game.heading)
+                        shadowVerticalOffset:   6 * Math.cos(game.heading)
                         autoPaddingEnabled: true
                     }
                 }
