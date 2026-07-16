@@ -200,20 +200,46 @@ Item {
                 width: boardW
                 height: boardH
 
-            // ── Checkerboard: rounded tiles inset over the dark seam background ──
+            // ── Checkerboard: raised, embossed 3D tiles over the dark seam ──
             Repeater {
                 model: game.cols * game.rows
-                delegate: Rectangle {
+                delegate: Shape {
+                    id: tile
                     required property int index
                     readonly property int col: index % game.cols
                     readonly property int rw: Math.floor(index / game.cols)
-                    readonly property real g: cell * 0.03    // thin seam gap on each side
+                    readonly property real g: cell * 0.04    // seam gap on each side
+                    readonly property color base: (col + rw) % 2 === 0 ? Theme.tileA : Theme.tileB
+                    readonly property real r: cell * 0.22
                     x: col * cell + g
                     y: rw * cell + g
                     width: cell - g * 2
                     height: cell - g * 2
-                    radius: cell * 0.2
-                    color: (col + rw) % 2 === 0 ? Theme.tileA : Theme.tileB
+                    antialiasing: true
+                    preferredRendererType: Shape.CurveRenderer
+                    // Directional top-lit bevel: a bright top edge fades down through
+                    // the base to a soft shadow at the bottom (light from above),
+                    // matching the reference's raised, top-lit tiles.
+                    ShapePath {
+                        strokeColor: "transparent"
+                        fillGradient: LinearGradient {
+                            x1: 0; y1: 0
+                            x2: 0; y2: tile.height
+                            GradientStop { position: 0.0;  color: Qt.lighter(tile.base, 1.18) }
+                            GradientStop { position: 0.16; color: Qt.lighter(tile.base, 1.04) }
+                            GradientStop { position: 0.6;  color: tile.base }
+                            GradientStop { position: 1.0;  color: Qt.darker(tile.base, 1.13) }
+                        }
+                        startX: tile.r; startY: 0
+                        PathLine { x: tile.width - tile.r; y: 0 }
+                        PathArc  { x: tile.width; y: tile.r; radiusX: tile.r; radiusY: tile.r }
+                        PathLine { x: tile.width; y: tile.height - tile.r }
+                        PathArc  { x: tile.width - tile.r; y: tile.height; radiusX: tile.r; radiusY: tile.r }
+                        PathLine { x: tile.r; y: tile.height }
+                        PathArc  { x: 0; y: tile.height - tile.r; radiusX: tile.r; radiusY: tile.r }
+                        PathLine { x: 0; y: tile.r }
+                        PathArc  { x: tile.r; y: 0; radiusX: tile.r; radiusY: tile.r }
+                    }
                 }
             }
 

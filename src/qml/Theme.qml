@@ -18,9 +18,9 @@ QtObject {
     // ── Board ──
     readonly property color frame:    "#7a4c26"   // wooden border
     readonly property color frameHi:  "#9a6636"   // frame top bevel
-    readonly property color tileA:    "#bc8a5c"   // board tile (light)
-    readonly property color tileB:    "#976946"   // board tile (dark)
-    readonly property color tileGap:  "#7f5838"   // seam / background between rounded tiles
+    readonly property color tileA:    "#c68d56"   // board tile (light)
+    readonly property color tileB:    "#a06b3b"   // board tile (dark) — clear checkerboard
+    readonly property color tileGap:  "#583720"   // dark recessed grout between tiles
     readonly property color shadow:   "#000000"   // drop shadows
 
     // ── UI kit (from the design-system "UI Kit" doc) ──
