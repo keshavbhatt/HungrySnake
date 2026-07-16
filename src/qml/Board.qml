@@ -711,6 +711,22 @@ Item {
                                 GradientStop { position: 0.0; color: "#eef6e3" }   // pale green-white
                                 GradientStop { position: 1.0; color: "#c7deb0" }   // light green
                             }
+                            // A real drop shadow: it always falls straight DOWN in screen
+                            // space (light from above). The eye sits inside the head, which
+                            // rotates with the heading, so counter-rotate the offset by the
+                            // heading — the shadow stays pointing down however the snake turns.
+                            layer.enabled: true
+                            layer.smooth: true
+                            layer.effect: MultiEffect {
+                                shadowEnabled: true
+                                shadowColor: "#000000"
+                                shadowBlur: 0.8
+                                blurMax: 24
+                                shadowOpacity: 0.4
+                                shadowHorizontalOffset: 4.5 * Math.sin(game.heading)
+                                shadowVerticalOffset:   4.5 * Math.cos(game.heading)
+                                autoPaddingEnabled: true
+                            }
                         }
                         Rectangle {   // black pupil — biased forward; rolls in circles while dead
                             width: parent.width * 0.56; height: width; radius: width / 2
