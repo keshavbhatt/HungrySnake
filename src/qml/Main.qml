@@ -490,6 +490,23 @@ ApplicationWindow {
                     font.family: Theme.display; font.pixelSize: 78; font.weight: Font.Bold
                     style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
                 }
+                // A cheeky little apple perched on the corner, tilted for life. Fixed
+                // classic red (not the equipped skin) so the logo stays brand-stable.
+                AppleArt {
+                    id: logoApple
+                    d: 44
+                    shadow: false
+                    rotation: 15
+                    transformOrigin: Item.Center
+                    x: title.width * 0.9
+                    y: title.height * 0.24
+                    // A gentle idle bob so the logo feels alive.
+                    SequentialAnimation on rotation {
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 9;  duration: 1600; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 15; duration: 1600; easing.type: Easing.InOutSine }
+                    }
+                }
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
