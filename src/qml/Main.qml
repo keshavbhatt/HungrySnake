@@ -435,16 +435,30 @@ ApplicationWindow {
             id: tile
             property string icon: ""
             property string label: ""
+            property string badge: ""
             signal clicked
             width: 96; height: 94
+
             Rectangle {
                 id: tileBg
                 anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter
-                width: 66; height: 66; radius: Theme.r
+                width: 66; height: 66; radius: Theme.r     // square, as before
                 color: tileMa.pressed ? Theme.insetDeep
                      : tileMa.containsMouse ? Qt.lighter(Theme.insetTan, 1.06) : Theme.insetTan
+                Behavior on color { ColorAnimation { duration: 110 } }
                 border.width: 2; border.color: Theme.insetEdge
+                // Slight lift on hover (a visual Translate, so the anchored layout is
+                // undisturbed); settles back down + darkens on press.
+                property real lift: (tileMa.containsMouse && !tileMa.pressed) ? -3 : 0
+                Behavior on lift { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                transform: Translate { y: tileBg.lift }
+
                 Icon { anchors.centerIn: parent; name: tile.icon; color: Theme.inkStrong; size: 30 }
+                Badge {                                      // e.g. the Daily "!" flag
+                    visible: tile.badge !== ""
+                    text: tile.badge
+                    anchors { right: parent.right; rightMargin: -6; top: parent.top; topMargin: -6 }
+                }
                 MouseArea {
                     id: tileMa; anchors.fill: parent; hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor; onClicked: tile.clicked()
@@ -458,28 +472,76 @@ ApplicationWindow {
             }
         }
 
-        CoinBalance {
-            anchors { top: parent.top; right: parent.right; topMargin: 30; rightMargin: 32 }
-            value: profile.coins; iconSize: 30; ink: Theme.text
+        // Top bar: a Best-score pill (left) + a Coins pill (right), both on wood.
+        Rectangle {
+            anchors { top: parent.top; left: parent.left; topMargin: 22; leftMargin: 30 }
+            height: 40; radius: height / 2
+            width: bestRow.implicitWidth + 34
+            color: Theme.hudWood; border.width: 3; border.color: Theme.hudEdge
+            Row {
+                id: bestRow
+                anchors.centerIn: parent; spacing: 8
+                Rectangle { width: 10; height: 10; radius: 5; color: Theme.primary
+                            anchors.verticalCenter: parent.verticalCenter }
+                Text { anchors.verticalCenter: parent.verticalCenter
+                       text: qsTr("Best · ") + game.best
+                       color: Theme.cream; font.family: Theme.ui; font.pixelSize: 15; font.weight: Font.DemiBold }
+            }
+        }
+        Rectangle {
+            anchors { top: parent.top; right: parent.right; topMargin: 22; rightMargin: 30 }
+            height: 40; radius: height / 2
+            width: coinPill.implicitWidth + 30
+            color: Theme.hudWood; border.width: 3; border.color: Theme.hudEdge
+            CoinBalance {
+                id: coinPill
+                anchors.centerIn: parent
+                value: profile.coins; iconSize: 24; ink: Theme.cream
+            }
+        }
+
+        // A grounding strip along the very bottom of the hub.
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 26
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#103528" }
+                GradientStop { position: 1.0; color: "#0d2a20" }
+            }
         }
 
         Column {
             anchors.centerIn: parent
-            spacing: 24
-            // Title with a chunky drop shadow. Done as a duplicate Text offset behind
-            // the real one (not a MultiEffect): a crisp offset reads well on the heavy
-            // display face, and — unlike layered effects in this tree — it renders in
-            // headless grabs. The Item sizes to the text so the Column layout is unchanged.
+            spacing: 22
+
+            // Mascot — the Goof head, matching the app icon, gently bobbing above the
+            // title as the hero of the lockup.
+            MascotHead {
+                id: mascot
+                anchors.horizontalCenter: parent.horizontalCenter
+                size: 128
+                property real bob: 0
+                transform: Translate { y: mascot.bob }
+                SequentialAnimation on bob {
+                    running: homeScreen.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { to: -12; duration: 1600; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 0;   duration: 1600; easing.type: Easing.InOutSine }
+                }
+            }
+
+            // Title with an extruded drop shadow — a duplicate Text offset straight down
+            // in the title's own darker green (not a MultiEffect, which wouldn't grab
+            // headless). The Item sizes to the text so the Column layout is unchanged.
             Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 implicitWidth: title.implicitWidth
                 implicitHeight: title.implicitHeight
-                Text {                                   // shadow (behind, offset down-right)
+                Text {                                   // extruded shadow, straight down
                     anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: 3
                     anchors.verticalCenterOffset: 6
                     text: title.text
-                    color: Qt.rgba(0, 0, 0, 0.45)
+                    color: "#2e7d43"                     // the title's own darker green
                     font.family: title.font.family; font.pixelSize: title.font.pixelSize
                     font.weight: title.font.weight
                 }
@@ -513,15 +575,25 @@ ApplicationWindow {
                 text: qsTr("Eat apples • grow • don't bite yourself")
                 color: Theme.text; font.family: Theme.ui; font.pixelSize: 16
             }
-            PillButton {
+            Column {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Play"); fontSize: 22; onClicked: win.playGame()
+                spacing: 9
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Play"); icon: "play"; fontSize: 27; onClicked: win.playGame()
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("or press Space")
+                    color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 13
+                }
             }
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 12
                 HomeTile { icon: "store";    label: qsTr("Store");    onClicked: win.navigate("store") }
-                HomeTile { icon: "calendar"; label: qsTr("Daily");    onClicked: win.navigate("daily") }
+                HomeTile { icon: "calendar"; label: qsTr("Daily");    onClicked: win.navigate("daily")
+                           badge: win.dailyDone ? "" : "!" }
                 HomeTile { icon: "medal";    label: qsTr("Awards");   onClicked: win.navigate("achievements") }
                 HomeTile { icon: "gear";     label: qsTr("Settings"); onClicked: win.openSettings() }
                 HomeTile { icon: "heart";    label: qsTr("Support");  onClicked: win.navigate("about") }
@@ -1178,14 +1250,20 @@ ApplicationWindow {
         id: cursorHider
         anchors.fill: parent
         acceptedButtons: Qt.NoButton
-        hoverEnabled: true
+        // Only ACTIVE during real play. A full-screen hoverEnabled MouseArea swallows
+        // hover from every button beneath it (clicks still pass via Qt.NoButton, which
+        // is why press worked but hover didn't) — so it must be inert on menus/dialogs.
+        // It's also the only place the cursor should auto-hide anyway.
+        enabled: win.route === "game" && game.status === SnakeGame.Playing && !win.settingsOpen
+        hoverEnabled: enabled
         propagateComposedEvents: true
         property bool hidden: false
         cursorShape: hidden ? Qt.BlankCursor : Qt.ArrowCursor
         onPositionChanged: { hidden = false; hideTimer.restart(); }
         onEntered: hideTimer.restart()
         onExited: hideTimer.stop()
-        Timer { id: hideTimer; interval: 2500; running: true; onTriggered: cursorHider.hidden = true }
+        onEnabledChanged: { hidden = false; if (enabled) hideTimer.restart(); else hideTimer.stop(); }
+        Timer { id: hideTimer; interval: 2500; running: cursorHider.enabled; onTriggered: cursorHider.hidden = true }
     }
 
     // Transient notification (achievement unlocked / daily complete) — topmost.

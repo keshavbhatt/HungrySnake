@@ -26,8 +26,8 @@ Item {
         border.width: root.borderWidth
         border.color: root.bgBorder
         Behavior on color { ColorAnimation { duration: 120 } }
-        scale: ma.pressed ? 0.94 : 1.0
-        Behavior on scale { NumberAnimation { duration: 90 } }
+        scale: ma.pressed ? 0.94 : ma.containsMouse ? 1.07 : 1.0   // grow on hover, dip on press
+        Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutQuad } }
 
         Icon {
             anchors.centerIn: parent

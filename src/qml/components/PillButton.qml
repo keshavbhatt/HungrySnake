@@ -14,11 +14,17 @@ Item {
     property bool  raised: true
     property int   fontSize: 16
     property int   weight: Font.Bold
+    property string icon: ""                     // optional leading icon (e.g. "play")
     readonly property int lift: raised ? 4 : 0
     signal clicked
 
-    implicitWidth: label.implicitWidth + 52
+    implicitWidth: content.implicitWidth + 52
     implicitHeight: 46 + lift
+
+    // Whole-button hover lift — a small rise on hover for tactile feedback.
+    property real hoverY: (ma.containsMouse && !ma.pressed && root.raised) ? -3 : 0
+    Behavior on hoverY { NumberAnimation { duration: 110; easing.type: Easing.OutQuad } }
+    transform: Translate { y: root.hoverY }
 
     // Raised lip (the "border-bottom") sits under the face.
     Rectangle {
@@ -51,14 +57,32 @@ Item {
             Behavior on opacity { NumberAnimation { duration: 90 } }
         }
 
-        Text {
-            id: label
+        // Glossy top sheen for a rounder, more 3-D face.
+        Rectangle {
+            visible: root.raised
+            width: parent.width; height: parent.height * 0.5
+            radius: parent.radius
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.22) }
+                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+            }
+        }
+
+        Row {
+            id: content
             anchors.centerIn: parent
-            text: root.text
-            color: root.ink
-            font.family: Theme.ui
-            font.pixelSize: root.fontSize
-            font.weight: root.weight
+            spacing: 8
+            Icon {
+                visible: root.icon !== ""
+                anchors.verticalCenter: parent.verticalCenter
+                name: root.icon; color: root.ink
+                size: Math.round(root.fontSize * 0.92)
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.text; color: root.ink
+                font.family: Theme.ui; font.pixelSize: root.fontSize; font.weight: root.weight
+            }
         }
     }
 
