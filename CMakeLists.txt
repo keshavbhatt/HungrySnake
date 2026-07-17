@@ -138,3 +138,7 @@ install(FILES packaging/${SN_APP_ID}.metainfo.xml
 
 install(FILES assets/icons/${SN_APP_ID}.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
+
+# The bundled typefaces are SIL Open Font License — the licence must ship with them.
+install(FILES assets/fonts/Fredoka-OFL.txt assets/fonts/TitanOne-OFL.txt
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${SN_APP_ID}/fonts)

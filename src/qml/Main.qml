@@ -393,7 +393,7 @@ ApplicationWindow {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: qsTr("Daily  ") + game.score + " / " + win.dailyTarget
-                color: Theme.text; font.family: Theme.ui; font.pixelSize: 17; font.weight: Font.Bold
+                color: Theme.text; font.family: Theme.display; font.pixelSize: 17; font.weight: Font.Bold
                 style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.5)
             }
         }
@@ -464,7 +464,7 @@ ApplicationWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "HUNGRY SNAKE"; color: Theme.title
-                font.family: Theme.ui; font.pixelSize: 78; font.weight: Font.Bold
+                font.family: Theme.display; font.pixelSize: 78; font.weight: Font.Bold
                 style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
             }
             Text {
@@ -664,13 +664,13 @@ ApplicationWindow {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Reach a score of ") + win.dailyTarget
-                    color: Theme.text; font.family: Theme.ui; font.pixelSize: 28; font.weight: Font.Bold
+                    color: Theme.text; font.family: Theme.display; font.pixelSize: 28; font.weight: Font.Bold
                 }
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter; spacing: 40
                     Column {
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: profile.dailyStreak
-                               color: Theme.title; font.family: Theme.ui; font.pixelSize: 34; font.weight: Font.Bold }
+                               color: Theme.title; font.family: Theme.display; font.pixelSize: 34; font.weight: Font.Bold }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("day streak")
                                color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 14 }
                     }
@@ -678,7 +678,7 @@ ApplicationWindow {
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter; spacing: 5
                             Icon { name: "coin"; size: 28; anchors.verticalCenter: parent.verticalCenter }
-                            Text { text: win.dailyReward; color: Theme.text; font.family: Theme.ui
+                            Text { text: win.dailyReward; color: Theme.text; font.family: Theme.display
                                    font.pixelSize: 34; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                         }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("reward")
@@ -695,7 +695,7 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                     Icon { name: "check"; color: Theme.success; size: 26; anchors.verticalCenter: parent.verticalCenter }
                     Text { text: qsTr("Completed today!"); color: Theme.success
-                           font.family: Theme.ui; font.pixelSize: 20; font.weight: Font.Bold
+                           font.family: Theme.display; font.pixelSize: 20; font.weight: Font.Bold
                            anchors.verticalCenter: parent.verticalCenter }
                 }
             }
@@ -761,7 +761,7 @@ ApplicationWindow {
                                 Row {
                                     anchors.horizontalCenter: parent.horizontalCenter; spacing: 3
                                     Icon { name: "coin"; size: 16; anchors.verticalCenter: parent.verticalCenter }
-                                    Text { text: modelData.reward; color: Theme.inkStrong; font.family: Theme.ui
+                                    Text { text: modelData.reward; color: Theme.inkStrong; font.family: Theme.display
                                            font.pixelSize: 15; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                                 }
                                 Text { visible: done; text: qsTr("owned"); color: Theme.success
@@ -771,7 +771,7 @@ ApplicationWindow {
                                 anchors { left: badge.right; leftMargin: 14; right: rewardCol.left; rightMargin: 12
                                           verticalCenter: parent.verticalCenter }
                                 spacing: 6
-                                Text { text: modelData.name; color: Theme.inkStrong; font.family: Theme.ui
+                                Text { text: modelData.name; color: Theme.inkStrong; font.family: Theme.display
                                        font.pixelSize: 16; font.weight: Font.Bold }
                                 Text { text: modelData.desc; color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 12 }
                                 ProgressBar {
@@ -832,13 +832,13 @@ ApplicationWindow {
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "coin"; size: 24; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("500 Coin bundle"); color: Theme.inkStrong; font.family: Theme.ui
+                                Text { text: qsTr("500 Coin bundle"); color: Theme.inkStrong; font.family: Theme.display
                                        font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "sparkle"; color: Theme.gold; size: 24; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("3 exclusive Supporter cosmetics"); color: Theme.inkStrong; font.family: Theme.ui
+                                Text { text: qsTr("3 exclusive Supporter cosmetics"); color: Theme.inkStrong; font.family: Theme.display
                                        font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             PillButton {
@@ -854,7 +854,7 @@ ApplicationWindow {
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "heart"; color: Theme.success; size: 26; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("You're a Supporter — thank you!"); color: Theme.success; font.family: Theme.ui
+                                Text { text: qsTr("You're a Supporter — thank you!"); color: Theme.success; font.family: Theme.display
                                        font.pixelSize: 18; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             Text {
@@ -922,7 +922,7 @@ ApplicationWindow {
 
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("Game Over"); color: Theme.inkStrong
-                       font.family: Theme.ui; font.pixelSize: 40; font.weight: Font.Bold }
+                       font.family: Theme.display; font.pixelSize: 40; font.weight: Font.Bold }
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -939,7 +939,7 @@ ApplicationWindow {
                                 Icon { anchors.centerIn: parent; name: glyph; size: 34 }
                             }
                             Text { anchors.verticalCenter: parent.verticalCenter; text: value
-                                   color: Theme.inkStrong; font.family: Theme.ui
+                                   color: Theme.inkStrong; font.family: Theme.display
                                    font.pixelSize: 32; font.weight: Font.Bold }
                         }
                     }
@@ -959,7 +959,7 @@ ApplicationWindow {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "+" + overlay.shownCoins
-                        color: Theme.coinDeep; font.family: Theme.ui
+                        color: Theme.coinDeep; font.family: Theme.display
                         font.pixelSize: 26; font.weight: Font.Bold
                     }
                     Text {
@@ -1018,7 +1018,7 @@ ApplicationWindow {
                     Text {
                         anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                         text: game.status === SnakeGame.Playing ? qsTr("Paused") : qsTr("Settings")
-                        color: Theme.inkStrong; font.family: Theme.ui
+                        color: Theme.inkStrong; font.family: Theme.display
                         font.pixelSize: 24; font.weight: Font.Bold
                     }
                     IconButton {

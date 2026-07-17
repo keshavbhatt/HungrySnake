@@ -39,7 +39,7 @@ Rectangle {
         Text {
             width: parent.width
             text: root.name
-            color: Theme.inkStrong; font.family: Theme.ui
+            color: Theme.inkStrong; font.family: Theme.display
             font.pixelSize: 15; font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight
         }
@@ -65,7 +65,7 @@ Rectangle {
                         : root.owned    ? qsTr("Equip")
                         : root.price
                     color: root.equipped ? Theme.success : "#ffffff"
-                    font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.Bold
+                    font.family: Theme.display; font.pixelSize: 14; font.weight: Font.Bold
                 }
             }
             MouseArea {

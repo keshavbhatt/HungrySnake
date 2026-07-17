@@ -89,6 +89,11 @@ QtObject {
     readonly property int rlg:  22   // dialog card radius
     readonly property int rChip: 999 // pills & chips
 
-    // Bundled UI typeface (also set as the default app font in main.cpp).
+    // ── Typefaces (both bundled; registered in main.cpp) ──
+    // `ui` — the body/UI face, and the app-wide default font.
+    // `display` — the chunky "gamey" face: titles, screen headers, HUD numbers and
+    // button labels. Deliberately NOT used for body copy (it's a display face and
+    // gets hard to read at small sizes / long strings).
     readonly property string ui: "Fredoka"
+    readonly property string display: "Titan One"
 }

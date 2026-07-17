@@ -17,6 +17,6 @@ Rectangle {
         id: label
         anchors.centerIn: parent
         color: root.ink
-        font.family: Theme.ui; font.pixelSize: 12; font.weight: Font.Bold
+        font.family: Theme.display; font.pixelSize: 12; font.weight: Font.Bold
     }
 }

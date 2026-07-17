@@ -61,8 +61,12 @@ int main(int argc, char *argv[])
     // game looks identical across platforms.
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
-    // Bundled UI font — Fredoka (the design-system typeface). Loading it as the
-    // default application font makes every QML Text render in it out of the box.
+    // Bundled typefaces (see Theme.qml `ui` / `display`):
+    //  • Fredoka  — the body/UI face, also set as the default application font so
+    //               every QML Text renders in it out of the box.
+    //  • Titan One — the chunky display face for titles, headers, HUD numbers and
+    //               buttons. Registered here so QML can ask for it by family name.
+    QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/TitanOne.ttf"));
     if (int id = QFontDatabase::addApplicationFont(
             QStringLiteral(":/assets/fonts/Fredoka.ttf"));
         id != -1) {

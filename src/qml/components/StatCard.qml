@@ -36,7 +36,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             text: root.value
             color: root.ink
-            font.family: Theme.ui; font.pixelSize: 30; font.weight: Font.Bold
+            font.family: Theme.display; font.pixelSize: 30; font.weight: Font.Bold
         }
     }
 }

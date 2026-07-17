@@ -41,7 +41,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: seg.lbl
                     color: seg.sel ? "#ffffff" : Theme.inkSoft
-                    font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.DemiBold
+                    font.family: Theme.display; font.pixelSize: 14; font.weight: Font.DemiBold
                 }
                 MouseArea {
                     anchors.fill: parent; cursorShape: Qt.PointingHandCursor
