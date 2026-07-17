@@ -18,7 +18,7 @@ Row {
         anchors.verticalCenter: parent.verticalCenter
         text: root.value
         color: root.ink
-        font.family: Theme.display
+        font.family: Theme.ui
         font.pixelSize: Math.round(root.iconSize * 0.82); font.weight: Font.Bold
     }
 }

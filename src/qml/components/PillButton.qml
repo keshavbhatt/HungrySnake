@@ -56,7 +56,7 @@ Item {
             anchors.centerIn: parent
             text: root.text
             color: root.ink
-            font.family: Theme.display
+            font.family: Theme.ui
             font.pixelSize: root.fontSize
             font.weight: root.weight
         }

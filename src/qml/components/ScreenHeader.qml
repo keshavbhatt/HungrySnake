@@ -24,6 +24,6 @@ Item {
         anchors.leftMargin: root.showBack ? 14 : 0
         anchors.verticalCenter: parent.verticalCenter
         text: root.title; color: Theme.text
-        font.family: Theme.display; font.pixelSize: 26; font.weight: Font.Bold
+        font.family: Theme.ui; font.pixelSize: 26; font.weight: Font.Bold
     }
 }
