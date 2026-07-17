@@ -1,50 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="iBg" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="gBg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#1e5a41"/>
       <stop offset="1" stop-color="#0f3527"/>
     </linearGradient>
-    <linearGradient id="iBody" x1="0" y1="256" x2="0" y2="120" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0e4f58"/>
-      <stop offset="1" stop-color="#2ad374"/>
-    </linearGradient>
-    <radialGradient id="iApple" cx="0.35" cy="0.3" r="0.9">
-      <stop offset="0" stop-color="#ff5a4e"/>
-      <stop offset="1" stop-color="#d31f2f"/>
-    </radialGradient>
-    <clipPath id="iHeadC"><rect x="58" y="52" width="140" height="150" rx="46"/></clipPath>
-    <clipPath id="iRound"><rect x="0" y="0" width="256" height="256" rx="52"/></clipPath>
+    <clipPath id="gHead"><rect x="52" y="48" width="152" height="160" rx="50"/></clipPath>
   </defs>
-
-  <g clip-path="url(#iRound)">
-    <!-- deep jungle background -->
-    <rect width="256" height="256" fill="url(#iBg)"/>
-    <!-- two faint vine strokes -->
-    <path d="M 40 236 Q 20 190 44 168 M 216 236 Q 240 196 214 170"
-          stroke="#153f2f" stroke-width="14" fill="none" stroke-linecap="round"/>
-
-    <!-- body coming down off the bottom edge, with a lit/shadow seam -->
-    <rect x="92" y="180" width="72" height="76" fill="url(#iBody)"/>
-    <rect x="128" y="180" width="36" height="76" fill="#000000" opacity="0.10"/>
-
-    <!-- head: two-tone rounded rect + snout cap + shadow seam -->
-    <rect x="58" y="52" width="140" height="150" rx="46" fill="#2fb268"/>
-    <rect x="58" y="52" width="140" height="64" rx="32" fill="#1f8f56"/>
-    <rect x="128" y="52" width="70" height="150" fill="#000000" opacity="0.13" clip-path="url(#iHeadC)"/>
-
-    <!-- big yellow eyes, orange pupils gazing up toward the apple -->
-    <circle cx="94" cy="136" r="31" fill="#ffdf2b"/>
-    <circle cx="162" cy="136" r="31" fill="#ffdf2b"/>
-    <circle cx="90" cy="126" r="10" fill="#f2772e"/>
-    <circle cx="166" cy="126" r="10" fill="#f2772e"/>
-    <!-- nostrils near the snout -->
-    <circle cx="96" cy="74" r="6" fill="#14603f"/>
-    <circle cx="160" cy="74" r="6" fill="#14603f"/>
-
-    <!-- apple peeking from the top-right corner -->
-    <circle cx="210" cy="52" r="26" fill="url(#iApple)"/>
-    <circle cx="201" cy="43" r="6" fill="#ffffff" opacity="0.45"/>
-    <rect x="207" y="21" width="5" height="12" rx="2.5" fill="#6b4a2b"/>
-    <ellipse cx="222" cy="25" rx="10" ry="5" fill="#3aa45c" transform="rotate(-28 222 25)"/>
-  </g>
+  <rect x="16" y="16" width="224" height="224" rx="58" fill="url(#gBg)"/>
+  <rect x="52" y="48" width="152" height="160" rx="50" fill="#2fb268"/>
+  <rect x="52" y="48" width="152" height="68" rx="34" fill="#1f8f56"/>
+  <rect x="128" y="48" width="76" height="160" fill="#000000" opacity="0.13" clip-path="url(#gHead)"/>
+  <path d="M 92 158 Q 128 190 164 152" stroke="#14603f" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <circle cx="146" cy="174" r="11" fill="#e63a3a"/>
+  <circle cx="98" cy="102" r="37" fill="#ffffff"/>
+  <circle cx="164" cy="96" r="28" fill="#ffffff"/>
+  <circle cx="106" cy="106" r="15" fill="#14603f"/>
+  <circle cx="170" cy="99" r="12" fill="#14603f"/>
+  <circle cx="111" cy="100" r="5" fill="#ffffff"/>
+  <circle cx="174" cy="94" r="4.5" fill="#ffffff"/>
 </svg>
