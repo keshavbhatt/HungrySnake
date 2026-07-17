@@ -40,7 +40,7 @@ Rectangle {
                     id: segLabel
                     anchors.centerIn: parent
                     text: seg.lbl
-                    color: seg.sel ? "#ffffff" : Theme.inkSoft
+                    color: Theme.inkStrong
                     font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.DemiBold
                 }
                 MouseArea {

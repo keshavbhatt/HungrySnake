@@ -466,11 +466,30 @@ ApplicationWindow {
         Column {
             anchors.centerIn: parent
             spacing: 24
-            Text {
+            // Title with a chunky drop shadow. Done as a duplicate Text offset behind
+            // the real one (not a MultiEffect): a crisp offset reads well on the heavy
+            // display face, and — unlike layered effects in this tree — it renders in
+            // headless grabs. The Item sizes to the text so the Column layout is unchanged.
+            Item {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "HUNGRY SNAKE"; color: Theme.title
-                font.family: Theme.display; font.pixelSize: 78; font.weight: Font.Bold
-                style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
+                implicitWidth: title.implicitWidth
+                implicitHeight: title.implicitHeight
+                Text {                                   // shadow (behind, offset down-right)
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: 3
+                    anchors.verticalCenterOffset: 6
+                    text: title.text
+                    color: Qt.rgba(0, 0, 0, 0.45)
+                    font.family: title.font.family; font.pixelSize: title.font.pixelSize
+                    font.weight: title.font.weight
+                }
+                Text {
+                    id: title
+                    anchors.centerIn: parent
+                    text: "HUNGRY SNAKE"; color: Theme.title
+                    font.family: Theme.display; font.pixelSize: 78; font.weight: Font.Bold
+                    style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
+                }
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -759,7 +778,7 @@ ApplicationWindow {
                             // A claimed row's tint sits on the dark scrim, so its text has
                             // to flip light — dark ink on that green is unreadable.
                             readonly property color ink:    done ? Theme.cream   : Theme.inkStrong
-                            readonly property color inkDim: done ? Theme.textDim : Theme.inkSoft
+                            readonly property color inkDim: done ? Theme.textDim : Theme.inkStrong
                             color: done ? Qt.rgba(Theme.success.r, Theme.success.g, Theme.success.b, 0.18)
                                         : Theme.insetTan
                             border.width: 2
