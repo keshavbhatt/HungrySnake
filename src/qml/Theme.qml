@@ -60,9 +60,9 @@ QtObject {
     readonly property color snakeNose:  "#14603f"  // nostril
     readonly property color snakeCrest: "#e63a3a"  // tongue / eating-mouth red
 
-    // ── Berries (soft currency) ──
-    readonly property color berry:     "#8360e0"
-    readonly property color berryDeep: "#5a3fb0"
+    // ── Coins (soft currency) ──
+    readonly property color coin:     "#8360e0"
+    readonly property color coinDeep: "#5a3fb0"
 
     // ── Store / progression state colours ──
     readonly property color success:   "#46c08a"  // owned / equipped / completed (= primary)

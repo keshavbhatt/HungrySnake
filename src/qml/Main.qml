@@ -18,7 +18,7 @@ ApplicationWindow {
     color: Theme.bg
 
     SnakeGame { id: game }
-    Profile   { id: profile }   // persistent Berries currency + lifetime stats
+    Profile   { id: profile }   // persistent Coins currency + lifetime stats
     Cosmetics { id: cosmetics; profile: profile }   // equipped-skin palette resolver
     Achievements { id: achievements; profile: profile; game: game }
     Connections {
@@ -88,7 +88,7 @@ ApplicationWindow {
         win.route = "home";
     }
 
-    // Redeem the Supporter unlock (generous Berry bundle + exclusive cosmetics).
+    // Redeem the Supporter unlock (generous Coin bundle + exclusive cosmetics).
     // On a real build the KTechpit AccountAndLicense purchase gates this call.
     function becomeSupporter() {
         profile.unlockSupporter(500, cosmetics.supporterIds);
@@ -204,7 +204,7 @@ ApplicationWindow {
         }
         function onDied() {
             if (win.soundOn) sfxCrash.play();
-            // Bank the Berries earned this run (apples + a new-best bonus).
+            // Bank the Coins earned this run (apples + a new-best bonus).
             profile.recordRun(game.score, game.score > win.bestAtRunStart);
             win.dailyActive = false;              // a daily attempt ends on death
             achievements.check();                 // grant any newly-earned achievements
@@ -355,7 +355,7 @@ ApplicationWindow {
 
                 StatCard { glyph: "apple";  value: game.score }
                 StatCard { glyph: "trophy"; value: game.best }
-                StatCard { glyph: "berry";  value: profile.berries }
+                StatCard { glyph: "coin";  value: profile.coins }
             }
 
             IconButton {
@@ -455,7 +455,7 @@ ApplicationWindow {
 
         CoinBalance {
             anchors { top: parent.top; right: parent.right; topMargin: 30; rightMargin: 32 }
-            value: profile.berries; iconSize: 30; ink: Theme.text
+            value: profile.coins; iconSize: 30; ink: Theme.text
         }
 
         Column {
@@ -513,7 +513,7 @@ ApplicationWindow {
             }
             CoinBalance {
                 anchors { top: parent.top; right: parent.right; topMargin: 34; rightMargin: 32 }
-                value: profile.berries; ink: Theme.text
+                value: profile.coins; ink: Theme.text
             }
             Text {
                 anchors.centerIn: parent
@@ -522,7 +522,7 @@ ApplicationWindow {
             }
         }
 
-        // ── Store — browse cosmetics by slot; buy with Berries and equip. ──
+        // ── Store — browse cosmetics by slot; buy with Coins and equip. ──
         Item {
             id: store
             anchors.fill: parent
@@ -543,7 +543,7 @@ ApplicationWindow {
             }
             CoinBalance {
                 anchors { verticalCenter: storeHdr.verticalCenter; right: parent.right; rightMargin: 32 }
-                value: profile.berries; ink: Theme.text
+                value: profile.coins; ink: Theme.text
             }
 
             Column {
@@ -574,7 +574,7 @@ ApplicationWindow {
                                    ? profile.supporter
                                    : (modelData.price === 0 || profile.owned.indexOf(modelData.id) >= 0)
                             equipped: eqId === modelData.id
-                            affordable: profile.berries >= modelData.price
+                            affordable: profile.coins >= modelData.price
                             onBuy: {
                                 if (profile.buy(modelData.id, modelData.price))
                                     profile.equip(store.catSlot, modelData.id);
@@ -653,7 +653,7 @@ ApplicationWindow {
             }
             CoinBalance {
                 anchors { verticalCenter: dhdr.verticalCenter; right: parent.right; rightMargin: 32 }
-                value: profile.berries; ink: Theme.text
+                value: profile.coins; ink: Theme.text
             }
 
             Column {
@@ -677,7 +677,7 @@ ApplicationWindow {
                     Column {
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter; spacing: 5
-                            Icon { name: "berry"; size: 28; anchors.verticalCenter: parent.verticalCenter }
+                            Icon { name: "coin"; size: 28; anchors.verticalCenter: parent.verticalCenter }
                             Text { text: win.dailyReward; color: Theme.text; font.family: Theme.ui
                                    font.pixelSize: 34; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                         }
@@ -718,7 +718,7 @@ ApplicationWindow {
             }
             CoinBalance {
                 anchors { verticalCenter: ahdr.verticalCenter; right: parent.right; rightMargin: 32 }
-                value: profile.berries; ink: Theme.text
+                value: profile.coins; ink: Theme.text
             }
 
             Flickable {
@@ -760,7 +760,7 @@ ApplicationWindow {
                                 spacing: 2
                                 Row {
                                     anchors.horizontalCenter: parent.horizontalCenter; spacing: 3
-                                    Icon { name: "berry"; size: 16; anchors.verticalCenter: parent.verticalCenter }
+                                    Icon { name: "coin"; size: 16; anchors.verticalCenter: parent.verticalCenter }
                                     Text { text: modelData.reward; color: Theme.inkStrong; font.family: Theme.ui
                                            font.pixelSize: 15; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                                 }
@@ -810,7 +810,7 @@ ApplicationWindow {
                        name: "heart"; color: Theme.danger; size: 54 }
                 Text {
                     width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
-                    text: qsTr("Snecko is free — and always will be. If you're enjoying it, become a Supporter to unlock exclusive skins and a big Berry bundle, and help fund new updates.")
+                    text: qsTr("Snecko is free — and always will be. If you're enjoying it, become a Supporter to unlock exclusive skins and a big Coin bundle, and help fund new updates.")
                     color: Theme.text; font.family: Theme.ui; font.pixelSize: 16
                 }
 
@@ -831,8 +831,8 @@ ApplicationWindow {
                             width: parent.width; spacing: 12
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
-                                Icon { name: "berry"; size: 24; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("500 Berry bundle"); color: Theme.inkStrong; font.family: Theme.ui
+                                Icon { name: "coin"; size: 24; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: qsTr("500 Coin bundle"); color: Theme.inkStrong; font.family: Theme.ui
                                        font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             Row {
@@ -883,14 +883,14 @@ ApplicationWindow {
         // Hold the overlay back briefly on death so the board shake + head-burst
         // play on the clear field first, then fade the Game Over card in.
         property bool active: false
-        // Berries-earned count-up shown on the card (animates 0 → what this run earned).
-        property int shownBerries: 0
+        // Coins-earned count-up shown on the card (animates 0 → what this run earned).
+        property int shownCoins: 0
         onDeadChanged: { if (dead) overDelay.restart(); else active = false; }
-        onActiveChanged: if (active) berryCount.restart()
+        onActiveChanged: if (active) coinCount.restart()
         Timer { id: overDelay; interval: 430; onTriggered: overlay.active = true }
         NumberAnimation {
-            id: berryCount; target: overlay; property: "shownBerries"
-            from: 0; to: profile.lastRunBerries; duration: 650; easing.type: Easing.OutCubic
+            id: coinCount; target: overlay; property: "shownCoins"
+            from: 0; to: profile.lastRunCoins; duration: 650; easing.type: Easing.OutCubic
         }
         color: Qt.rgba(0, 0, 0, 0.45)
         visible: opacity > 0
@@ -947,24 +947,24 @@ ApplicationWindow {
                     ScoreChip { glyph: "trophy"; value: game.best }
                 }
 
-                // Berries earned this run (hidden on a fruitless run).
+                // Coins earned this run (hidden on a fruitless run).
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 8
-                    visible: profile.lastRunBerries > 0
+                    visible: profile.lastRunCoins > 0
                     Item {
                         width: 30; height: 30; anchors.verticalCenter: parent.verticalCenter
-                        Icon { anchors.centerIn: parent; name: "berry"; size: 28 }
+                        Icon { anchors.centerIn: parent; name: "coin"; size: 28 }
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "+" + overlay.shownBerries
-                        color: Theme.berryDeep; font.family: Theme.ui
+                        text: "+" + overlay.shownCoins
+                        color: Theme.coinDeep; font.family: Theme.ui
                         font.pixelSize: 26; font.weight: Font.Bold
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("berries earned")
+                        text: qsTr("coins earned")
                         color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 17
                     }
                 }

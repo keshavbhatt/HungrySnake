@@ -2,7 +2,7 @@ import QtQuick
 import Snecko
 
 // A cosmetic tile for the Store: a preview swatch, a name, and a state-driven
-// action pill (Berry price to buy → Equip → Equipped). Pass the preview as a
+// action pill (Coin price to buy → Equip → Equipped). Pass the preview as a
 // Component so each slot (snake skin, board theme, …) can draw its own swatch.
 Rectangle {
     id: root
@@ -55,7 +55,7 @@ Rectangle {
                 Item {
                     visible: root.locked || !root.owned
                     width: 18; height: 18; anchors.verticalCenter: parent.verticalCenter
-                    Icon { anchors.centerIn: parent; name: root.locked ? "lock" : "berry"
+                    Icon { anchors.centerIn: parent; name: root.locked ? "lock" : "coin"
                            color: Theme.cream; size: root.locked ? 15 : 18 }
                 }
                 Text {

@@ -3,7 +3,7 @@ import Snecko
 
 // The achievements catalogue + the checker that grants newly-earned ones. An
 // instance (takes `profile` + `game`): each entry compares a lifetime/run stat
-// against a target and pays a one-time Berry reward. `check()` is called after a
+// against a target and pays a one-time Coin reward. `check()` is called after a
 // run and when cosmetics change; it emits `unlocked` per newly-earned award.
 QtObject {
     id: ach

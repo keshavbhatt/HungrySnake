@@ -3,15 +3,15 @@
 #include <algorithm>
 
 namespace {
-// Berry economy — tunable; see docs/ROADMAP.md (§1). Kept deliberately simple in
-// Stage 1: one Berry per apple, a small bonus for beating your best.
-constexpr int kBerriesPerApple = 1;
+// Coin economy — tunable; see docs/ROADMAP.md (§1). Kept deliberately simple in
+// Stage 1: one Coin per apple, a small bonus for beating your best.
+constexpr int kCoinsPerApple = 1;
 constexpr int kNewBestBonus    = 5;
 constexpr int kSchemaVersion   = 1;
 
 constexpr auto kGroup          = "profile";
 constexpr auto kKeySchema      = "schema";
-constexpr auto kKeyBerries     = "berries";
+constexpr auto kKeyCoins     = "coins";
 constexpr auto kKeyGames       = "gamesPlayed";
 constexpr auto kKeyApples      = "lifetimeApples";
 constexpr auto kKeyOwned       = "owned";
@@ -32,7 +32,7 @@ Profile::Profile(QObject *parent)
 void Profile::load()
 {
     m_store.beginGroup(QLatin1String(kGroup));
-    m_berries        = m_store.value(QLatin1String(kKeyBerries), 0).toInt();
+    m_coins        = m_store.value(QLatin1String(kKeyCoins), 0).toInt();
     m_gamesPlayed    = m_store.value(QLatin1String(kKeyGames), 0).toInt();
     m_lifetimeApples = m_store.value(QLatin1String(kKeyApples), 0).toInt();
     m_owned          = m_store.value(QLatin1String(kKeyOwned)).toStringList();
@@ -56,7 +56,7 @@ void Profile::persist()
 {
     m_store.beginGroup(QLatin1String(kGroup));
     m_store.setValue(QLatin1String(kKeySchema), kSchemaVersion);
-    m_store.setValue(QLatin1String(kKeyBerries), m_berries);
+    m_store.setValue(QLatin1String(kKeyCoins), m_coins);
     m_store.setValue(QLatin1String(kKeyGames), m_gamesPlayed);
     m_store.setValue(QLatin1String(kKeyApples), m_lifetimeApples);
     m_store.setValue(QLatin1String(kKeyOwned), m_owned);
@@ -73,27 +73,27 @@ void Profile::persist()
     m_store.endGroup();
 }
 
-void Profile::grant(int berries)
+void Profile::grant(int coins)
 {
-    if (berries <= 0)
+    if (coins <= 0)
         return;
-    m_berries += berries;
+    m_coins += coins;
     persist();
-    emit berriesChanged();
+    emit coinsChanged();
 }
 
 int Profile::recordRun(int apples, bool newBest)
 {
     const int a = std::max(0, apples);
-    const int earned = a * kBerriesPerApple + (newBest ? kNewBestBonus : 0);
+    const int earned = a * kCoinsPerApple + (newBest ? kNewBestBonus : 0);
 
     m_lifetimeApples += a;
     m_gamesPlayed    += 1;
-    m_berries        += earned;
-    m_lastRunBerries  = earned;
+    m_coins        += earned;
+    m_lastRunCoins  = earned;
 
     persist();
-    emit berriesChanged();
+    emit coinsChanged();
     emit statsChanged();
     emit lastRunChanged();
     return earned;
@@ -103,12 +103,12 @@ bool Profile::buy(const QString &id, int price)
 {
     if (price <= 0 || m_owned.contains(id))
         return true;                 // free / already owned
-    if (m_berries < price)
+    if (m_coins < price)
         return false;                // can't afford
-    m_berries -= price;
+    m_coins -= price;
     m_owned.append(id);
     persist();
-    emit berriesChanged();
+    emit coinsChanged();
     emit ownedChanged();
     return true;
 }
@@ -128,10 +128,10 @@ int Profile::claimAchievement(const QString &id, int reward)
         return -1;                   // already claimed
     m_claimed.append(id);
     const int r = std::max(0, reward);
-    m_berries += r;
+    m_coins += r;
     persist();
     emit claimedChanged();
-    emit berriesChanged();
+    emit coinsChanged();
     return r;
 }
 
@@ -143,10 +143,10 @@ int Profile::completeDaily(const QString &today, const QString &yesterday, int r
     m_bestStreak  = std::max(m_bestStreak, m_dailyStreak);
     m_dailyLast   = today;
     const int r = std::max(0, reward);
-    m_berries += r;
+    m_coins += r;
     persist();
     emit dailyChanged();
-    emit berriesChanged();
+    emit coinsChanged();
     return r;
 }
 
@@ -155,12 +155,12 @@ void Profile::unlockSupporter(int bundle, const QStringList &exclusiveIds)
     if (m_supporter)
         return;
     m_supporter = true;
-    m_berries += std::max(0, bundle);
+    m_coins += std::max(0, bundle);
     for (const QString &id : exclusiveIds)
         if (!m_owned.contains(id))
             m_owned.append(id);
     persist();
     emit supporterChanged();
-    emit berriesChanged();
+    emit coinsChanged();
     emit ownedChanged();
 }

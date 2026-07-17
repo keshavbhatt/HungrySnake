@@ -56,13 +56,12 @@ Item {
           + '<rect x="10.9" y="12.2" width="2.2" height="3.3" fill="#c98a2a"/>'
           + '<rect x="8.2" y="15.2" width="7.6" height="1.9" rx="0.9" fill="#e6a93a"/>'
           + '<rect x="6.9" y="17.1" width="10.2" height="2.5" rx="1.2" fill="#c98a2a"/>',
-        "berry":   // the Berries currency glyph — a plump purple berry (distinct from the red apple)
-            '<circle cx="12" cy="13.8" r="6.7" fill="#8360e0"/>'
-          + '<path d="M12 7.6 C12 5.6 12.7 4.3 13.8 3.7" fill="none" stroke="#7a4a25" stroke-width="1.5" stroke-linecap="round"/>'
-          + '<ellipse cx="14.9" cy="5.4" rx="2.9" ry="1.5" fill="#57b845" transform="rotate(-30 14.9 5.4)"/>'
-          + '<ellipse cx="9.5" cy="11" rx="1.8" ry="2.6" fill="#ffffff" fill-opacity="0.5" transform="rotate(-25 9.5 11)"/>'
-          + '<circle cx="13.6" cy="15.3" r="0.9" fill="#5a3fb0" fill-opacity="0.55"/>'
-          + '<circle cx="11" cy="16.3" r="0.7" fill="#5a3fb0" fill-opacity="0.45"/>'
+        "coin":   // the Coins currency glyph — a shiny gold coin with a star
+            '<circle cx="12" cy="12" r="8.6" fill="#e8b53a"/>'
+          + '<circle cx="12" cy="12" r="8.6" fill="none" stroke="#a9781a" stroke-width="1.1"/>'
+          + '<circle cx="12" cy="12" r="6.1" fill="none" stroke="#caa02a" stroke-width="1.1"/>'
+          + '<path d="M12 8.5 l1.06 2.15 2.37.35 -1.72 1.67 .41 2.36 -2.12 -1.11 -2.12 1.11 .41 -2.36 -1.72 -1.67 2.37 -.35 z" fill="#fff3cf"/>'
+          + '<ellipse cx="9.3" cy="9" rx="1.9" ry="2.5" fill="#ffffff" fill-opacity="0.45" transform="rotate(-25 9.3 9)"/>'
     })
 
     // SVG only understands #RRGGBB (not Qt's #AARRGGBB), so pass the opaque RGB
