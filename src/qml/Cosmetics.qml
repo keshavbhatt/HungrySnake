@@ -11,7 +11,7 @@ QtObject {
     property Profile profile: null
 
     // Slot order used by the Store's category tabs.
-    readonly property var slotList: ["snake", "board", "apple"]
+    readonly property var slotList: ["snake", "board", "apple", "bonus"]
 
     // ── Catalogues (price 0 == the free default, first in each list) ──
     readonly property var snakeSkins: [
@@ -61,12 +61,30 @@ QtObject {
         { id: "apple_diamond",name: qsTr("Diamond"),price: 0, supporter: true, body: "#79dbe0", leaf: "#8bd0d0" }
     ]
 
+    // Bonus-food skins. IMPORTANT: these restyle how the timed Star/Mint foods LOOK —
+    // the foods themselves are always available to everyone. Selling the foods would let
+    // the Supporter coin bundle buy scoring power; skins keep the Store gameplay-neutral.
+    // The star/leaf SHAPES are fixed for exactly this reason (see BonusFoodArt.qml).
+    readonly property var bonusSkins: [
+        { id: "bonus_classic", name: qsTr("Classic"), price: 0,
+          gold: "#f0c23a", goldDeep: "#a9781a", mint: "#5fe0a8", mintDeep: "#1f8f66" },
+        { id: "bonus_ruby",    name: qsTr("Ruby"),    price: 200,
+          gold: "#f05a72", goldDeep: "#a01f38", mint: "#f0a0b8", mintDeep: "#a04f66" },
+        { id: "bonus_frost",   name: qsTr("Frost"),   price: 240,
+          gold: "#7fd8f0", goldDeep: "#1f6f90", mint: "#bfe8f5", mintDeep: "#4f90a8" },
+        { id: "bonus_neon",    name: qsTr("Neon"),    price: 320,
+          gold: "#f050d0", goldDeep: "#8a0f70", mint: "#b8f050", mintDeep: "#5f8a0f" },
+        { id: "bonus_prism",   name: qsTr("Prism"),   price: 0, supporter: true,
+          gold: "#e9b6ff", goldDeep: "#7a3fb0", mint: "#b6f7ff", mintDeep: "#2f7f96" }
+    ]
+
     // Exclusive cosmetics granted by the Supporter unlock (see the About screen).
-    readonly property var supporterIds: ["snake_gold", "board_obsidian", "apple_diamond"]
+    readonly property var supporterIds: ["snake_gold", "board_obsidian", "apple_diamond", "bonus_prism"]
 
     function catalogue(slot) {
         return slot === "snake" ? snakeSkins
              : slot === "board" ? boardThemes
+             : slot === "bonus" ? bonusSkins
              : appleSkins;
     }
     function _find(list, id) {
@@ -82,6 +100,7 @@ QtObject {
     readonly property var snake: _find(snakeSkins,  _equipped("snake"))
     readonly property var board: _find(boardThemes, _equipped("board"))
     readonly property var fruit: _find(appleSkins,  _equipped("apple"))
+    readonly property var bonusSet: _find(bonusSkins, _equipped("bonus"))
 
     // ── Resolved palette (what Board.qml / HUD read) ──
     readonly property color headGreen:  snake.head
@@ -99,4 +118,10 @@ QtObject {
     readonly property color apple:      fruit.body
     readonly property color appleLeaf:  fruit.leaf
     readonly property color appleStem:  Theme.appleStem   // constant across skins
+
+    // Bonus-food tints (the star/leaf shapes never change — only their colours).
+    readonly property color starTint:   bonusSet.gold
+    readonly property color starDeep:   bonusSet.goldDeep
+    readonly property color leafTint:   bonusSet.mint
+    readonly property color leafDeep:   bonusSet.mintDeep
 }

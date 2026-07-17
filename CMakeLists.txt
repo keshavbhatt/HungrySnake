@@ -63,6 +63,7 @@ set(SN_QML_FILES
     components/AppleArt.qml
     components/SnakeArt.qml
     components/BoardArt.qml
+    components/BonusFoodArt.qml
 )
 set(SN_QML_PATHS "")
 foreach(qml IN LISTS SN_QML_FILES)

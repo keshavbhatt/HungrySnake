@@ -202,10 +202,15 @@ ApplicationWindow {
             if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // finish the daily on reaching its target
         }
+        function onAteBonus(kind) {
+            if (win.soundOn) sfxEat.play();
+            win.tryCompleteDaily();               // a star's points can finish the daily too
+        }
         function onDied() {
             if (win.soundOn) sfxCrash.play();
-            // Bank the Coins earned this run (apples + a new-best bonus).
-            profile.recordRun(game.score, game.score > win.bestAtRunStart);
+            // Bank the Coins for this run's score (apples + bonus food), and record
+            // the real apple count separately for the lifetime stats.
+            profile.recordRun(game.score, game.apples, game.score > win.bestAtRunStart);
             win.dailyActive = false;              // a daily attempt ends on death
             achievements.check();                 // grant any newly-earned achievements
         }
@@ -552,7 +557,7 @@ ApplicationWindow {
 
                 SegmentedControl {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    model: [qsTr("Snake"), qsTr("Board"), qsTr("Apple")]
+                    model: [qsTr("Snake"), qsTr("Board"), qsTr("Apple"), qsTr("Bonus")]
                     currentIndex: store.catIndex
                     onActivated: store.catIndex = index
                 }
@@ -608,6 +613,25 @@ ApplicationWindow {
                                         tileGap: sw.def.gap     || Theme.tileGap
                                         frame:   sw.def.frame   || Theme.frame
                                         frameHi: sw.def.frameHi || Theme.frameHi
+                                    }
+                                    Row {                             // bonus-food skin: star + leaf
+                                        visible: store.catSlot === "bonus"
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        BonusFoodArt {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 34; height: 34
+                                            kind: 0; life: 1; d: 26; showRing: false
+                                            goldTint: sw.def.gold     || "#f0c23a"
+                                            goldDeep: sw.def.goldDeep || "#a9781a"
+                                        }
+                                        BonusFoodArt {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 34; height: 34
+                                            kind: 1; life: 1; d: 26; showRing: false
+                                            mintTint: sw.def.mint     || "#5fe0a8"
+                                            mintDeep: sw.def.mintDeep || "#1f8f66"
+                                        }
                                     }
                                     AppleArt {                        // origin = fruit centre
                                         visible: store.catSlot === "apple"

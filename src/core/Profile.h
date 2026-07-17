@@ -54,10 +54,10 @@ public:
     // Award Coins outright (daily/achievement rewards, the Supporter bundle).
     Q_INVOKABLE void grant(int coins);
 
-    // Record a finished run: bank Coins for the apples eaten (+ a new-best
-    // bonus), bump lifetime stats, and remember what this run earned (for the
-    // Game Over tally). Returns the Coins earned this run.
-    Q_INVOKABLE int recordRun(int apples, bool newBest);
+    // Record a finished run. Coins reward the run's SCORE (which includes bonus-food
+    // points), while lifetime stats count only real APPLES — a Golden star must not
+    // count as 5 apples toward the "eat N apples" achievements. Returns Coins earned.
+    Q_INVOKABLE int recordRun(int score, int apples, bool newBest);
 
     // ── Cosmetics store ──
     Q_INVOKABLE bool owns(const QString &id) const { return m_owned.contains(id); }

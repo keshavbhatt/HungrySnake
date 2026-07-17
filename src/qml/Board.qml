@@ -30,6 +30,10 @@ Item {
     readonly property color cApple:      cosmetics ? cosmetics.apple      : Theme.apple
     readonly property color cAppleLeaf:  cosmetics ? cosmetics.appleLeaf  : Theme.appleLeaf
     readonly property color cAppleStem:  cosmetics ? cosmetics.appleStem  : Theme.appleStem
+    readonly property color cStarTint:   cosmetics ? cosmetics.starTint   : "#f0c23a"
+    readonly property color cStarDeep:   cosmetics ? cosmetics.starDeep   : "#a9781a"
+    readonly property color cLeafTint:   cosmetics ? cosmetics.leafTint   : "#5fe0a8"
+    readonly property color cLeafDeep:   cosmetics ? cosmetics.leafDeep   : "#1f8f66"
 
     // Size the cell so the whole *frame* (board + padding) fits — otherwise the
     // padded frame overflows its bounds and can slide up under the HUD buttons.
@@ -315,6 +319,31 @@ Item {
                     radius: height / 2
                     rotation: -28
                     color: root.cAppleLeaf
+                }
+            }
+
+            // ── Bonus food: a timed star / mint leaf that pops in and drains away ──
+            Item {
+                id: bonus
+                visible: game.bonusActive
+                x: game.bonusX * cell
+                y: game.bonusY * cell
+                z: 4
+                // Pop in with a bounce each time one spawns.
+                property real pop: 1
+                Connections {
+                    target: game
+                    function onBonusChanged() { if (game.bonusActive) bonusPopAnim.restart(); }
+                }
+                NumberAnimation { id: bonusPopAnim; target: bonus; property: "pop"
+                                  from: 0; to: 1; duration: 300; easing.type: Easing.OutBack }
+                scale: pop
+                BonusFoodArt {
+                    kind: game.bonusKind
+                    life: game.bonusLife
+                    d: cell * 0.72
+                    goldTint: root.cStarTint; goldDeep: root.cStarDeep
+                    mintTint: root.cLeafTint; mintDeep: root.cLeafDeep
                 }
             }
 

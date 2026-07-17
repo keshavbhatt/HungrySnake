@@ -23,6 +23,13 @@ constexpr int   kStepMs      = 16;     // ~60 Hz clock
 constexpr qreal kDtMax       = 0.05;   // clamp long stalls (window drag, etc.)
 constexpr qreal kImpact      = 0.34;   // how far the head nudges into a wall/body on death
 
+// ── Bonus food ──
+constexpr int   kBonusEvery   = 5;     // apples between bonus spawns
+constexpr qreal kBonusLife    = 8.0;   // seconds a bonus stays on the board
+constexpr int   kGoldenScore  = 5;     // points for a Golden star
+constexpr int   kMintShrink   = 4;     // cells a Mint leaf removes
+constexpr int   kMintMinLen   = 14;    // only offer Mint once you're long enough to want it
+
 qreal dist(const QPointF &a, const QPointF &b)
 {
     const qreal dx = a.x() - b.x(), dy = a.y() - b.y();
@@ -71,11 +78,27 @@ void SnakeGame::resetSnake()
     m_turns.clear();
     m_progress = 0;
     m_score = 0;
+    m_apples = 0;
+    m_bonusActive = false;
+    m_bonusTime = 0;
+    m_applesSinceBonus = 0;
+    emit bonusChanged();
 
     updateHead();
     rebuildBody();
     emit scoreChanged();
     emit advanced();
+}
+
+bool SnakeGame::cellFree(const QPoint &c) const
+{
+    if (std::find(m_cells.begin(), m_cells.end(), c) != m_cells.end())
+        return false;
+    if (c == m_apple)
+        return false;
+    if (m_bonusActive && c == m_bonus)
+        return false;
+    return true;
 }
 
 void SnakeGame::spawnApple()
@@ -86,7 +109,9 @@ void SnakeGame::spawnApple()
     const int total = m_cols * m_rows;
     for (int attempt = 0; attempt < total * 4; ++attempt) {
         const QPoint c(x0 + m_rng.bounded(x1 - x0), y0 + m_rng.bounded(y1 - y0));
-        if (std::find(m_cells.begin(), m_cells.end(), c) == m_cells.end()) {
+        // NB the apple must also dodge a live bonus, or they'd stack on one cell.
+        if (std::find(m_cells.begin(), m_cells.end(), c) == m_cells.end()
+            && !(m_bonusActive && c == m_bonus)) {
             m_apple = c;
             emit appleChanged();
             return;
@@ -102,6 +127,36 @@ void SnakeGame::spawnApple()
                 return;
             }
         }
+}
+
+void SnakeGame::maybeSpawnBonus()
+{
+    if (m_bonusActive || m_applesSinceBonus < kBonusEvery)
+        return;
+    // Mint is only useful (and only offered) once you're long enough to be boxed in.
+    const bool longEnough = static_cast<int>(m_cells.size()) >= kMintMinLen;
+    const int kind = (longEnough && m_rng.bounded(2) == 0) ? Mint : Golden;
+
+    const int x0 = (m_cols > 4) ? 1 : 0, x1 = (m_cols > 4) ? m_cols - 1 : m_cols;
+    const int y0 = (m_rows > 4) ? 1 : 0, y1 = (m_rows > 4) ? m_rows - 1 : m_rows;
+    for (int attempt = 0; attempt < m_cols * m_rows * 4; ++attempt) {
+        const QPoint c(x0 + m_rng.bounded(x1 - x0), y0 + m_rng.bounded(y1 - y0));
+        if (cellFree(c)) {
+            m_bonus = c;
+            m_bonusKind = kind;
+            m_bonusTime = kBonusLife;
+            m_bonusActive = true;
+            m_applesSinceBonus = 0;
+            emit bonusChanged();
+            return;
+        }
+    }
+    m_applesSinceBonus = 0;   // board too full — try again after the next few apples
+}
+
+qreal SnakeGame::bonusLife() const
+{
+    return m_bonusActive ? std::max(qreal(0), m_bonusTime / kBonusLife) : qreal(0);
 }
 
 void SnakeGame::start()
@@ -175,6 +230,15 @@ void SnakeGame::step()
     const qreal speed = std::min(kBaseSpeed + m_score * kAccel, kMaxSpeed);
     m_progress += speed * dt;
 
+    // Bonus food ages out on the wall clock, whatever the snake is doing.
+    if (m_bonusActive) {
+        m_bonusTime -= dt;
+        if (m_bonusTime <= 0) {
+            m_bonusActive = false;
+            emit bonusChanged();
+        }
+    }
+
     // Enter each safe cell as the head reaches it. Crucially, the cell ahead
     // (m_next) was already vetted by retarget(), so we never glide into a wall or
     // body: if the next cell is lethal we stop the head *at* it (a small impact
@@ -202,16 +266,45 @@ void SnakeGame::step()
 void SnakeGame::arrive()
 {
     // m_next was pre-verified safe by retarget(); enter it.
-    const bool eating = (m_next == m_apple);
+    const bool eatingApple = (m_next == m_apple);
+    const bool eatingBonus = m_bonusActive && (m_next == m_bonus);
     m_cells.push_front(m_next);
-    if (eating) {
+
+    // Anything that grows us keeps the tail this step (so we gain a cell).
+    bool grows = eatingApple;
+
+    if (eatingApple) {
         ++m_score;
+        ++m_apples;
+        ++m_applesSinceBonus;
         emit scoreChanged();
         emit ate();
-        spawnApple();          // body keeps its tail this step → grows by one cell
-    } else {
-        m_cells.pop_back();
+        spawnApple();
     }
+    if (eatingBonus) {
+        const int kind = m_bonusKind;
+        m_bonusActive = false;
+        if (kind == Golden) {
+            m_score += kGoldenScore;
+            grows = true;                  // a star feeds you like an apple, worth more
+        } else {                           // Mint — pay out a little, then shrink below
+            ++m_score;
+        }
+        emit scoreChanged();
+        emit bonusChanged();
+        emit ateBonus(kind);
+    }
+
+    if (!grows)
+        m_cells.pop_back();
+
+    // Mint's shrink happens after the normal advance, never below the starting length.
+    if (eatingBonus && m_bonusKind == Mint)
+        for (int i = 0; i < kMintShrink && static_cast<int>(m_cells.size()) > kStartLen; ++i)
+            m_cells.pop_back();
+
+    if (eatingApple)
+        maybeSpawnBonus();
 
     // Apply the next buffered turn (never a direct reversal), then look ahead.
     if (!m_turns.empty()) {
@@ -228,10 +321,12 @@ bool SnakeGame::stepIsLethal(const QPoint &next) const
     // Walls are lethal (classic Snake).
     if (next.x() < 0 || next.x() >= m_cols || next.y() < 0 || next.y() >= m_rows)
         return true;
-    // Body: the tail cell vacates as we advance (unless we're about to eat), so
-    // moving into the current tail is legal.
-    const bool eating = (next == m_apple);
-    const int checkCount = static_cast<int>(m_cells.size()) - (eating ? 0 : 1);
+    // Body: the tail cell vacates as we advance (unless we're about to grow), so
+    // moving into the current tail is legal. A Golden star grows us like an apple;
+    // Mint shrinks us, so the tail still vacates.
+    const bool grows = (next == m_apple)
+                    || (m_bonusActive && next == m_bonus && m_bonusKind == Golden);
+    const int checkCount = static_cast<int>(m_cells.size()) - (grows ? 0 : 1);
     for (int i = 0; i < checkCount; ++i)
         if (m_cells[i] == next)
             return true;

@@ -3,9 +3,9 @@
 #include <algorithm>
 
 namespace {
-// Coin economy — tunable; see docs/ROADMAP.md (§1). Kept deliberately simple in
-// Stage 1: one Coin per apple, a small bonus for beating your best.
-constexpr int kCoinsPerApple = 1;
+// Coin economy — tunable; see docs/ROADMAP.md (§1). One Coin per point of score
+// (so bonus foods pay out too), plus a small bonus for beating your best.
+constexpr int kCoinsPerPoint = 1;
 constexpr int kNewBestBonus    = 5;
 constexpr int kSchemaVersion   = 1;
 
@@ -82,10 +82,11 @@ void Profile::grant(int coins)
     emit coinsChanged();
 }
 
-int Profile::recordRun(int apples, bool newBest)
+int Profile::recordRun(int score, int apples, bool newBest)
 {
-    const int a = std::max(0, apples);
-    const int earned = a * kCoinsPerApple + (newBest ? kNewBestBonus : 0);
+    const int pts = std::max(0, score);
+    const int a   = std::max(0, apples);
+    const int earned = pts * kCoinsPerPoint + (newBest ? kNewBestBonus : 0);
 
     m_lifetimeApples += a;
     m_gamesPlayed    += 1;

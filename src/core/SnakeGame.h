@@ -41,6 +41,15 @@ class SnakeGame : public QObject
     Q_PROPERTY(qreal headSize  READ headSize    CONSTANT)
     Q_PROPERTY(qreal appleRadius READ appleRadius CONSTANT)
     Q_PROPERTY(int score       READ score       NOTIFY scoreChanged)
+    // Apples actually eaten this run. Kept apart from `score` because bonus foods add
+    // points too — lifetime "apples" stats must not count a star as 5 apples.
+    Q_PROPERTY(int apples      READ apples      NOTIFY scoreChanged)
+    // ── Bonus food: a timed extra that spawns every few apples ──
+    Q_PROPERTY(qreal bonusX    READ bonusX      NOTIFY bonusChanged)
+    Q_PROPERTY(qreal bonusY    READ bonusY      NOTIFY bonusChanged)
+    Q_PROPERTY(bool bonusActive READ bonusActive NOTIFY bonusChanged)
+    Q_PROPERTY(int  bonusKind  READ bonusKind   NOTIFY bonusChanged)   // Food enum
+    Q_PROPERTY(qreal bonusLife READ bonusLife   NOTIFY advanced)       // 1 → 0 as it expires
     Q_PROPERTY(int best        READ best        WRITE setBest NOTIFY bestChanged)
     Q_PROPERTY(Status status   READ status      NOTIFY statusChanged)
     Q_PROPERTY(bool waiting    READ waiting     NOTIFY waitingChanged)  // primed, awaiting first steer
@@ -51,6 +60,14 @@ public:
 
     enum Status { Ready, Playing, Dead };
     Q_ENUM(Status)
+
+    // Bonus food kinds. The staple apple is always on the board and is skinnable via
+    // cosmetics; these are timed extras drawn as distinct SHAPES (star / leaf) so no
+    // apple skin can ever be mistaken for one.
+    //   Golden — worth kGoldenScore points, grows you by one like an apple.
+    //   Mint   — shrinks the snake (an escape hatch when you're long and boxed in).
+    enum Food { Golden = 0, Mint = 1 };
+    Q_ENUM(Food)
 
     explicit SnakeGame(QObject *parent = nullptr);
 
@@ -66,6 +83,12 @@ public:
     qreal headSize() const;
     qreal appleRadius() const;
     int   score() const { return m_score; }
+    int   apples() const { return m_apples; }
+    qreal bonusX() const { return m_bonus.x() + 0.5; }
+    qreal bonusY() const { return m_bonus.y() + 0.5; }
+    bool  bonusActive() const { return m_bonusActive; }
+    int   bonusKind() const { return m_bonusKind; }
+    qreal bonusLife() const;
     int   best() const { return m_best; }
     void  setBest(int b);
     Status status() const { return m_status; }
@@ -86,6 +109,8 @@ signals:
     void statusChanged();
     void waitingChanged();
     void ate();               // apple eaten this frame
+    void bonusChanged();      // bonus food spawned / eaten / expired
+    void ateBonus(int kind);  // a bonus food was eaten this frame (Food enum)
     void died();              // the run just ended
 
 private:
@@ -95,6 +120,8 @@ private:
     bool stepIsLethal(const QPoint &next) const;  // would entering `next` end the run?
     void resetSnake();        // place a short snake at the centre, facing right
     void spawnApple();        // put the apple on a random empty cell
+    void maybeSpawnBonus();   // every kBonusEvery apples, drop a timed bonus food
+    bool cellFree(const QPoint &c) const;   // not snake, not apple, not bonus
     void rebuildBody();       // build the smooth head→tail render polyline
     void updateHead();        // head visual position + heading from cell + progress
     void die();
@@ -122,6 +149,12 @@ private:
     QVariantList m_body;
 
     int    m_score = 0;
+    int    m_apples = 0;          // apples only (score also counts bonus points)
+    QPoint m_bonus;
+    bool   m_bonusActive = false;
+    int    m_bonusKind = Golden;
+    qreal  m_bonusTime = 0;       // seconds of life left
+    int    m_applesSinceBonus = 0;
     int    m_best = 0;
     Status m_status = Ready;
 

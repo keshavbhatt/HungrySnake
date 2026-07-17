@@ -7,6 +7,7 @@
 #include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlError>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
@@ -17,10 +18,10 @@
 // Dev-only apple-seeking AI: steer toward the apple along the dominant axis, but
 // never pick a reversal into the neck (pick the other axis instead). Good enough
 // to demo growth + turns headlessly.
-static void seekApple(SnakeGame *g)
+static void seekPoint(SnakeGame *g, qreal tx, qreal ty)
 {
-    const qreal dx = g->appleX() - g->headX();
-    const qreal dy = g->appleY() - g->headY();
+    const qreal dx = tx - g->headX();
+    const qreal dy = ty - g->headY();
     const qreal hx = std::cos(g->heading()), hy = std::sin(g->heading());
     const bool horiz = std::abs(hx) > std::abs(hy);
 
@@ -37,6 +38,14 @@ static void seekApple(SnakeGame *g)
                      : ((hy > 0 && d == SnakeGame::Up)   || (hy < 0 && d == SnakeGame::Down));
     };
     g->steer(isReverse(pref) ? alt : pref);
+}
+
+// Chase the apple, or the bonus food while one is on the board.
+static void seekApple(SnakeGame *g) { seekPoint(g, g->appleX(), g->appleY()); }
+static void seekFood(SnakeGame *g)
+{
+    if (g->bonusActive()) seekPoint(g, g->bonusX(), g->bonusY());
+    else                  seekPoint(g, g->appleX(), g->appleY());
 }
 
 int main(int argc, char *argv[])
@@ -87,6 +96,16 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appDebug", false);
 #endif
 
+    // Dev builds shout about QML errors. Without this they are swallowed: a bad
+    // binding just yields a blank/failed load with no clue why (this has bitten us
+    // twice — a duplicate id, and a nested layer.effect rendering nothing).
+#ifdef SN_DEBUG
+    QObject::connect(&engine, &QQmlEngine::warnings, &app,
+        [](const QList<QQmlError> &ws) {
+            for (const QQmlError &e : ws)
+                fprintf(stderr, "QML: %s\n", qPrintable(e.toString()));
+        });
+#endif
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
@@ -117,7 +136,8 @@ int main(int argc, char *argv[])
                 // The gameplay screenshot modes live on the board, so put the router
                 // there (the app otherwise launches to the "home" hub).
                 else if (mode == "waiting" || mode == "eat" || mode == "die"
-                      || mode == "mouth" || mode == "long" || mode == "settings")
+                      || mode == "mouth" || mode == "long" || mode == "settings"
+                      || mode == "bonus" || mode == "bonuseat")
                     w->setProperty("route", "game");
                 auto *game = w->findChild<SnakeGame *>();
                 int grabDelay = 2200;
@@ -194,6 +214,39 @@ int main(int argc, char *argv[])
                     });
                     poll->start();
                     grabDelay = 9000;   // fallback if the window is never hit
+                } else if (game && mode == "bonus") {
+                    // Autoplay chasing food; grab the instant a bonus is on the board.
+                    // The dev AI often crashes before the 5 apples a bonus needs, so keep
+                    // restarting until one shows up.
+                    game->start();
+                    QObject::connect(game, &SnakeGame::died, &app,
+                                     [game]() { QTimer::singleShot(60, game, [game]{ game->start(); }); });
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekFood(game); });
+                    t->start();
+                    auto *poll = new QTimer(&app);
+                    poll->setInterval(16);
+                    QObject::connect(poll, &QTimer::timeout, &app, [w, shot, &app, poll, game]() {
+                        if (game->bonusActive() && game->bonusLife() < 0.92) {
+                            poll->stop();
+                            w->grabWindow().save(QString::fromUtf8(shot));
+                            app.quit();
+                        }
+                    });
+                    poll->start();
+                    grabDelay = 25000;
+                } else if (game && mode == "bonuseat") {
+                    // Autoplay chasing bonus food across several runs — used to verify the
+                    // score/apples split end-to-end via the profile.
+                    game->start();
+                    QObject::connect(game, &SnakeGame::died, &app,
+                                     [game]() { QTimer::singleShot(60, game, [game]{ game->start(); }); });
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekFood(game); });
+                    t->start();
+                    grabDelay = 40000;
                 } else if (game && mode == "die") {
                     game->start();
                     auto *t = new QTimer(&app);
