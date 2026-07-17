@@ -347,6 +347,37 @@ Item {
                 }
             }
 
+            // ── Floating "+N" score popup at the eat spot — rises and fades so a
+            // score gain reads instantly (an apple = +1, a Golden star = +5). ──
+            Item {
+                id: scorePop
+                property real cx: 0
+                property real cy: 0
+                property string txt: ""
+                property real t: 1               // 1 = done
+                x: cx * cell; y: cy * cell
+                z: 7
+                visible: t < 1
+                function show(s, gx, gy) { txt = s; cx = gx; cy = gy; scorePopAnim.restart(); }
+                Connections {
+                    target: game
+                    function onAte()          { scorePop.show("+1", game.appleX, game.appleY); }
+                    function onAteBonus(kind) { scorePop.show(kind === 0 ? "+5" : "+1", game.bonusX, game.bonusY); }
+                }
+                NumberAnimation { id: scorePopAnim; target: scorePop; property: "t"
+                                  from: 0; to: 1; duration: 750; easing.type: Easing.OutQuad }
+                Text {
+                    anchors.centerIn: parent
+                    text: scorePop.txt
+                    color: "#ffe27a"
+                    style: Text.Outline; styleColor: "#3a2a06"
+                    font.family: Theme.display; font.pixelSize: cell * 0.6; font.weight: Font.Bold
+                    y: -8 - scorePop.t * cell * 1.1                       // rise
+                    opacity: 1 - scorePop.t                              // fade
+                    scale: 0.5 + Math.min(1, scorePop.t * 6) * 0.7        // quick pop-in
+                }
+            }
+
             // ── Fruit crush: a juice splat where an apple was just eaten ──
             // ate() fires *before* the new apple spawns, so game.appleX/Y still
             // holds the eaten apple's cell when we capture it here.

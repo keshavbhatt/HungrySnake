@@ -36,6 +36,8 @@ ApplicationWindow {
     // The best score at the moment the current run began — so, on death, we can
     // tell whether this run set a new best (game.best is already bumped by then).
     property int  bestAtRunStart: 0
+    property bool newBestFired: false     // "New Best!" already celebrated this run
+    property bool lastRunWasBest: false   // did the finished run set a record?
 
     // The looping background tracks (procedurally generated — see tools/make_music.py).
     readonly property var musicTracks: [
@@ -206,17 +208,26 @@ ApplicationWindow {
             if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // a star's points can finish the daily too
         }
+        // Celebrate the moment this run first overtakes the previous best.
+        function onScoreChanged() {
+            if (!win.newBestFired && win.bestAtRunStart > 0 && game.score > win.bestAtRunStart) {
+                win.newBestFired = true;
+                achToast.show(qsTr("New Best!"), "trophy");
+            }
+        }
         function onDied() {
             if (win.soundOn) sfxCrash.play();
+            win.lastRunWasBest = game.score > win.bestAtRunStart;   // for the Game Over card
             // Bank the Coins for this run's score (apples + bonus food), and record
             // the real apple count separately for the lifetime stats.
-            profile.recordRun(game.score, game.apples, game.score > win.bestAtRunStart);
+            profile.recordRun(game.score, game.apples, win.lastRunWasBest);
             win.dailyActive = false;              // a daily attempt ends on death
             achievements.check();                 // grant any newly-earned achievements
         }
         function onStatusChanged() {
             if (game.status === SnakeGame.Playing) {
                 win.bestAtRunStart = game.best;            // snapshot for the new-best check
+                win.newBestFired = false;                  // reset the celebration for this run
                 // On a fresh run in Random mode, reshuffle for a new tune.
                 if (win.musicOn && win.musicTrack < 0)
                     win.restartMusic();
@@ -359,7 +370,9 @@ ApplicationWindow {
                 spacing: 12
 
                 StatCard { glyph: "apple";  value: game.score }
-                StatCard { glyph: "trophy"; value: game.best }
+                // Climbs live once the run overtakes your record, so beating your
+                // best is visible as it happens (not only on Game Over).
+                StatCard { glyph: "trophy"; value: Math.max(game.best, game.score) }
                 StatCard { glyph: "coin";  value: profile.coins }
             }
 
@@ -1049,6 +1062,33 @@ ApplicationWindow {
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("Game Over"); color: Theme.inkStrong
                        font.family: Theme.ui; font.pixelSize: 40; font.weight: Font.Bold }
+
+                // Record-breaking celebration: a gold banner that pops in when the run
+                // set a new best. It sparkles + scale-bounces to feel like an event.
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: win.lastRunWasBest
+                    implicitWidth: nbPill.width; implicitHeight: nbPill.height
+                    Rectangle {
+                        id: nbPill
+                        anchors.centerIn: parent
+                        width: nbRow.implicitWidth + 34; height: 40; radius: height / 2
+                        color: Theme.gold; border.width: 3; border.color: Qt.darker(Theme.gold, 1.35)
+                        Row {
+                            id: nbRow
+                            anchors.centerIn: parent; spacing: 8
+                            Icon { anchors.verticalCenter: parent.verticalCenter; name: "trophy"; size: 24 }
+                            Text { anchors.verticalCenter: parent.verticalCenter
+                                   text: qsTr("NEW BEST!"); color: "#5a3a06"
+                                   font.family: Theme.display; font.pixelSize: 20; font.weight: Font.Bold }
+                        }
+                        // Pop in with a bounce whenever the card reveals a record.
+                        scale: overlay.active && win.lastRunWasBest ? 1 : 0.4
+                        opacity: overlay.active && win.lastRunWasBest ? 1 : 0
+                        Behavior on scale { NumberAnimation { duration: 380; easing.type: Easing.OutBack } }
+                        Behavior on opacity { NumberAnimation { duration: 260 } }
+                    }
+                }
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter

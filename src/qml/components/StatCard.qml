@@ -12,6 +12,7 @@ Rectangle {
     property color  edge: Theme.hudEdge
     property color  ink:  Theme.cream
     property int    iconSize: 32
+    property bool   pulse: true        // pop the chip whenever the value changes
 
     width: 132; height: 64
     radius: Theme.r
@@ -22,6 +23,17 @@ Rectangle {
     layer.effect: MultiEffect {
         shadowEnabled: true; shadowColor: Theme.shadow; shadowBlur: 0.6
         shadowOpacity: 0.3; shadowVerticalOffset: 4; autoPaddingEnabled: true
+    }
+
+    // A quick bounce when the value ticks — makes score/coin changes noticeable.
+    transformOrigin: Item.Center
+    property real pop: 1
+    scale: pop
+    onValueChanged: if (root.pulse) popSeq.restart()
+    SequentialAnimation {
+        id: popSeq
+        NumberAnimation { target: root; property: "pop"; to: 1.2; duration: 90;  easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "pop"; to: 1.0; duration: 200; easing.type: Easing.OutBack }
     }
 
     Row {
