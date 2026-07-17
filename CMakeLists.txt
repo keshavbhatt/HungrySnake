@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(Snecko
+project(HungrySnake
     VERSION 0.1.0
     DESCRIPTION "A smooth, jungle-themed take on the classic Snake"
     HOMEPAGE_URL "https://ktechpit.com"
     LANGUAGES CXX)
 
 # ── Single source of truth for the reverse-DNS app id ─────────────────────────
-set(SN_APP_ID   "com.ktechpit.snecko")
-set(SN_APP_NAME "Snecko")
+set(SN_APP_ID   "com.ktechpit.hungrysnake")
+set(SN_APP_NAME "Hungry Snake")
 
 # ── Project-wide build settings ───────────────────────────────────────────────
 set(CMAKE_CXX_STANDARD 20)
@@ -36,7 +36,7 @@ qt_policy(SET QTP0004 NEW)
 configure_file(src/AppInfo.h.in ${CMAKE_BINARY_DIR}/generated/AppInfo.h @ONLY)
 
 # ── Executable ────────────────────────────────────────────────────────────────
-qt_add_executable(snecko
+qt_add_executable(hungrysnake
     src/main.cpp
 )
 
@@ -73,8 +73,8 @@ endforeach()
 set_source_files_properties(src/qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # ── QML module (compiles QML, registers C++ QML_ELEMENT types under the URI) ──
-qt_add_qml_module(snecko
-    URI Snecko
+qt_add_qml_module(hungrysnake
+    URI HungrySnake
     VERSION 1.0
     QML_FILES ${SN_QML_PATHS}
     SOURCES
@@ -92,7 +92,7 @@ file(GLOB SN_DECOR_FILES CONFIGURE_DEPENDS
 file(GLOB SN_FONT_FILES CONFIGURE_DEPENDS
      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} assets/fonts/*.ttf)
 
-qt_add_resources(snecko "appdata"
+qt_add_resources(hungrysnake "appdata"
     PREFIX "/"
     BASE ${CMAKE_CURRENT_SOURCE_DIR}
     FILES
@@ -102,13 +102,13 @@ qt_add_resources(snecko "appdata"
         ${SN_FONT_FILES}
 )
 
-target_include_directories(snecko PRIVATE
+target_include_directories(hungrysnake PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_BINARY_DIR}/generated
 )
 
-target_link_libraries(snecko PRIVATE
+target_link_libraries(hungrysnake PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml
@@ -118,7 +118,7 @@ target_link_libraries(snecko PRIVATE
     Qt6::Multimedia
 )
 
-target_compile_definitions(snecko PRIVATE
+target_compile_definitions(hungrysnake PRIVATE
     $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:QT_NO_DEBUG_OUTPUT>
     $<$<CONFIG:Debug>:SN_DEBUG>
 )
@@ -126,7 +126,7 @@ target_compile_definitions(snecko PRIVATE
 # ── Install (desktop integration) ─────────────────────────────────────────────
 include(GNUInstallDirs)
 
-install(TARGETS snecko RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS hungrysnake RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES packaging/${SN_APP_ID}.desktop
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)

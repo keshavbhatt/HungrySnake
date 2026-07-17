@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 
-// App-wide design tokens for Snecko — a warm jungle palette: deep green canvas,
+// App-wide design tokens for Hungry Snake — a warm jungle palette: deep green canvas,
 // a tan checkerboard board inside a rounded wooden frame, a green snake, red
 // apples and a gold trophy.
 QtObject {

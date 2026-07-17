@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Snecko's sound effects as small mono 16-bit PCM WAV files.
+"""Generate HungrySnake's sound effects as small mono 16-bit PCM WAV files.
 
 No external deps — pure stdlib. Re-run after tweaking to regenerate:
 

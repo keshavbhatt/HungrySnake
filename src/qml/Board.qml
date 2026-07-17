@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
-import Snecko
+import HungrySnake
 
 // The play-field: a rounded wooden frame (with a soft drop shadow and a top
 // bevel) around a tan checkerboard. The snake body is a smooth rounded tube —

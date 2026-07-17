@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A simple rounded progress track (achievements / daily progress).
 Rectangle {

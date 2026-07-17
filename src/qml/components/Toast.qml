@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Snecko
+import HungrySnake
 
 // A transient notification chip (icon + message) that fades in, holds, fades out.
 // Call show(message, iconName) to trigger it.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Snecko's looping background music as small mono 16-bit PCM WAV files.
+"""Generate HungrySnake's looping background music as small mono 16-bit PCM WAV files.
 
 No external deps — pure stdlib (mirrors tools/make_sounds.py). Re-run to regen:
 

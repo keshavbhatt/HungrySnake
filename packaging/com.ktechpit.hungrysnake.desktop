@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=Snecko
+Name=Hungry Snake
 GenericName=Snake Game
 Comment=A smooth, jungle-themed take on the classic Snake — eat apples, don't crash
-Exec=snecko
-Icon=com.ktechpit.snecko
+Exec=hungrysnake
+Icon=com.ktechpit.hungrysnake
 Terminal=false
 Categories=Game;ArcadeGame;Qt;
-Keywords=snake;arcade;snecko;retro;apples;
+Keywords=snake;arcade;hungrysnake;retro;apples;
 StartupNotify=true

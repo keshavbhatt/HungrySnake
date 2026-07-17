@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A screen title bar: an optional back button on the left + a title. Right-side
 // content (e.g. a CoinBalance) is placed by the screen itself, anchored right.

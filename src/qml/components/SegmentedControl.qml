@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A pill of mutually-exclusive tabs (store categories, etc.). `model` is a list
 // of strings, or of objects with a `label`. Two-way via `currentIndex`.

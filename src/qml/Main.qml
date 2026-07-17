@@ -4,7 +4,7 @@ import QtQuick.Window
 import QtQuick.Effects
 import QtCore
 import QtMultimedia
-import Snecko
+import HungrySnake
 import "components"
 
 ApplicationWindow {
@@ -14,7 +14,7 @@ ApplicationWindow {
     height: 640
     minimumWidth: 720
     minimumHeight: 480
-    title: "Snecko"
+    title: "Hungry Snake"
     color: Theme.bg
 
     SnakeGame { id: game }
@@ -92,7 +92,7 @@ ApplicationWindow {
     // On a real build the KTechpit AccountAndLicense purchase gates this call.
     function becomeSupporter() {
         profile.unlockSupporter(500, cosmetics.supporterIds);
-        achToast.show(qsTr("Thanks for supporting Snecko!"), "heart");
+        achToast.show(qsTr("Thanks for supporting Hungry Snake!"), "heart");
     }
 
     // ── Daily challenge ──
@@ -167,7 +167,7 @@ ApplicationWindow {
 
     // Persisted best score + preferences.
     Settings {
-        category: "Snecko"
+        category: "HungrySnake"
         property alias best: game.best
         property alias soundOn: win.soundOn
         property alias musicOn: win.musicOn
@@ -463,7 +463,7 @@ ApplicationWindow {
             spacing: 24
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "SNECKO"; color: Theme.title
+                text: "HUNGRY SNAKE"; color: Theme.title
                 font.family: Theme.ui; font.pixelSize: 78; font.weight: Font.Bold
                 style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.32)
             }
@@ -798,7 +798,7 @@ ApplicationWindow {
             ScreenHeader {
                 id: abhdr
                 anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
-                title: qsTr("Support Snecko"); onBack: win.back()
+                title: qsTr("Support Hungry Snake"); onBack: win.back()
             }
 
             Column {
@@ -810,7 +810,7 @@ ApplicationWindow {
                        name: "heart"; color: Theme.danger; size: 54 }
                 Text {
                     width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
-                    text: qsTr("Snecko is free — and always will be. If you're enjoying it, become a Supporter to unlock exclusive skins and a big Coin bundle, and help fund new updates.")
+                    text: qsTr("Hungry Snake is free — and always will be. If you're enjoying it, become a Supporter to unlock exclusive skins and a big Coin bundle, and help fund new updates.")
                     color: Theme.text; font.family: Theme.ui; font.pixelSize: 16
                 }
 

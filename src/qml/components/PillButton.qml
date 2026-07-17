@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // The UI-kit action button. Primary/danger variants are "raised" — a solid face
 // over a darker bottom lip that the press pushes down onto (the border-bottom

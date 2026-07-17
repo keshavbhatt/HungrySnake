@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
             }, Qt::QueuedConnection);
     }
 
-    engine.loadFromModule("Snecko", "Main");
+    engine.loadFromModule("HungrySnake", "Main");
 
     return app.exec();
 }

@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // The achievements catalogue + the checker that grants newly-earned ones. An
 // instance (takes `profile` + `game`): each entry compares a lifetime/run stat

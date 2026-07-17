@@ -1,4 +1,4 @@
-# Snecko — Progression, UI & Monetization Roadmap
+# Hungry Snake — Progression, UI & Monetization Roadmap
 
 Status: **planning** (agreed 2026-07-16). Build in stages; each stage ships and is
 verifiable on its own.
@@ -28,27 +28,27 @@ verifiable on its own.
 
 ## 1. Currency & economy
 
-- **Berries** 🫐 — the soft currency (name themed to the jungle; distinct from apples,
+- **Coins** 🪙 — the soft currency (name themed to the jungle; distinct from apples,
   which stay the score). Tunable.
 - **Earn (free):**
-  - Per run: `berries = score` (1 per apple) `+ newBestBonus` (e.g. +5 on a new best).
+  - Per run: `coins = score` (1 per apple) `+ newBestBonus` (e.g. +5 on a new best).
   - Daily challenge completion: flat reward + streak multiplier.
   - Achievement payouts (one-time each).
 - **Spend:** cosmetics only, in the Store.
-- **Optional buy:** Supporter unlock → a berry bundle + exclusive Supporter cosmetics
+- **Optional buy:** Supporter unlock → a coin bundle + exclusive Supporter cosmetics
   (and optionally "unlock everything now"). Purely a shortcut + thank-you.
 
 ## 2. Meta progression
 
 - **Achievements** — data-driven list, each with a predicate over run/lifetime stats
-  and a one-time berry payout. Seed set: First Bite (1 apple), Sweet Tooth (50
+  and a one-time coin payout. Seed set: First Bite (1 apple), Sweet Tooth (50
   lifetime), Century (score 100 in a run), Long Boi (length N), Marathoner (X games),
   Daily Devotee (7-day streak), Completionist (own all cosmetics).
 - **Daily Challenge** — deterministic from the date: a fixed apple seed + one modifier
   (e.g. brisker speed, or a target "reach score N"). One attempt tracked per day;
-  completing it advances a **streak** and pays berries (streak-scaled).
+  completing it advances a **streak** and pays coins (streak-scaled).
 - **Lifetime stats / profile** — games played, total apples, longest length, best
-  score, total berries earned, current & best daily streak.
+  score, total coins earned, current & best daily streak.
 
 ## 3. Cosmetics (data-driven, gameplay-neutral)
 
@@ -75,7 +75,7 @@ bindings.
 - **Home hub** (new) — title, big **Play**, plus Store / Achievements / Daily /
   Settings / Supporter. Becomes the landing screen; quick "tap to start" replay stays.
 - **Store** — a `SegmentedControl` of slots, a grid of `StoreCard`s (preview + price /
-  Owned / Equip), berry balance in the header.
+  Owned / Equip), coin balance in the header.
 - **Achievements** — list with `ProgressBar`s; claim buttons for unclaimed payouts.
 - **Daily** — today's modifier/target, reward, streak, Play.
 - **Settings** — existing sound/music/track **+ dark-mode toggle** (wire sun/moon) and
@@ -92,7 +92,7 @@ bindings.
   `SegmentedControl`/`Tab`, `ScreenHeader` (title + back), `Toast`, `Badge`.
 - **Icon** — add: berry/coin, store/bag, medal, calendar, lock, check, gear, heart,
   home, chevron, sparkle; wire the already-defined `sun`/`moon`/`back`/`home`.
-- **Theme** — add store/locked/owned + berry-gold tokens; restructure into
+- **Theme** — add store/locked/owned + coin-gold tokens; restructure into
   **light/dark palettes** so the dark-mode toggle has something to switch.
 
 ## 5. Persistence & architecture
@@ -100,22 +100,22 @@ bindings.
 - New **`Profile : QObject` (QML_ELEMENT, QSettings-backed)** — the single source of
   truth for money/meta so list-state and atomic grants are robust (better than QML
   `Settings` aliases for sets):
-  - `berries`, `ownedCosmetics` (set), `equipped` (per-slot), `achievements`
+  - `coins`, `ownedCosmetics` (set), `equipped` (per-slot), `achievements`
     (unlocked/claimed), `dailyLast`, `dailyStreak`/`bestStreak`, lifetime `stats`,
     `supporterUnlocked`, `schemaVersion`.
-  - `Q_INVOKABLE`: `grant(berries)`, `buy(id)`, `equip(slot,id)`, `claim(ach)`,
+  - `Q_INVOKABLE`: `grant(coins)`, `buy(id)`, `equip(slot,id)`, `claim(ach)`,
     `recordRun(summary)`, `startDailyIfDue()`.
 - **`SnakeGame`** — on `died()`, expose a run summary (apples, length, isNewBest);
   add an optional `startDaily(seed, modifier)` that only sets seed/speed — normal
   `start()` is untouched. RNG already seeds the apple; make the seed injectable.
 - Keep the existing QML `Settings` for sound/music/dark toggles; Profile owns the
-  rest. Both under the `Snecko` category.
+  rest. Both under the `HungrySnake` category.
 
 ## 6. Monetization wiring (desktop)
 
 - Reuse the sibling **AccountAndLicense** module (deferred in the original build plan)
   for the one-time **Supporter** unlock. Free build stays fully playable; purchase
-  sets `Profile.supporterUnlocked` → grants the berry bundle + exclusive skins (and
+  sets `Profile.supporterUnlocked` → grants the coin bundle + exclusive skins (and
   optional unlock-all).
 - No ads, no consumable IAP storefront on desktop — a single durable unlock.
 
@@ -126,8 +126,8 @@ bindings.
 Each stage is independently shippable & testable (headless `SN_SHOT`/`SN_MODE` +
 manual play).
 
-- **Stage 1 — Currency + Profile.** `Profile` C++ type + QSettings; berries earned per
-  run; berry balance in HUD; coins-earned tally on Game Over. No store yet.
+- **Stage 1 — Currency + Profile.** `Profile` C++ type + QSettings; coins earned per
+  run; coin balance in HUD; coins-earned tally on Game Over. No store yet.
 - **Stage 2 — Widget kit + Theme tokens + icons.** Promote StatCard/ToggleRow; add
   CoinBalance/StoreCard/ProgressBar/SegmentedControl/ScreenHeader/Toast/Badge; new
   icons; Theme light/dark token split.
@@ -143,7 +143,7 @@ manual play).
 
 ## Open questions (for later stages, not blocking)
 
-- Berry earn/price tuning (how many runs ≈ one skin).
+- Coin earn/price tuning (how many runs ≈ one skin).
 - Daily modifier set (which modifiers feel fair).
 - Whether Supporter "unlocks everything" or just grants a generous bundle + exclusives.
-- Currency name (Berries vs. Coins vs. Seeds).
+- Currency name (Coins vs. Coins vs. Seeds).

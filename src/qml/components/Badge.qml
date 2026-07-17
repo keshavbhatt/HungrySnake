@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A small pill badge — a count, "NEW", "LOCKED", etc.
 Rectangle {

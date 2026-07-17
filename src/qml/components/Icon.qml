@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A themeable vector icon rendered from real SVG markup (via Qt's SVG image
 // backend) so the UI looks identical on every platform. Pick an icon by `name`;

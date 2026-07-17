@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A cosmetic tile for the Store: a preview swatch, a name, and a state-driven
 // action pill (Coin price to buy → Equip → Equipped). Pass the preview as a

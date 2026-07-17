@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // The player's Coin balance (icon + count), for screen headers / store.
 Row {

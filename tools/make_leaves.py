@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate decorative jungle foliage SVGs for Snecko's background.
+"""Generate decorative jungle foliage SVGs for HungrySnake's background.
 
 Pure-math palm fronds (a curved rib with tapered leaflets) — no external art.
 Output: assets/decor/frond.svg  (a single dark leaf; QML tints/rotates instances)

@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // A square icon button (kit style — 48px, 14px radius). Defaults to the tan
 // "secondary" surface; pass bg/bgBorder/color to place it on wood (HUD) etc.

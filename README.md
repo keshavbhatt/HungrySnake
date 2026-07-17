@@ -1,4 +1,4 @@
-# Snecko
+# Hungry Snake
 
 A smooth, jungle-themed take on the classic **Snake** for the desktop. Guide a
 gliding snake around a checkerboard field, eat apples to grow, and don't run
@@ -55,7 +55,7 @@ packaging/              # .desktop
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
-./build/bin/snecko
+./build/bin/hungrysnake
 ```
 
 Requires Qt ≥ 6.5 (developed against 6.10) with `Quick`, `QuickControls2`,
@@ -65,10 +65,10 @@ Requires Qt ≥ 6.5 (developed against 6.10) with `Quick`, `QuickControls2`,
 
 ```sh
 # Render a mid-game frame to a PNG and quit
-SN_SHOT=/tmp/shot.png ./build/bin/snecko
+SN_SHOT=/tmp/shot.png ./build/bin/hungrysnake
 
 # Auto-steer toward the apple and save a numbered filmstrip
-SN_AUTOPLAY=/tmp/frames ./build/bin/snecko
+SN_AUTOPLAY=/tmp/frames ./build/bin/hungrysnake
 ```
 
 ## Regenerating sounds

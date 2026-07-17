@@ -1,5 +1,5 @@
 import QtQuick
-import Snecko
+import HungrySnake
 
 // The cosmetics catalogue + the resolver for what's currently equipped. An
 // instance (not a singleton) so it can bind to the Profile: set `profile` and

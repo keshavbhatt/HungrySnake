@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Snecko
+import HungrySnake
 
 // A labelled sliding switch row (kit style). Promoted from Main.qml's settings
 // dialog. Two-way: bind `checked` and handle `toggled` to flip the source.

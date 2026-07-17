@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Snecko
+import HungrySnake
 
 // A HUD stat chip — a themed icon glyph + a value, on a shadowed wood chip.
 // Promoted from Main.qml so the HUD, Game Over card and future screens share it.
