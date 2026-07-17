@@ -9,13 +9,28 @@ QtObject {
     id: ach
     property Profile  profile: null
     property SnakeGame game: null
+    property Cosmetics cosmetics: null
     signal unlocked(string name)
 
-    // Total paid cosmetics (for the "own all" achievement) — kept in step with Cosmetics.qml.
-    readonly property int cosmeticsTotal: 12
+    // How many cosmetics "own all" needs — DERIVED from the catalogue as the number of
+    // PURCHASABLE (price > 0) items, i.e. what a FREE player can actually reach.
+    // Never hardcode this: it was once 12 (9 paid + 3 Supporter-exclusive), which made
+    // the payout impossible without buying — a pay-gate that broke the "everything
+    // earnable free" rule. Supporters get 3 exclusives free, so they just reach it sooner.
+    readonly property int cosmeticsTotal: {
+        if (!cosmetics) return 0;
+        var n = 0;
+        var slots = cosmetics.slotList;
+        for (var i = 0; i < slots.length; i++) {
+            var list = cosmetics.catalogue(slots[i]);
+            for (var j = 0; j < list.length; j++)
+                if (list[j].price > 0) n++;
+        }
+        return n;
+    }
 
     readonly property var list: [
-        { id: "first_bite",    name: qsTr("First Bite"),    desc: qsTr("Eat your first apple"),      icon: "apple",    stat: "apples",    target: 1,   reward: 5 },
+        { id: "first_bite",    name: qsTr("First Bite"),    desc: qsTr("Eat your first apple"),      icon: "apple",    stat: "apples",    target: 1,   reward: 25 },
         { id: "sweet_tooth",   name: qsTr("Sweet Tooth"),   desc: qsTr("Eat 50 apples in total"),    icon: "apple",    stat: "apples",    target: 50,  reward: 20 },
         { id: "orchardist",    name: qsTr("Orchardist"),    desc: qsTr("Eat 250 apples in total"),   icon: "apple",    stat: "apples",    target: 250, reward: 60 },
         { id: "big_snake",     name: qsTr("Big Snake"),     desc: qsTr("Reach a score of 15"),       icon: "trophy",   stat: "best",      target: 15,  reward: 20 },

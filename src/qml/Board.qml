@@ -397,60 +397,12 @@ Item {
                     y: swallow.py * cell
                     scale: 1 - swallow.t * 0.82
                     opacity: swallow.t < 0.6 ? 1 : Math.max(0, (1 - swallow.t) / 0.4)
-                    Shape {   // apple body — a shaded sphere (radial light from top-left)
-                        id: appleBody
-                        readonly property real d: game.appleRadius * cell * 2
-                        width: d; height: d
-                        anchors.centerIn: parent
-                        antialiasing: true
-                        preferredRendererType: Shape.CurveRenderer
-                        // Real drop shadow, straight down in screen space (the apple
-                        // never rotates), matching the head and eyes.
-                        layer.enabled: true
-                        layer.smooth: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#000000"
-                            shadowBlur: 0.9
-                            blurMax: 28
-                            shadowOpacity: 0.6
-                            shadowVerticalOffset: 8
-                            autoPaddingEnabled: true
-                        }
-                        ShapePath {
-                            strokeColor: "transparent"
-                            fillGradient: RadialGradient {
-                                centerX: appleBody.d * 0.38; centerY: appleBody.d * 0.32
-                                centerRadius: appleBody.d * 0.78
-                                focalX: appleBody.d * 0.38; focalY: appleBody.d * 0.32
-                                GradientStop { position: 0.0;  color: Qt.lighter(root.cApple, 1.55) }
-                                GradientStop { position: 0.45; color: root.cApple }
-                                GradientStop { position: 1.0;  color: Qt.darker(root.cApple, 1.7) }
-                            }
-                            startX: appleBody.d; startY: appleBody.d / 2
-                            PathAngleArc {
-                                centerX: appleBody.d / 2; centerY: appleBody.d / 2
-                                radiusX: appleBody.d / 2; radiusY: appleBody.d / 2
-                                startAngle: 0; sweepAngle: 360
-                            }
-                        }
-                        // Glossy specular highlight — a sharp bright streak, top-left.
-                        Rectangle {
-                            x: appleBody.d * 0.19; y: appleBody.d * 0.14
-                            width: appleBody.d * 0.2; height: appleBody.d * 0.27
-                            radius: width / 2; rotation: -22
-                            antialiasing: true
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.9) }
-                                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
-                            }
-                        }
-                    }
-                    Rectangle {   // leaf
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        y: -game.appleRadius * cell * 1.0
-                        width: game.appleRadius * cell * 0.7; height: game.appleRadius * cell * 0.4
-                        radius: height / 2; rotation: -28; color: root.cAppleLeaf
+                    // The fruit art lives in AppleArt so the Store previews render the
+                    // exact same drawing (its origin is the fruit's centre).
+                    AppleArt {
+                        d: game.appleRadius * cell * 2
+                        body: root.cApple
+                        leaf: root.cAppleLeaf
                     }
                 }
             }

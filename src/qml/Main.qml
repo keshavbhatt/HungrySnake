@@ -20,7 +20,7 @@ ApplicationWindow {
     SnakeGame { id: game }
     Profile   { id: profile }   // persistent Coins currency + lifetime stats
     Cosmetics { id: cosmetics; profile: profile }   // equipped-skin palette resolver
-    Achievements { id: achievements; profile: profile; game: game }
+    Achievements { id: achievements; profile: profile; game: game; cosmetics: cosmetics }
     Connections {
         target: achievements
         function onUnlocked(name) { achToast.show(qsTr("Achievement: ") + name, "medal"); }
@@ -91,7 +91,7 @@ ApplicationWindow {
     // Redeem the Supporter unlock (generous Coin bundle + exclusive cosmetics).
     // On a real build the KTechpit AccountAndLicense purchase gates this call.
     function becomeSupporter() {
-        profile.unlockSupporter(500, cosmetics.supporterIds);
+        profile.unlockSupporter(800, cosmetics.supporterIds);
         achToast.show(qsTr("Thanks for supporting Hungry Snake!"), "heart");
     }
 
@@ -581,52 +581,42 @@ ApplicationWindow {
                             }
                             onEquip: profile.equip(store.catSlot, modelData.id)
                             onUnlock: win.navigate("about")   // go redeem Supporter
+                            // Previews render the REAL art (AppleArt is literally the same
+                            // component the board draws), not abstract swatches.
                             preview: Component {
                                 Item {
                                     id: sw
                                     anchors.fill: parent
                                     property var def: modelData      // capture the outer cosmetic def
-                                    Rectangle {                      // snake swatch
+
+                                    SnakeArt {
                                         visible: store.catSlot === "snake"
                                         anchors.centerIn: parent
-                                        width: parent.width * 0.62; height: 22; radius: 11
-                                        gradient: Gradient {
-                                            orientation: Gradient.Horizontal
-                                            GradientStop { position: 0.0; color: sw.def.dark  || "#00000000" }
-                                            GradientStop { position: 1.0; color: sw.def.light || "#00000000" }
-                                        }
-                                        Rectangle {
-                                            anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                                            width: 30; height: 30; radius: 9
-                                            color: sw.def.head || "#00000000"
-                                        }
+                                        width: parent.width * 0.92; height: 46
+                                        head:  sw.def.head  || Theme.headGreen
+                                        snout: sw.def.snout || Theme.snoutCap
+                                        light: sw.def.light || Theme.snakeLight
+                                        dark:  sw.def.dark  || Theme.snakeDark
+                                        nose:  sw.def.nose  || Theme.snakeNose
                                     }
-                                    Grid {                           // board 2×2 checker
+                                    BoardArt {
                                         visible: store.catSlot === "board"
                                         anchors.centerIn: parent
-                                        rows: 2; columns: 2; spacing: 0
-                                        Repeater {
-                                            model: 4
-                                            delegate: Rectangle {
-                                                width: 30; height: 30
-                                                color: ((index + Math.floor(index / 2)) % 2 === 0)
-                                                       ? (sw.def.a || "#00000000") : (sw.def.b || "#00000000")
-                                            }
-                                        }
+                                        width: parent.width * 0.88; height: parent.height * 0.84
+                                        tileA:   sw.def.a       || Theme.tileA
+                                        tileB:   sw.def.b       || Theme.tileB
+                                        tileGap: sw.def.gap     || Theme.tileGap
+                                        frame:   sw.def.frame   || Theme.frame
+                                        frameHi: sw.def.frameHi || Theme.frameHi
                                     }
-                                    Item {                           // apple swatch
+                                    AppleArt {                        // origin = fruit centre
                                         visible: store.catSlot === "apple"
-                                        anchors.centerIn: parent; width: 46; height: 50
-                                        Rectangle {
-                                            anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
-                                            width: 40; height: 40; radius: 20
-                                            color: sw.def.body || "#00000000"
-                                        }
-                                        Rectangle {
-                                            anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter
-                                            width: 16; height: 9; radius: 4.5; rotation: -25
-                                            color: sw.def.leaf || "#00000000"
-                                        }
+                                        x: parent.width / 2
+                                        y: parent.height / 2 + 6
+                                        d: 44
+                                        shadow: false                 // too tight for a drop shadow
+                                        body: sw.def.body || Theme.apple
+                                        leaf: sw.def.leaf || Theme.appleLeaf
                                     }
                                 }
                             }
@@ -836,7 +826,7 @@ ApplicationWindow {
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "coin"; size: 24; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("500 Coin bundle"); color: Theme.inkStrong; font.family: Theme.ui
+                                Text { text: qsTr("800 Coin bundle"); color: Theme.inkStrong; font.family: Theme.ui
                                        font.pixelSize: 16; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             Row {

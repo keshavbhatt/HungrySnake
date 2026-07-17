@@ -143,7 +143,30 @@ manual play).
   - Packaging ✅ DONE (2026-07-17): AppStream metainfo, snapcraft recipe, snap gui icon,
     `.desktop` polish, CMake metainfo install. Validated with `appstreamcli` +
     `desktop-file-validate`; install tree matches snapcraft's expectations.
-  - Economy tuning — ⬜ OUTSTANDING (coin earn rates vs. cosmetic prices).
+  - Economy tuning ✅ DONE (2026-07-17). Catalogue **720 → 2,260** coins over the 9 paid
+    items (ladder: apple 120/220/300, board 160/240/320, snake 200/280/420); `first_bite`
+    reward 5→25 (onboarding); Supporter bundle 500→800 (~35% head start, still not
+    unlock-all). **Fixed a pay-gate:** `completionist` targeted 12 cosmetics but a free
+    player can only own 9 (3 are Supporter-exclusive), making its 150-coin payout
+    impossible without paying — target is now 9. Earn rates unchanged (1 coin/apple,
+    +5 new-best, daily 30–80). Verified by simulation (which parses the numbers back out
+    of the source): regular 6 runs/day → all 9 by **day 13**, casual → day 18, dedicated →
+    day 8; first unlock day 1–2; 9/9 achievements reachable free.
+  - Catalogue expanded ✅ (2026-07-17) to address the coin sink: **18 paid items /
+    4,480 coins** (6 per slot). New: snake Mint/Coral/Shadow, board Tide/Candy/Dusk,
+    apple Lime/Plum/Melon. Pace now: first unlock day 2; ALL 18 by day 23 (regular
+    6 runs/day), day 34 (casual), day 15 (dedicated). `completionist` is now **derived**
+    from the catalogue (count of price>0 items) so it can never drift into a pay-gate again.
+  - ⬜ Idle coins still accumulate *after* the catalogue is complete — inherent with any
+    finite catalogue. Future: more cosmetics, or a second sink.
+
+## Next round (agreed 2026-07-17)
+
+- **More foods for the snake** — apples alone are limiting. Add other food types with
+  their own art/behaviour (e.g. different point values, timed/bonus fruit, a rare golden
+  apple). This is a GAMEPLAY change (SnakeGame + Board), distinct from the apple *skins*
+  in the cosmetics Store. `AppleArt` is already a shared component, so new fruit art can
+  follow the same pattern.
 
 ## Open questions (for later stages, not blocking)
 
