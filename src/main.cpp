@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
                 // there (the app otherwise launches to the "home" hub).
                 else if (mode == "waiting" || mode == "eat" || mode == "die"
                       || mode == "mouth" || mode == "long" || mode == "settings"
-                      || mode == "bonus" || mode == "bonuseat")
+                      || mode == "bonus" || mode == "bonuseat" || mode == "over")
                     w->setProperty("route", "game");
                 auto *game = w->findChild<SnakeGame *>();
                 int grabDelay = 2200;
@@ -247,6 +247,25 @@ int main(int argc, char *argv[])
                     QObject::connect(t, &QTimer::timeout, &app, [game]() { seekFood(game); });
                     t->start();
                     grabDelay = 40000;
+                } else if (game && mode == "over") {
+                    // Autoplay until the snake dies, then grab the Game Over card (past
+                    // its ~430ms reveal). Used to check the death / new-best celebration.
+                    game->start();
+                    auto *t = new QTimer(&app);
+                    t->setInterval(16);
+                    QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
+                    t->start();
+                    QObject::connect(game, &SnakeGame::died, &app, [w, shot, &app, t]() {
+                        static bool once = false;
+                        if (once) return;
+                        once = true;
+                        t->stop();
+                        QTimer::singleShot(700, [w, shot, &app] {
+                            w->grabWindow().save(QString::fromUtf8(shot));
+                            app.quit();
+                        });
+                    }, Qt::QueuedConnection);
+                    grabDelay = 30000;
                 } else if (game && mode == "die") {
                     game->start();
                     auto *t = new QTimer(&app);

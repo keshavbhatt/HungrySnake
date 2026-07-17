@@ -569,17 +569,26 @@ ApplicationWindow {
                 // classic red (not the equipped skin) so the logo stays brand-stable.
                 AppleArt {
                     id: logoApple
-                    d: 44
+                    d: 46
                     shadow: false
-                    rotation: 15
                     transformOrigin: Item.Center
-                    x: title.width * 0.9
-                    y: title.height * 0.24
-                    // A gentle idle bob so the logo feels alive.
-                    SequentialAnimation on rotation {
+                    x: title.width * 1.04          // sitting just past the final "E"
+                    y: title.height * 0.12         // perched up top so the "E" stays visible
+                    // Lively idle motion: a wide tilt swing + a hop on an offset period,
+                    // so it never repeats and clearly reads as alive.
+                    property real rot: 12
+                    property real hop: 0
+                    rotation: rot
+                    transform: Translate { y: logoApple.hop }
+                    SequentialAnimation on rot {
                         loops: Animation.Infinite
-                        NumberAnimation { to: 9;  duration: 1600; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 15; duration: 1600; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: -8; duration: 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 22; duration: 900; easing.type: Easing.InOutSine }
+                    }
+                    SequentialAnimation on hop {
+                        loops: Animation.Infinite
+                        NumberAnimation { to: -9; duration: 680; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0;  duration: 680; easing.type: Easing.InOutSine }
                     }
                 }
             }
