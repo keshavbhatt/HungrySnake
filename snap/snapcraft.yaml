@@ -1,0 +1,63 @@
+name: hungrysnake
+adopt-info: hungrysnake
+license: Proprietary
+
+grade: stable
+confinement: strict
+base: core24
+compression: lzo
+
+icon: snap/gui/icon.png
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  hungrysnake:
+    command: usr/bin/hungrysnake
+    desktop: usr/share/applications/com.ktechpit.hungrysnake.desktop
+    common-id: com.ktechpit.hungrysnake
+    extensions:
+      - kde-neon-6
+    environment:
+      IS_SNAP: '1'
+    plugs:
+      - opengl
+      - wayland
+      - x11
+      - desktop
+      - desktop-legacy
+      # Music + sound effects are looping SoundEffects (QAudioSink) — no
+      # MediaPlayer/ffmpeg — so only the audio-output service is needed.
+      - audio-playback
+      - alsa
+      # NOTE: no `network` plug — the game is fully offline. Add it only when the
+      # Supporter unlock is wired to the ktechpit USS licence check (see
+      # docs/ROADMAP.md §6); today that grant is applied locally.
+
+parts:
+  hungrysnake:
+    source: .
+    plugin: cmake
+    # Pull summary / description / licence from the bundled AppStream metainfo.
+    parse-info:
+      - usr/share/metainfo/com.ktechpit.hungrysnake.metainfo.xml
+    build-packages:
+      - libxkbcommon-dev
+      - libpulse-dev
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+    override-build: |
+      craftctl default
+
+      # Point the desktop entry at the snap's packaged icon.
+      sed -i \
+        "s|^Icon=.*|Icon=\${SNAP}/meta/gui/icon.png|" \
+        ${CRAFT_PART_INSTALL}/usr/share/applications/com.ktechpit.hungrysnake.desktop
+    prime:
+      - -usr/include
+      - -usr/lib/*/cmake
+      - -usr/share/man
+      - -usr/share/lintian

@@ -78,8 +78,7 @@ bindings.
   Owned / Equip), coin balance in the header.
 - **Achievements** — list with `ProgressBar`s; claim buttons for unclaimed payouts.
 - **Daily** — today's modifier/target, reward, streak, Play.
-- **Settings** — existing sound/music/track **+ dark-mode toggle** (wire sun/moon) and
-  reduced-motion.
+- **Settings** — existing sound/music/track.
 - **Game Over** (enhanced) — coins-earned tally with a count-up, new-best flag,
   achievement `Toast`s, and Home / Restart / Continue.
 - **Pause** — current settings-as-pause + a Home button.
@@ -88,12 +87,11 @@ bindings.
 ### Widget kit additions (`components/`)
 
 - Promote inline `StatCard` and `ToggleRow` to real components.
-- New: `CoinBalance` (berry icon + count), `StoreCard`, `ProgressBar`,
+- New: `CoinBalance` (coin icon + count), `StoreCard`, `ProgressBar`,
   `SegmentedControl`/`Tab`, `ScreenHeader` (title + back), `Toast`, `Badge`.
-- **Icon** — add: berry/coin, store/bag, medal, calendar, lock, check, gear, heart,
-  home, chevron, sparkle; wire the already-defined `sun`/`moon`/`back`/`home`.
-- **Theme** — add store/locked/owned + coin-gold tokens; restructure into
-  **light/dark palettes** so the dark-mode toggle has something to switch.
+- **Icon** — add: coin, store/bag, medal, calendar, lock, check, gear, heart,
+  home, chevron, sparkle; wire the already-defined `back`/`home`.
+- **Theme** — add store/locked/owned + coin tokens.
 
 ## 5. Persistence & architecture
 
@@ -108,7 +106,7 @@ bindings.
 - **`SnakeGame`** — on `died()`, expose a run summary (apples, length, isNewBest);
   add an optional `startDaily(seed, modifier)` that only sets seed/speed — normal
   `start()` is untouched. RNG already seeds the apple; make the seed injectable.
-- Keep the existing QML `Settings` for sound/music/dark toggles; Profile owns the
+- Keep the existing QML `Settings` for the sound/music toggles; Profile owns the
   rest. Both under the `HungrySnake` category.
 
 ## 6. Monetization wiring (desktop)
@@ -126,20 +124,26 @@ bindings.
 Each stage is independently shippable & testable (headless `SN_SHOT`/`SN_MODE` +
 manual play).
 
-- **Stage 1 — Currency + Profile.** `Profile` C++ type + QSettings; coins earned per
-  run; coin balance in HUD; coins-earned tally on Game Over. No store yet.
-- **Stage 2 — Widget kit + Theme tokens + icons.** Promote StatCard/ToggleRow; add
-  CoinBalance/StoreCard/ProgressBar/SegmentedControl/ScreenHeader/Toast/Badge; new
-  icons; Theme light/dark token split.
-- **Stage 3 — Screen router + Home hub.** `win.screen` + back-stack; Home landing;
-  rework overlays into screens.
-- **Stage 4 — Cosmetics.** Data model + `Cosmetics` equipped singleton; refactor
-  `Board.qml`/HUD to read equipped palettes; Store screen (browse / unlock / equip).
-- **Stage 5 — Achievements + Daily + streaks.** Predicate engine, daily seed/modifier,
-  Game-Over toasts, stats/profile view.
-- **Stage 6 — Dark mode + settings expansion.** Wire sun/moon; reduced-motion.
-- **Stage 7 — Supporter unlock + About/Credits.** AccountAndLicense integration.
-- **Stage 8 — Balance & packaging.** Economy tuning; snap metainfo/desktop polish.
+- **Stage 1 — Currency + Profile.** ✅ DONE. `Profile` C++ type + QSettings; coins earned
+  per run; coin balance in HUD; coins-earned tally on Game Over.
+- **Stage 2 — Widget kit + Theme tokens + icons.** ✅ DONE. Promoted StatCard/ToggleRow;
+  added CoinBalance/StoreCard/ProgressBar/SegmentedControl/ScreenHeader/Toast/Badge; new
+  icons; Theme tokens.
+- **Stage 3 — Screen router + Home hub.** ✅ DONE. `win.route` + back-stack; Home landing;
+  overlays reworked into screens.
+- **Stage 4 — Cosmetics.** ✅ DONE. Data model + `Cosmetics` equipped resolver; `Board.qml`/
+  HUD read equipped palettes; Store screen (browse / buy / equip).
+- **Stage 5 — Achievements + Daily + streaks.** ✅ DONE. Achievement checker, daily seed +
+  target, Game-Over/unlock toasts.
+- **Stage 6 — Dark mode.** ❌ DROPPED (2026-07-17, product decision — the game keeps its
+  single fixed jungle palette; the `sun`/`moon` icons stay unused).
+- **Stage 7 — Supporter unlock + About/Credits.** ✅ DONE (grant applied locally;
+  the real AccountAndLicense purchase gate is still to be wired — see §6).
+- **Stage 8 — Balance & packaging.**
+  - Packaging ✅ DONE (2026-07-17): AppStream metainfo, snapcraft recipe, snap gui icon,
+    `.desktop` polish, CMake metainfo install. Validated with `appstreamcli` +
+    `desktop-file-validate`; install tree matches snapcraft's expectations.
+  - Economy tuning — ⬜ OUTSTANDING (coin earn rates vs. cosmetic prices).
 
 ## Open questions (for later stages, not blocking)
 

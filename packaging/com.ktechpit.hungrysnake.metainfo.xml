@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ktechpit.hungrysnake</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary=https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/LICENSE</project_license>
+  <name>Hungry Snake</name>
+  <summary>A juicy, jungle-themed take on classic Snake</summary>
+
+  <developer id="com.ktechpit">
+    <name>Keshav Bhatt</name>
+  </developer>
+
+  <description>
+    <p>
+      Hungry Snake is a polished, jungle-themed take on the game you already know:
+      guide a glossy cartoon snake around a wooden board, gobble apples, and grow.
+      Hit a wall or your own tail and the run is over.
+    </p>
+    <p>
+      The snake glides smoothly between cells rather than snapping, turns are
+      buffered so quick taps never get dropped, and each run starts only when you
+      press a key — so you are never thrown straight into a crash.
+    </p>
+    <ul>
+      <li>Smooth, glide-between-cells movement with a cute, expressive snake that blinks, flicks its tongue and watches the apple</li>
+      <li>Earn Coins just by playing, then spend them in the Store on snake skins, board themes and apple styles</li>
+      <li>A fresh Daily Challenge every day with a streak to keep alive</li>
+      <li>Achievements that pay out as you hit lifetime and single-run milestones</li>
+      <li>Six looping soundtracks plus crunchy eat and crash effects — all toggleable</li>
+      <li>Free to play with no ads: every cosmetic can be unlocked just by playing</li>
+      <li>Fully offline — play anywhere, anytime</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.ktechpit.hungrysnake.desktop</launchable>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#437350</color>
+    <color type="primary" scheme_preference="dark">#0d211c</color>
+  </branding>
+
+  <!-- TODO(release): these images must exist in the hungrysnake-packaging repo
+       before publishing — capture them from a real (non-headless) run. -->
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/01-home.png</image>
+      <caption>The jungle home screen — jump straight into a run</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/02-play.png</image>
+      <caption>Glide around the board, gobble apples and grow</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/03-store.png</image>
+      <caption>Spend the Coins you earn on snake skins, boards and apples</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/04-daily.png</image>
+      <caption>A new Daily Challenge every day — keep your streak alive</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/05-achievements.png</image>
+      <caption>Achievements pay out Coins as you hit milestones</caption>
+    </screenshot>
+  </screenshots>
+
+  <icon type="stock">com.ktechpit.hungrysnake</icon>
+
+  <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=hungrysnake</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/hungrysnake-packaging/issues</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/hungrysnake-packaging</url>
+  <url type="donation">https://www.paypal.me/keshavnrj/9</url>
+
+  <provides>
+    <binary>hungrysnake</binary>
+  </provides>
+
+  <categories>
+    <category>Game</category>
+    <category>ArcadeGame</category>
+  </categories>
+
+  <keywords>
+    <keyword>snake</keyword>
+    <keyword>arcade</keyword>
+    <keyword>apples</keyword>
+    <keyword>retro</keyword>
+    <keyword>casual</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.1.0" date="2026-07-17">
+      <description>
+        <p>First public preview of Hungry Snake.</p>
+        <p>Smooth jungle-themed Snake with a cosmetics Store, earnable Coins, a Daily Challenge with streaks, achievements and six looping soundtracks.</p>
+      </description>
+    </release>
+  </releases>
+
+  <update_contact>keshavnrj@gmail.com</update_contact>
+</component>

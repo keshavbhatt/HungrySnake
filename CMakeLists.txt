@@ -131,5 +131,10 @@ install(TARGETS hungrysnake RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES packaging/${SN_APP_ID}.desktop
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
 
+# AppStream metainfo — snapcraft's parse-info pulls the summary/description/
+# licence straight out of this at build time (see snap/snapcraft.yaml).
+install(FILES packaging/${SN_APP_ID}.metainfo.xml
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
+
 install(FILES assets/icons/${SN_APP_ID}.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
