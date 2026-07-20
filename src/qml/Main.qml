@@ -1304,8 +1304,8 @@ ApplicationWindow {
                             width: parent.width; spacing: 8
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
-                                Icon { name: "heart"; color: Theme.success; size: 26; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: qsTr("You're a Supporter — thank you!"); color: Theme.success; font.family: Theme.ui
+                                Icon { name: "heart"; color: Theme.successInk; size: 26; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: qsTr("You're a Supporter — thank you!"); color: Theme.successInk; font.family: Theme.ui
                                        font.pixelSize: 18; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                             }
                             Text {
@@ -1603,7 +1603,7 @@ ApplicationWindow {
                                     id: chipLabel
                                     anchors.centerIn: parent
                                     text: modelData.label
-                                    color: sel ? "white" : Theme.inkStrong
+                                    color: Theme.inkStrong   // dark ink both states (white on green was 2.3:1)
                                     font.pixelSize: 14
                                     font.weight: Font.DemiBold
                                 }

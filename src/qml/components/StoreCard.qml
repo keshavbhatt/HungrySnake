@@ -66,7 +66,9 @@ Rectangle {
                     Icon {
                         anchors.centerIn: parent
                         name: root.locked ? "lock" : root.equipped ? "check" : "coin"
-                        color: root.equipped ? Theme.success : root.locked ? Theme.cream : Theme.inkStrong
+                        // The equipped check was success-green on the tan pill (~1.5:1, invisible);
+                        // dark ink reads clearly and the card's green border still signals "equipped".
+                        color: root.locked ? Theme.cream : Theme.inkStrong
                         size: root.locked ? 15 : root.equipped ? 16 : 18
                     }
                 }

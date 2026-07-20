@@ -66,6 +66,7 @@ QtObject {
 
     // ── Store / progression state colours ──
     readonly property color success:   "#46c08a"  // owned / equipped / completed (= primary)
+    readonly property color successInk: "#1f5c3d"  // dark green for green text/icons on tan cards (≥4.5:1)
     readonly property color locked:     "#9c7d56"  // locked-cosmetic tint
 
     // ── Apple ──
