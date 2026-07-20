@@ -545,16 +545,6 @@ ApplicationWindow {
             }
         }
 
-        // A grounding strip along the very bottom of the hub.
-        Rectangle {
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            height: 26
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: "#103528" }
-                GradientStop { position: 1.0; color: "#0d2a20" }
-            }
-        }
-
         Column {
             anchors.centerIn: parent
             spacing: 22
