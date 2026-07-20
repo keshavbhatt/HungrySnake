@@ -374,6 +374,7 @@ ApplicationWindow {
                 if (win.settingsOpen) win.closeSettings();
                 else if (win.route === "home") win.playGame();
                 else if (win.route === "game" && game.status === SnakeGame.Playing) win.openSettings();
+                else if (win.route === "game" && game.status === SnakeGame.Dead) game.restart();  // Play Again
                 e.accepted = true; break;
             case Qt.Key_Return: case Qt.Key_Enter:
                 if (win.route === "home") win.playGame();
