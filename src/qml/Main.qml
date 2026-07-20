@@ -1404,22 +1404,24 @@ ApplicationWindow {
                     spacing: 14
                     component ScoreChip: Rectangle {
                         property string glyph: ""
+                        property string caption: ""
                         property int value: 0
-                        width: 128; height: 74; radius: Theme.r
+                        width: 132; height: 74; radius: Theme.r
                         color: Theme.insetTan          // inset panel — stat block in a dialog
                         Row {
-                            anchors.centerIn: parent; spacing: 12
-                            Item {
-                                width: 36; height: 36; anchors.verticalCenter: parent.verticalCenter
-                                Icon { anchors.centerIn: parent; name: glyph; size: 34 }
+                            anchors.centerIn: parent; spacing: 10
+                            Icon { name: glyph; size: 32; anchors.verticalCenter: parent.verticalCenter }
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { text: value; color: Theme.inkStrong; font.family: Theme.ui
+                                       font.pixelSize: 30; font.weight: Font.Bold }
+                                Text { text: caption; color: Theme.inkSoft; font.family: Theme.ui
+                                       font.pixelSize: 12; font.weight: Font.DemiBold }
                             }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: value
-                                   color: Theme.inkStrong; font.family: Theme.ui
-                                   font.pixelSize: 32; font.weight: Font.Bold }
                         }
                     }
-                    ScoreChip { glyph: "apple";  value: game.score }
-                    ScoreChip { glyph: "trophy"; value: game.best }
+                    ScoreChip { glyph: "apple";  caption: qsTr("Score"); value: game.score }
+                    ScoreChip { glyph: "trophy"; caption: qsTr("Best");  value: game.best }
                 }
 
                 // Coins earned this run (hidden on a fruitless run).
@@ -1506,8 +1508,9 @@ ApplicationWindow {
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 12
-                    PillButton { text: qsTr("Continue"); fontSize: 18; onClicked: game.restart() }
-                    IconButton { icon: "restart"; onClicked: game.restart() }
+                    // One clear primary action (Play Again = a fresh run) + Home. The old
+                    // card had "Continue" and a restart icon that did the same thing.
+                    PillButton { icon: "play"; text: qsTr("Play Again"); fontSize: 18; onClicked: game.restart() }
                     IconButton { icon: "home"; onClicked: win.goHome() }
                 }
             }
