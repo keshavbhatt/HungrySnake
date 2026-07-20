@@ -347,31 +347,47 @@ Item {
                 }
             }
 
-            // ── Floating "+N" score popup at the eat spot — rises and fades so a
-            // score gain reads instantly (an apple = +1, a Golden star = +5). ──
+            // ── Floating eat popup at the eat spot — rises and fades so the effect
+            // reads instantly. It spells out what you got rather than a bare number:
+            // an apple "+1" and a Golden star "+5" in gold, a Mint leaf "Trim -4" in
+            // mint-green (so its tail-trim isn't misread as a point loss). ──
             Item {
                 id: scorePop
                 property real cx: 0
                 property real cy: 0
                 property string txt: ""
+                property color tint: "#ffe27a"      // fill
+                property color tintDark: "#3a2a06"  // outline
                 property real t: 1               // 1 = done
                 x: cx * cell; y: cy * cell
                 z: 7
                 visible: t < 1
-                function show(s, gx, gy) { txt = s; cx = gx; cy = gy; scorePopAnim.restart(); }
+                function show(s, gx, gy, col, colDark) {
+                    txt = s; cx = gx; cy = gy;
+                    tint = col || "#ffe27a";
+                    tintDark = colDark || "#3a2a06";
+                    scorePopAnim.restart();
+                }
                 Connections {
                     target: game
-                    function onAte()          { scorePop.show("+1", game.appleX, game.appleY); }
-                    function onAteBonus(kind) { scorePop.show(kind === 0 ? "+5" : "+1", game.bonusX, game.bonusY); }
+                    function onAte() { scorePop.show("+1", game.appleX, game.appleY); }
+                    function onAteBonus(kind) {
+                        if (kind === 0)   // Golden star: points + growth
+                            scorePop.show("+5", game.bonusX, game.bonusY);
+                        else              // Mint leaf: trims the tail
+                            scorePop.show("Trim -4", game.bonusX, game.bonusY, "#9ff0cc", "#0e3a2c");
+                    }
                 }
                 NumberAnimation { id: scorePopAnim; target: scorePop; property: "t"
                                   from: 0; to: 1; duration: 750; easing.type: Easing.OutQuad }
                 Text {
                     anchors.centerIn: parent
                     text: scorePop.txt
-                    color: "#ffe27a"
-                    style: Text.Outline; styleColor: "#3a2a06"
-                    font.family: Theme.display; font.pixelSize: cell * 0.6; font.weight: Font.Bold
+                    color: scorePop.tint
+                    style: Text.Outline; styleColor: scorePop.tintDark
+                    font.family: Theme.display; font.weight: Font.Bold
+                    // Shrink the pixel size for the wider word so "Trim -4" still fits.
+                    font.pixelSize: cell * (scorePop.txt.length > 3 ? 0.42 : 0.6)
                     y: -8 - scorePop.t * cell * 1.1                       // rise
                     opacity: 1 - scorePop.t                              // fade
                     scale: 0.5 + Math.min(1, scorePop.t * 6) * 0.7        // quick pop-in
