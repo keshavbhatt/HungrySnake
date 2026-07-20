@@ -9,7 +9,7 @@ Item {
     property string text: ""
     property color fill: Theme.primary          // face colour
     property color lip:  Qt.darker(fill, 1.34)  // raised bottom edge
-    property color ink:  "#ffffff"
+    property color ink:  Theme.inkStrong   // dark ink on the green face (5.4:1; white was 2.3:1)
     property real  radius: Theme.r
     property bool  raised: true
     property int   fontSize: 16

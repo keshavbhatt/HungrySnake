@@ -20,9 +20,22 @@ Rectangle {
     implicitWidth: 150
     implicitHeight: 178
     radius: Theme.r
-    color: Theme.cardTan
-    border.width: 2
+    // The equipped card is lifted out of the tan pack: a light-green fill, a thicker
+    // green border, and a corner check badge — so "which one is on" reads at a glance
+    // (the old thin border alone was too easy to miss).
+    color: equipped ? Theme.equippedTint : Theme.cardTan
+    border.width: equipped ? 3 : 2
     border.color: equipped ? Theme.success : Theme.cardEdge
+
+    Rectangle {                              // corner "equipped" check badge
+        visible: root.equipped
+        z: 2
+        width: 28; height: 28; radius: 14
+        color: Theme.success
+        border.width: 2; border.color: Theme.equippedTint
+        anchors { right: parent.right; top: parent.top; rightMargin: -6; topMargin: -6 }
+        Icon { anchors.centerIn: parent; name: "check"; color: "#ffffff"; size: 17 }
+    }
 
     Column {
         anchors.fill: parent
