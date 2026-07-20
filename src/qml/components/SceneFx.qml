@@ -1,0 +1,52 @@
+import QtQuick
+
+// Picks the atmospheric layer for the equipped background scene. Two instances are
+// placed in Main: plane "back" (sky: stars, aurora) sits behind the board; plane
+// "front" (air: snow, embers, motes, fireflies) drifts over everything. Each effect
+// is gated on both its `fx` name and its plane, and builds zero nodes when inactive,
+// so only the equipped scene's layer costs anything.
+Item {
+    id: root
+    property string fx: "none"      // cosmetics.sceneFx
+    property string plane: "front"  // "back" | "front"
+    property bool   active: true
+
+    // ── Sky (back plane) ──────────────────────────────────────────────────────
+    StarField {
+        anchors.fill: parent
+        running: root.active && root.plane === "back" && root.fx === "stars"
+        showMoon: true
+    }
+    AuroraLayer {
+        anchors.fill: parent
+        running: root.active && root.plane === "back" && root.fx === "aurora"
+    }
+
+    // ── Air (front plane) ─────────────────────────────────────────────────────
+    FireflyField {
+        anchors.fill: parent
+        running: root.active && root.plane === "front" && root.fx === "fireflies"
+    }
+    // Warm dust motes rising in the sunset light — slow, soft, no flicker.
+    ParticleField {
+        anchors.fill: parent
+        running: root.active && root.plane === "front" && root.fx === "motes"
+        count: 34; minSize: 3; maxSize: 9
+        core: "#ffe9cf"; glow: "#ffbe86"
+        direction: -1; durMin: 11000; durMax: 20000; swayMax: 34
+        flicker: false; baseOpacity: 0.5
+    }
+    // Rising embers — hot, fast-ish, flickering.
+    ParticleField {
+        anchors.fill: parent
+        running: root.active && root.plane === "front" && root.fx === "embers"
+        count: 46; minSize: 2.5; maxSize: 7
+        core: "#ffd98a"; glow: "#ff5a1e"
+        direction: -1; durMin: 5000; durMax: 11000; swayMax: 46
+        flicker: true; baseOpacity: 0.92
+    }
+    SnowLayer {
+        anchors.fill: parent
+        running: root.active && root.plane === "front" && root.fx === "snow"
+    }
+}

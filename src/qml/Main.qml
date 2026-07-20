@@ -235,21 +235,33 @@ ApplicationWindow {
         }
     }
 
-    // ── Jungle backdrop: bright canopy up top → deep teal on the floor ──
+    // ── Backdrop: the equipped background scene's 3-stop gradient (canopy → floor).
+    // Cosmetics resolves the colours; a Behavior cross-fades when the scene changes.
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0;  color: Theme.bgTop }
-            GradientStop { position: 0.55; color: Theme.bg }
-            GradientStop { position: 1.0;  color: Theme.bgDeep }
+            GradientStop { position: 0.0;  color: cosmetics.sceneTop;    Behavior on color { ColorAnimation { duration: 400 } } }
+            GradientStop { position: 0.55; color: cosmetics.sceneMid;    Behavior on color { ColorAnimation { duration: 400 } } }
+            GradientStop { position: 1.0;  color: cosmetics.sceneBottom; Behavior on color { ColorAnimation { duration: 400 } } }
         }
+    }
+
+    // Sky-plane atmosphere (stars / aurora) — behind the foliage and the board so it
+    // reads as the far background, not something painted over the snake.
+    SceneFx {
+        anchors.fill: parent
+        plane: "back"
+        fx: cosmetics.sceneFx
     }
 
     // ── Decorative foliage framing the scene ──
     // Dark leaf silhouettes clustered around the edges — lighter/thinner up in the
     // canopy, denser and darker on the floor — each swaying gently in the breeze.
+    // The scene fades them (0 for Snowfall, where snow replaces them).
     Item {
         anchors.fill: parent
+        opacity: cosmetics.sceneLeaf
+        Behavior on opacity { NumberAnimation { duration: 400 } }
 
         component Leaf: Image {
             property real len: 360
@@ -687,7 +699,7 @@ ApplicationWindow {
 
                 SegmentedControl {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    model: [qsTr("Snake"), qsTr("Board"), qsTr("Apple"), qsTr("Bonus")]
+                    model: [qsTr("Snake"), qsTr("Board"), qsTr("Apple"), qsTr("Bonus"), qsTr("Scene")]
                     currentIndex: store.catIndex
                     onActivated: store.catIndex = index
                 }
@@ -771,6 +783,27 @@ ApplicationWindow {
                                         shadow: false                 // too tight for a drop shadow
                                         body: sw.def.body || Theme.apple
                                         leaf: sw.def.leaf || Theme.appleLeaf
+                                    }
+                                    Rectangle {                       // scene: a mini gradient sky
+                                        visible: store.catSlot === "scene"
+                                        anchors.centerIn: parent
+                                        width: parent.width * 0.84; height: parent.height * 0.8
+                                        radius: 8; clip: true
+                                        gradient: Gradient {
+                                            GradientStop { position: 0.0;  color: sw.def.top    || "#00000000" }
+                                            GradientStop { position: 0.55; color: sw.def.mid    || "#00000000" }
+                                            GradientStop { position: 1.0;  color: sw.def.bottom || "#00000000" }
+                                        }
+                                        Repeater {                    // snow hint dots
+                                            model: (sw.def.snow === true) ? 10 : 0
+                                            delegate: Rectangle {
+                                                required property int index
+                                                width: 3; height: 3; radius: 1.5; color: "#ffffff"
+                                                opacity: 0.85
+                                                x: ((index * 0.3719) % 1) * parent.width
+                                                y: ((index * 0.6180) % 1) * parent.height
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1313,6 +1346,14 @@ ApplicationWindow {
         onExited: hideTimer.stop()
         onEnabledChanged: { hidden = false; if (enabled) hideTimer.restart(); else hideTimer.stop(); }
         Timer { id: hideTimer; interval: 2500; running: cursorHider.enabled; onTriggered: cursorHider.hidden = true }
+    }
+
+    // Air-plane atmosphere (snow / embers / motes / fireflies) — drifts over the whole
+    // scene, board included, when the equipped scene calls for it. Purely visual.
+    SceneFx {
+        anchors.fill: parent
+        plane: "front"
+        fx: cosmetics.sceneFx
     }
 
     // Transient notification (achievement unlocked / daily complete) — topmost.

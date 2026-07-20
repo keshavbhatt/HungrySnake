@@ -65,6 +65,12 @@ set(SN_QML_FILES
     components/BoardArt.qml
     components/BonusFoodArt.qml
     components/MascotHead.qml
+    components/SnowLayer.qml
+    components/ParticleField.qml
+    components/FireflyField.qml
+    components/StarField.qml
+    components/AuroraLayer.qml
+    components/SceneFx.qml
 )
 set(SN_QML_PATHS "")
 foreach(qml IN LISTS SN_QML_FILES)
