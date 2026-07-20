@@ -35,7 +35,11 @@ Item {
         "check":   '<polyline points="5 12.5 10 17.5 19 6.5"/>',
         "heart":   '<path d="M12 20.5C6.5 16.2 3.5 12.9 3.5 9 3.5 6.4 5.5 4.5 8 4.5c1.7 0 3.2.9 4 2.3.8-1.4 2.3-2.3 4-2.3 2.5 0 4.5 1.9 4.5 4.5 0 3.9-3 7.2-8.5 11.5z"/>',
         "chevron": '<polyline points="9 6 15 12 9 18"/>',
-        "sparkle": '<path d="M12 3l1.7 5.5L19 10l-5.3 1.5L12 17l-1.7-5.5L5 10l5.3-1.5L12 3z"/>'
+        "sparkle": '<path d="M12 3l1.7 5.5L19 10l-5.3 1.5L12 17l-1.7-5.5L5 10l5.3-1.5L12 3z"/>',
+        // Winner's podium (2-1-3) — a monochrome ranks/leaderboard glyph matching the
+        // other line icons (the full-colour trophy lives in _rich for HUD/celebrations).
+        "ranks":   '<rect x="3" y="12" width="5.6" height="9" rx="1"/><rect x="9.2" y="7" width="5.6" height="14" rx="1"/><rect x="15.4" y="15" width="5.6" height="6" rx="1"/>',
+        "edit":    '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>'
     })
 
     // Filled, full-colour icons that match the game art (flat + saturated) — used

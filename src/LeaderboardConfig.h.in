@@ -1,0 +1,9 @@
+#pragma once
+
+// Baked-in leaderboard backend, filled by CMake at configure time from the
+// SN_SUPABASE_URL / SN_SUPABASE_ANON_KEY cache variables. The publishable (anon)
+// key is safe to ship in the binary — access is gated server-side by Row Level
+// Security (see backend/supabase_setup.sql). Empty values ⇒ the client runs in
+// mock mode. Environment vars / QSettings override these at runtime (dev only).
+#define SN_SUPABASE_URL      "@SN_SUPABASE_URL@"
+#define SN_SUPABASE_ANON_KEY "@SN_SUPABASE_ANON_KEY@"

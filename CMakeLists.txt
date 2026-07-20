@@ -25,7 +25,7 @@ endif()
 
 # ── Qt ── (pure Qt Quick app: no Widgets) ─────────────────────────────────────
 find_package(Qt6 6.5 REQUIRED COMPONENTS
-    Core Gui Qml Quick QuickControls2 Svg Multimedia)
+    Core Gui Qml Quick QuickControls2 Svg Multimedia Network)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -34,6 +34,15 @@ qt_policy(SET QTP0004 NEW)
 
 # ── Configured build metadata header (app id / name / version) ────────────────
 configure_file(src/AppInfo.h.in ${CMAKE_BINARY_DIR}/generated/AppInfo.h @ONLY)
+
+# ── Leaderboard backend (baked in at build time) ──────────────────────────────
+# The publishable/anon key is safe to embed (server-side RLS is the guard). Override
+# per-build with -DSN_SUPABASE_URL=... -DSN_SUPABASE_ANON_KEY=...; empty ⇒ mock mode.
+set(SN_SUPABASE_URL      "https://enogcodwgrtyzytmglmk.supabase.co"
+    CACHE STRING "Supabase project URL for the global leaderboard")
+set(SN_SUPABASE_ANON_KEY "sb_publishable_AwV9LaGBpkIKCWNnZJh4kg_e02Ybome"
+    CACHE STRING "Supabase publishable (anon) key for the global leaderboard")
+configure_file(src/LeaderboardConfig.h.in ${CMAKE_BINARY_DIR}/generated/LeaderboardConfig.h @ONLY)
 
 # ── Executable ────────────────────────────────────────────────────────────────
 qt_add_executable(hungrysnake
@@ -89,8 +98,9 @@ qt_add_qml_module(hungrysnake
     VERSION 1.0
     QML_FILES ${SN_QML_PATHS}
     SOURCES
-        src/core/SnakeGame.h  src/core/SnakeGame.cpp
-        src/core/Profile.h    src/core/Profile.cpp
+        src/core/SnakeGame.h    src/core/SnakeGame.cpp
+        src/core/Profile.h      src/core/Profile.cpp
+        src/core/Leaderboard.h  src/core/Leaderboard.cpp
 )
 
 # ── Bundled assets: app icon + sound effects + decorative foliage ─────────────
@@ -127,6 +137,7 @@ target_link_libraries(hungrysnake PRIVATE
     Qt6::QuickControls2
     Qt6::Svg
     Qt6::Multimedia
+    Qt6::Network
 )
 
 target_compile_definitions(hungrysnake PRIVATE

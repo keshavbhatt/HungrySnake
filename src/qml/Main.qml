@@ -21,9 +21,18 @@ ApplicationWindow {
     Profile   { id: profile }   // persistent Coins currency + lifetime stats
     Cosmetics { id: cosmetics; profile: profile }   // equipped-skin palette resolver
     Achievements { id: achievements; profile: profile; game: game; cosmetics: cosmetics }
+    Leaderboard { id: leaderboard }   // global ranks (Supabase REST, or a mock demo board offline)
     Connections {
         target: achievements
         function onUnlocked(name) { achToast.show(qsTr("Achievement: ") + name, "medal"); }
+    }
+    // Celebrate a posted personal best with the player's new global rank.
+    Connections {
+        target: leaderboard
+        function onSubmitted(rank) {
+            achToast.show(rank > 0 ? qsTr("You reached #%1 worldwide!").arg(rank)
+                                   : qsTr("Best posted to the leaderboard!"), "trophy");
+        }
     }
     // Re-check cosmetics-count achievements whenever the collection grows.
     Connections { target: profile; function onOwnedChanged() { achievements.check(); } }
@@ -38,6 +47,7 @@ ApplicationWindow {
     property int  bestAtRunStart: 0
     property bool newBestFired: false     // "New Best!" already celebrated this run
     property bool lastRunWasBest: false   // did the finished run set a record?
+    property bool lbNickAsked: false      // once true, stop auto-prompting for a leaderboard nickname
 
     // The looping background tracks (procedurally generated — see tools/make_music.py).
     readonly property var musicTracks: [
@@ -166,6 +176,10 @@ ApplicationWindow {
     onMusicTrackChanged: restartMusic()
     onVisibilityChanged: syncMusic()
     onActiveChanged: syncMusic()
+    // Any navigation re-arms the keyboard handler. Without this, a text field (e.g. the
+    // leaderboard nickname editor) that grabbed focus keeps it, so the game would get no
+    // arrow/space input after you leave that screen.
+    onRouteChanged: keyLayer.forceActiveFocus()
 
     // Persisted best score + preferences.
     Settings {
@@ -174,6 +188,7 @@ ApplicationWindow {
         property alias soundOn: win.soundOn
         property alias musicOn: win.musicOn
         property alias musicTrack: win.musicTrack
+        property alias lbNickAsked: win.lbNickAsked
     }
     Component.onCompleted: {
         keyLayer.forceActiveFocus();
@@ -223,6 +238,10 @@ ApplicationWindow {
             profile.recordRun(game.score, game.apples, win.lastRunWasBest);
             win.dailyActive = false;              // a daily attempt ends on death
             achievements.check();                 // grant any newly-earned achievements
+            // Post a new personal best to the global leaderboard (only if the player
+            // has picked a nickname — otherwise they'll be prompted on the Ranks screen).
+            if (win.lastRunWasBest && leaderboard.hasNickname && game.best >= leaderboard.minScore)
+                leaderboard.submit(game.best);
         }
         function onStatusChanged() {
             if (game.status === SnakeGame.Playing) {
@@ -629,6 +648,7 @@ ApplicationWindow {
                 HomeTile { icon: "calendar"; label: qsTr("Daily");    onClicked: win.navigate("daily")
                            badge: win.dailyDone ? "" : "!" }
                 HomeTile { icon: "medal";    label: qsTr("Awards");   onClicked: win.navigate("achievements") }
+                HomeTile { icon: "ranks";    label: qsTr("Ranks");    onClicked: win.navigate("leaderboard") }
                 HomeTile { icon: "gear";     label: qsTr("Settings"); onClicked: win.openSettings() }
                 HomeTile { icon: "heart";    label: qsTr("Support");  onClicked: win.navigate("about") }
             }
@@ -981,6 +1001,238 @@ ApplicationWindow {
                 }
             }
         }
+        // ── Global leaderboard ──
+        Item {
+            id: lbScr
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: win.route === "leaderboard" ? 1 : 0
+            enabled: win.route === "leaderboard"
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+            property bool editingNick: false
+
+            // Load the board (and sync the player's best) whenever this screen opens.
+            Connections {
+                target: win
+                function onRouteChanged() {
+                    if (win.route !== "leaderboard") return;
+                    lbScr.editingNick = false;
+                    if (leaderboard.hasNickname && game.best > 0) leaderboard.submit(game.best);
+                    else leaderboard.refresh();
+                }
+            }
+
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.55) }
+            ScreenHeader {
+                id: lhdr
+                anchors { top: parent.top; left: parent.left; right: parent.right; margins: 22 }
+                title: qsTr("Leaderboard"); onBack: win.back()
+            }
+
+            Item {
+                anchors { top: lhdr.bottom; topMargin: 20; bottom: parent.bottom; bottomMargin: 22
+                          horizontalCenter: parent.horizontalCenter }
+                width: Math.min(win.width - 80, 560)
+
+                // — Nickname gate — shown until the player picks a name (or is editing it) —
+                Column {
+                    id: nickGate
+                    readonly property bool editing: leaderboard.hasNickname   // already joined ⇒ editing
+                    function commit() {
+                        if (nickField.text.trim().length === 0) return;
+                        leaderboard.setNickname(nickField.text);
+                        lbScr.editingNick = false;
+                        keyLayer.forceActiveFocus();
+                    }
+                    visible: !leaderboard.hasNickname || lbScr.editingNick
+                    anchors.centerIn: parent
+                    width: parent.width
+                    spacing: 16
+                    Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "trophy"; size: 52; color: Theme.title }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: nickGate.editing ? qsTr("Change your leaderboard name")
+                                               : qsTr("Pick a nickname to join\nthe global leaderboard")
+                        color: Theme.text; font.family: Theme.ui; font.pixelSize: 18; font.weight: Font.DemiBold
+                    }
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 10
+                        TextField {
+                            id: nickField
+                            width: 240; height: 48
+                            leftPadding: 14; rightPadding: 14
+                            verticalAlignment: Text.AlignVCenter
+                            placeholderText: qsTr("Your name")
+                            maximumLength: 16
+                            color: Theme.inkStrong
+                            placeholderTextColor: Theme.inkSoft     // readable on the tan field
+                            font.family: Theme.ui; font.pixelSize: 16; font.weight: Font.DemiBold
+                            background: Rectangle {
+                                radius: Theme.rsm; color: Theme.insetTan
+                                border.width: 2
+                                border.color: nickField.activeFocus ? Theme.primary : Theme.insetEdge
+                            }
+                            onAccepted: nickGate.commit()
+                        }
+                        PillButton {
+                            text: nickGate.editing ? qsTr("Save") : qsTr("Join")
+                            enabled: nickField.text.trim().length > 0
+                            onClicked: nickGate.commit()
+                        }
+                    }
+                    // Cancel — only when editing an existing name (a first-time player
+                    // has nothing to go back to).
+                    Text {
+                        visible: nickGate.editing
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Cancel"); color: Theme.textDim
+                        font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.DemiBold
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: { lbScr.editingNick = false; keyLayer.forceActiveFocus() } }
+                    }
+                }
+
+                // — The ranked board —
+                Item {
+                    id: boardWrap
+                    visible: leaderboard.hasNickname && !lbScr.editingNick
+                    anchors.fill: parent
+
+                    // Summary strip: your rank/best (left), a Change-name button + a
+                    // Refresh button whose icon spins while a load is in flight (right).
+                    Item {
+                        id: lbSummary
+                        anchors { top: parent.top; left: parent.left; right: parent.right }
+                        height: 40
+
+                        component ChipButton: Rectangle {
+                            id: chip
+                            property alias label: chipText.text
+                            property string glyph: ""
+                            signal tapped
+                            implicitWidth: chipRow.implicitWidth + 24
+                            implicitHeight: 36
+                            radius: height / 2
+                            color: chipMa.pressed ? Theme.insetDeep
+                                 : chipMa.containsMouse ? Qt.lighter(Theme.insetTan, 1.06) : Theme.insetTan
+                            border.width: 2; border.color: Theme.insetEdge
+                            Row {
+                                id: chipRow
+                                anchors.centerIn: parent; spacing: 6
+                                Icon { visible: chip.glyph !== ""; name: chip.glyph; size: 17
+                                       color: Theme.inkStrong; anchors.verticalCenter: parent.verticalCenter }
+                                Text { id: chipText; color: Theme.inkStrong; font.family: Theme.ui
+                                       font.pixelSize: 13; font.weight: Font.Bold
+                                       anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            MouseArea { id: chipMa; anchors.fill: parent; hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor; onClicked: chip.tapped() }
+                        }
+
+                        Text {
+                            anchors { left: parent.left; right: lbActions.left; rightMargin: 12
+                                      verticalCenter: parent.verticalCenter }
+                            elide: Text.ElideRight
+                            text: (leaderboard.usingMock ? qsTr("Demo · ") : "")
+                                  + (leaderboard.playerRank > 0
+                                     ? qsTr("You're #%1 · best %2").arg(leaderboard.playerRank).arg(leaderboard.playerBest)
+                                     : qsTr("Play a game to join the board!"))
+                            color: Theme.text; font.family: Theme.ui; font.pixelSize: 15; font.weight: Font.Bold
+                        }
+                        Row {
+                            id: lbActions
+                            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                            spacing: 8
+                            ChipButton {
+                                label: qsTr("Change name"); glyph: "edit"
+                                onTapped: { nickField.text = leaderboard.nickname; lbScr.editingNick = true; nickField.forceActiveFocus() }
+                            }
+                            // Refresh — the icon spins while loading, so a tap has visible effect.
+                            Rectangle {
+                                width: 36; height: 36; radius: height / 2
+                                color: refreshMa.pressed ? Theme.insetDeep
+                                     : refreshMa.containsMouse ? Qt.lighter(Theme.insetTan, 1.06) : Theme.insetTan
+                                border.width: 2; border.color: Theme.insetEdge
+                                Icon {
+                                    id: refreshIcon
+                                    anchors.centerIn: parent; name: "restart"; size: 20; color: Theme.inkStrong
+                                    RotationAnimation on rotation {
+                                        from: 0; to: 360; duration: 800; loops: Animation.Infinite
+                                        running: leaderboard.status === Leaderboard.Loading
+                                        onRunningChanged: if (!running) refreshIcon.rotation = 0
+                                    }
+                                }
+                                MouseArea { id: refreshMa; anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            enabled: leaderboard.status !== Leaderboard.Loading
+                                            onClicked: leaderboard.refresh() }
+                            }
+                        }
+                    }
+
+                    ListView {
+                        id: lbList
+                        anchors { top: lbSummary.bottom; topMargin: 16; left: parent.left
+                                  right: parent.right; bottom: parent.bottom }
+                        clip: true
+                        spacing: 8
+                        model: leaderboard.entries
+                        delegate: Rectangle {
+                            required property var modelData
+                            readonly property bool self: modelData.self === true
+                            readonly property int rank: modelData.rank
+                            width: ListView.view.width; height: 46; radius: Theme.rsm
+                            color: self ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.24)
+                                        : Theme.insetTan
+                            border.width: self ? 2 : 1
+                            border.color: self ? Theme.primary : Theme.insetEdge
+
+                            Rectangle {                              // rank badge
+                                id: rankBadge
+                                anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                                width: 30; height: 30; radius: 15
+                                color: rank === 1 ? "#e0b23f" : rank === 2 ? "#c2ccd8"
+                                     : rank === 3 ? "#cf9160" : Theme.hudWood
+                                Text {
+                                    anchors.centerIn: parent; text: rank
+                                    color: rank <= 3 ? "#3a2a06" : Theme.cream
+                                    font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.Bold
+                                }
+                            }
+                            Text {                                   // name
+                                anchors { left: rankBadge.right; leftMargin: 12; right: scoreText.left; rightMargin: 10
+                                          verticalCenter: parent.verticalCenter }
+                                elide: Text.ElideRight
+                                text: modelData.name + (self ? qsTr(" (you)") : "")
+                                // The self row sits on a dark-green highlight, so its text
+                                // flips to cream — dark ink would be unreadable there.
+                                color: self ? Theme.cream : Theme.inkStrong
+                                font.family: Theme.ui; font.pixelSize: 16; font.weight: self ? Font.Bold : Font.DemiBold
+                            }
+                            Text {                                   // score
+                                id: scoreText
+                                anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+                                text: modelData.score
+                                color: self ? Theme.cream : Theme.inkStrong
+                                font.family: Theme.display; font.pixelSize: 18
+                            }
+                        }
+                    }
+
+                    Text {                                           // loading / error states
+                        anchors.centerIn: parent
+                        visible: leaderboard.entries.length === 0
+                        text: leaderboard.status === Leaderboard.Error
+                              ? qsTr("Couldn't load scores.\nTap ↻ to retry.")
+                              : qsTr("Loading scores…")
+                        horizontalAlignment: Text.AlignHCenter
+                        color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 15
+                    }
+                }
+            }
+        }
         // ── About / Supporter ──
         Item {
             id: aboutScr
@@ -1189,6 +1441,65 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         text: qsTr("coins earned")
                         color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 17
+                    }
+                }
+
+                // First-best nudge: offer to post to the global leaderboard, but only
+                // when this run set a record AND the player has no nickname yet AND
+                // hasn't declined before. Once they have a name, new bests auto-submit
+                // silently (see onDied), so this never shows again.
+                Column {
+                    id: nickPrompt
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: overCol.width
+                    spacing: 10
+                    visible: win.lastRunWasBest && !leaderboard.hasNickname && !win.lbNickAsked
+                             && game.best >= leaderboard.minScore
+
+                    function postScore() {
+                        if (overNick.text.trim().length === 0) return;
+                        leaderboard.setNickname(overNick.text);   // persists + refreshes
+                        leaderboard.submit(game.best);            // post the record (toasts the rank on completion)
+                        win.lbNickAsked = true;
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Post your best to the global leaderboard!")
+                        color: Theme.inkStrong; font.family: Theme.ui
+                        font.pixelSize: 16; font.weight: Font.DemiBold
+                    }
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 10
+                        TextField {
+                            id: overNick
+                            width: 200; height: 46
+                            leftPadding: 14; rightPadding: 14
+                            verticalAlignment: Text.AlignVCenter
+                            placeholderText: qsTr("Your name")
+                            maximumLength: 16
+                            color: Theme.inkStrong; placeholderTextColor: Theme.textDim
+                            font.family: Theme.ui; font.pixelSize: 16; font.weight: Font.DemiBold
+                            background: Rectangle {
+                                radius: Theme.rsm; color: Theme.insetTan
+                                border.width: 2
+                                border.color: overNick.activeFocus ? Theme.primary : Theme.insetEdge
+                            }
+                            onAccepted: nickPrompt.postScore()
+                        }
+                        PillButton {
+                            text: qsTr("Post"); fontSize: 16
+                            enabled: overNick.text.trim().length > 0
+                            onClicked: nickPrompt.postScore()
+                        }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Not now")
+                        color: Theme.title; font.family: Theme.ui; font.pixelSize: 13; font.weight: Font.DemiBold
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: win.lbNickAsked = true }
                     }
                 }
 

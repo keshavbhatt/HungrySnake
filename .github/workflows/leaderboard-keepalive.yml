@@ -1,0 +1,24 @@
+name: leaderboard-keepalive
+
+# Supabase pauses a free project after 7 days with no traffic. This pings the REST
+# endpoint every 3 days so the leaderboard never goes to sleep. Add repo secrets
+# SUPABASE_URL and SUPABASE_ANON_KEY (Settings → Secrets → Actions).
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *"   # 06:00 UTC, every 3rd day
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl -sf "$SUPABASE_URL/rest/v1/scores?select=score&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" > /dev/null
+          echo "pinged leaderboard OK"
