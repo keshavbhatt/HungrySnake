@@ -12,9 +12,9 @@ int opposite(int d) { return (d + 2) % 4; }
 
 // Feel — all geometry is in "cells" (world units).
 constexpr int   kStartLen    = 4;      // body length (cells) at score 0
-constexpr qreal kBaseSpeed   = 6.5;    // cells / second at score 0
-constexpr qreal kAccel       = 0.18;   // extra cells/s per apple
-constexpr qreal kMaxSpeed    = 12.0;
+constexpr qreal kBaseSpeed   = 6.5;    // cells / second at the start
+constexpr qreal kMaxSpeed    = 10.0;   // gentle top speed (was 12) so a long snake stays manageable
+constexpr qreal kRampApples  = 12.0;   // apples to reach ~63% of the way to max (saturating curve)
 constexpr qreal kBodyWidth   = 0.75;   // neck width; body tapers to a point at the tail
 constexpr qreal kHeadSize    = 1.22;
 constexpr qreal kAppleRadius = 0.42;
@@ -227,7 +227,11 @@ void SnakeGame::step()
         return;
     dt = std::min(dt, kDtMax);
 
-    const qreal speed = std::min(kBaseSpeed + m_score * kAccel, kMaxSpeed);
+    // Speed eases toward the cap on a saturating curve keyed to APPLES eaten (not
+    // score — so a Golden star's +5 doesn't jerk the pace). It ramps briskly early
+    // then plateaus, so the late-game challenge is steering a long body, not raw speed.
+    const qreal ramp = 1.0 - std::exp(-m_apples / kRampApples);
+    const qreal speed = kBaseSpeed + (kMaxSpeed - kBaseSpeed) * ramp;
     m_progress += speed * dt;
 
     // Bonus food ages out on the wall clock, whatever the snake is doing.
