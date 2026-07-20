@@ -108,6 +108,16 @@ QtObject {
              : slot === "scene" ? sceneSkins
              : appleSkins;
     }
+    // The Store's display order: cheapest first, Supporter-exclusive items last (they
+    // read as price 0 but aren't for sale). Operates on a copy so the raw catalogue
+    // order — which the resolver and previews rely on — is untouched.
+    function storeOrder(slot) {
+        return catalogue(slot).slice().sort(function (a, b) {
+            var sa = a.supporter === true, sb = b.supporter === true;
+            if (sa !== sb) return sa ? 1 : -1;   // Supporter items to the end
+            return a.price - b.price;            // then by price ascending
+        });
+    }
     function _find(list, id) {
         for (var i = 0; i < list.length; i++)
             if (list[i].id === id) return list[i];

@@ -32,7 +32,7 @@ QtObject {
     readonly property color insetTan:    "#c99a5f"  // inset panel / secondary button
     readonly property color insetEdge:   "#b08a55"  // inset / chip border
     readonly property color insetDeep:   "#b48347"  // secondary button pressed
-    readonly property color hudWood:     "#8a6238"  // HUD chip (floats over gameplay)
+    readonly property color hudWood:     "#7e5731"  // HUD chip (floats over gameplay) — darkened for 4.8:1 cream text
     readonly property color hudEdge:     "#6f4d2a"  // HUD chip border
     readonly property color danger:      "#d9534a"
     readonly property color dangerDeep:  "#b03d36"
@@ -42,7 +42,7 @@ QtObject {
 
     // Ink (dark on tan) & cream (light on wood/dark).
     readonly property color inkStrong: "#4a2f14"
-    readonly property color inkSoft:   "#7a5530"
+    readonly property color inkSoft:   "#6d4a28"   // secondary ink — darkened for ≥4.5:1 on the tan cards
     readonly property color cream:     "#f3dcb2"
 
     // Legacy aliases kept so existing call sites resolve to the kit tokens.

@@ -58,9 +58,13 @@ Item {
             GradientStop { position: 1.0;  color: "transparent" }
         }
         opacity: 0.2
-        NumberAnimation on drift {
-            from: -root.width * 0.12; to: root.width * 0.12
-            duration: driftMs; loops: Animation.Infinite; easing.type: Easing.InOutSine; running: root.running
+        // Ping-pong (out AND back) so the ribbon eases continuously — a single
+        // NumberAnimation loop would snap from `to` back to `from`, jolting the sky
+        // sideways every cycle.
+        SequentialAnimation on drift {
+            running: root.running; loops: Animation.Infinite
+            NumberAnimation { from: -root.width * 0.12; to: root.width * 0.12; duration: rr.driftMs; easing.type: Easing.InOutSine }
+            NumberAnimation { from: root.width * 0.12; to: -root.width * 0.12; duration: rr.driftMs; easing.type: Easing.InOutSine }
         }
         SequentialAnimation on opacity {
             running: root.running; loops: Animation.Infinite

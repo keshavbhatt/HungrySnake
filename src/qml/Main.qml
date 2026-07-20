@@ -726,10 +726,12 @@ ApplicationWindow {
                 }
 
                 Flow {
-                    width: Math.min(win.width - 96, 700)
+                    // Exactly four 150px cards + three 16px gaps = 648, so the centered
+                    // Flow centres the grid instead of leaving dead space on the right.
+                    width: Math.min(win.width - 96, 648)
                     spacing: 16
                     Repeater {
-                        model: cosmetics.catalogue(store.catSlot)
+                        model: cosmetics.storeOrder(store.catSlot)
                         delegate: StoreCard {
                             readonly property string eqId:
                                 (profile.equipped[store.catSlot] && profile.equipped[store.catSlot] !== "")
@@ -1416,7 +1418,7 @@ ApplicationWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 Text { text: value; color: Theme.inkStrong; font.family: Theme.ui
                                        font.pixelSize: 30; font.weight: Font.Bold }
-                                Text { text: caption; color: Theme.inkSoft; font.family: Theme.ui
+                                Text { text: caption; color: Theme.inkStrong; font.family: Theme.ui
                                        font.pixelSize: 12; font.weight: Font.DemiBold }
                             }
                         }
