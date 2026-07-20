@@ -10,28 +10,34 @@ Item {
     property string fx: "none"      // cosmetics.sceneFx
     property string plane: "front"  // "back" | "front"
     property bool   active: true
+    // Scales every effect's particle/star count. 1.0 = the full in-game field; the
+    // Store previews render it smaller (e.g. ~0.3) so a thumbnail isn't a blizzard.
+    property real   density: 1.0
 
     // ── Sky (back plane) ──────────────────────────────────────────────────────
     StarField {
         anchors.fill: parent
         running: root.active && root.plane === "back" && root.fx === "stars"
         showMoon: true
+        count: Math.max(10, Math.round(90 * root.density))
     }
     AuroraLayer {
         anchors.fill: parent
         running: root.active && root.plane === "back" && root.fx === "aurora"
+        density: root.density
     }
 
     // ── Air (front plane) ─────────────────────────────────────────────────────
     FireflyField {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "fireflies"
+        count: Math.max(4, Math.round(16 * root.density))
     }
     // Warm dust motes rising in the sunset light — slow, soft, no flicker.
     ParticleField {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "motes"
-        count: 34; minSize: 3; maxSize: 9
+        count: Math.max(6, Math.round(34 * root.density)); minSize: 3; maxSize: 9
         core: "#ffe9cf"; glow: "#ffbe86"
         direction: -1; durMin: 11000; durMax: 20000; swayMax: 34
         flicker: false; baseOpacity: 0.5
@@ -40,7 +46,7 @@ Item {
     ParticleField {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "embers"
-        count: 46; minSize: 2.5; maxSize: 7
+        count: Math.max(6, Math.round(46 * root.density)); minSize: 2.5; maxSize: 7
         core: "#ffd98a"; glow: "#ff5a1e"
         direction: -1; durMin: 5000; durMax: 11000; swayMax: 46
         flicker: true; baseOpacity: 0.92
@@ -48,5 +54,6 @@ Item {
     SnowLayer {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "snow"
+        count: Math.max(8, Math.round(64 * root.density))
     }
 }

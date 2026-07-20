@@ -7,6 +7,7 @@ import QtQuick
 Item {
     id: root
     property bool running: false
+    property real density: 1.0      // scales the background star count (previews thin it)
     // The ribbons below are permanent children (only their animations key off
     // `running`), so without this they'd render at their static opacity over EVERY
     // scene. Gate the whole layer's rendering on the Aurora scene being equipped.
@@ -19,7 +20,7 @@ Item {
 
     // Faint stars behind the ribbons.
     Repeater {
-        model: root.running ? 60 : 0
+        model: root.running ? Math.max(10, Math.round(60 * root.density)) : 0
         delegate: Rectangle {
             required property int index
             readonly property real rS: root.rnd(index, 3.7)

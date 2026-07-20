@@ -50,13 +50,27 @@ Item {
     opacity: root.life < 0.18 ? 0.55 + 0.45 * Math.abs(Math.sin(root.life * 60)) : 1
 
     // ── Expiry ring ──
+    // A faint full-circle track sits under the coloured arc that drains as the food
+    // expires — so the remaining arc always reads as a depleting timer ring around the
+    // food, never as a stray tail hanging off it.
     Shape {
         visible: root.showRing
         anchors.centerIn: parent
         width: root.d * 1.7; height: root.d * 1.7
         antialiasing: true
         preferredRendererType: Shape.CurveRenderer
-        ShapePath {
+        ShapePath {                       // faint full-circle track
+            fillColor: "transparent"
+            strokeColor: Qt.rgba(0, 0, 0, 0.28)
+            strokeWidth: Math.max(2, root.d * 0.09)
+            capStyle: ShapePath.FlatCap
+            PathAngleArc {
+                centerX: root.d * 0.85; centerY: root.d * 0.85
+                radiusX: root.d * 0.72; radiusY: root.d * 0.72
+                startAngle: -90; sweepAngle: 360
+            }
+        }
+        ShapePath {                       // remaining-time arc
             fillColor: "transparent"
             strokeColor: root.tint
             strokeWidth: Math.max(2, root.d * 0.09)

@@ -797,54 +797,26 @@ ApplicationWindow {
                                             GradientStop { position: 1.0;  color: sw.def.bottom || "#00000000" }
                                         }
 
-                                        // Aurora ribbon — a soft teal band across the upper sky.
-                                        Rectangle {
-                                            visible: sceneSwatch.fx === "aurora"
-                                            anchors { left: parent.left; right: parent.right }
-                                            y: parent.height * 0.14; height: parent.height * 0.34
-                                            gradient: Gradient {
-                                                orientation: Gradient.Vertical
-                                                GradientStop { position: 0.0; color: "transparent" }
-                                                GradientStop { position: 0.5; color: "#8046e0a0" }
-                                                GradientStop { position: 1.0; color: "transparent" }
+                                        // Live atmosphere: the real SceneFx effects rendered at 3× and
+                                        // scaled down, so a full-screen field reads correctly in a
+                                        // thumbnail without re-tuning any particle sizes. Density is
+                                        // thinned to match on-screen sparsity; both planes are stacked
+                                        // (sky behind, air in front) exactly as in game. Runs only while
+                                        // the Scene tab is actually showing.
+                                        Item {
+                                            id: fxHost
+                                            anchors.centerIn: parent
+                                            width: sceneSwatch.width * 3
+                                            height: sceneSwatch.height * 3
+                                            scale: 1 / 3
+                                            readonly property bool live: win.route === "store" && store.catSlot === "scene"
+                                            SceneFx {
+                                                anchors.fill: parent; plane: "back"
+                                                fx: sceneSwatch.fx; density: 0.3; active: fxHost.live
                                             }
-                                        }
-                                        // Moon — for the starry Twilight scene.
-                                        Rectangle {
-                                            visible: sceneSwatch.fx === "stars"
-                                            width: parent.width * 0.14; height: width; radius: width / 2
-                                            color: "#eef2ff"
-                                            x: parent.width * 0.72; y: parent.height * 0.14
-                                        }
-
-                                        // Atmosphere hint dots — coloured/placed to echo the scene's fx.
-                                        Repeater {
-                                            model: {
-                                                var f = sceneSwatch.fx;
-                                                if (f === "snow" || f === "stars" || f === "aurora") return 12;
-                                                if (f === "motes" || f === "embers") return 7;
-                                                if (f === "fireflies") return 5;
-                                                return 0;
-                                            }
-                                            delegate: Rectangle {
-                                                required property int index
-                                                readonly property string f: sceneSwatch.fx
-                                                readonly property real hx: (index * 0.3719) % 1
-                                                readonly property real hy: (index * 0.6180) % 1
-                                                readonly property real sz: f === "fireflies" ? 4.5
-                                                                         : (f === "snow" || f === "motes" || f === "embers") ? 3
-                                                                         : 1.5 + (index % 3)          // stars/aurora: a few larger
-                                                width: sz; height: sz; radius: sz / 2
-                                                color: f === "fireflies" ? "#e6ff8c"
-                                                     : f === "embers"    ? "#ffb35a"
-                                                     : f === "motes"     ? "#ffe9cf"
-                                                     : "#ffffff"
-                                                opacity: f === "motes" ? 0.5 : 0.85
-                                                x: hx * (sceneSwatch.width - sz)
-                                                // embers hug the floor; stars/aurora cluster up top.
-                                                y: (f === "embers" ? 0.5 + hy * 0.45
-                                                   : (f === "stars" || f === "aurora") ? hy * 0.5
-                                                   : hy) * (sceneSwatch.height - sz)
+                                            SceneFx {
+                                                anchors.fill: parent; plane: "front"
+                                                fx: sceneSwatch.fx; density: 0.3; active: fxHost.live
                                             }
                                         }
                                     }
