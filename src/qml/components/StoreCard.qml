@@ -16,6 +16,7 @@ Rectangle {
     signal buy()
     signal equip()
     signal unlock()                      // locked item tapped → go redeem Supporter
+    signal needCoins()                   // can't-afford item tapped → propose Supporter (Coin bundle)
 
     implicitWidth: 150
     implicitHeight: 178
@@ -58,19 +59,16 @@ Rectangle {
         }
         Rectangle {                              // state-driven action pill
             width: parent.width; height: 34; radius: Theme.r
-            readonly property bool actionable: root.locked || (!root.equipped && (root.owned || root.affordable))
-            readonly property bool cantAfford: !root.locked && !root.owned && !root.affordable
-            // Contrast matters more than palette purity here — measured with WCAG:
-            //   old "Equipped" (success on insetTan) was 1.11:1 — invisible.
-            //   old unaffordable price (white on disabled) was 1.80:1 — a ghost.
-            // Both now use dark ink on their pale pill (4.8:1 / 6.8:1); the pale pill
-            // still reads as "inactive" against the green actionable ones.
-            // White-on-green measured only 2.3:1; dark ink on the same green is 5.4:1
-            // and keeps "green pill = do something". Locked keeps cream on dark (5.4:1).
-            color: root.locked     ? Qt.darker(Theme.locked, 1.5)
-                 : root.equipped   ? Theme.insetTan
-                 : root.owned      ? Theme.primary
-                 : root.affordable ? Theme.primary : Theme.disabled
+            // Everything but the already-equipped item is tappable now: a can't-afford
+            // price still clicks through to a Supporter proposal (the 800-Coin bundle).
+            readonly property bool actionable: !root.equipped
+            // A can't-afford price is now tappable (it opens the Supporter upsell), so it
+            // uses the same green actionable pill as Buy/Equip — no more disabled-grey look.
+            // Dark ink on that green is 5.4:1 (white-on-green was only 2.3:1); the equipped
+            // pill stays the pale tan "done" state, and locked keeps cream on dark.
+            color: root.locked   ? Qt.darker(Theme.locked, 1.5)
+                 : root.equipped ? Theme.insetTan
+                                 : Theme.primary
             Row {
                 anchors.centerIn: parent; spacing: 5
                 Item {
@@ -99,7 +97,10 @@ Rectangle {
                 anchors.fill: parent
                 enabled: parent.actionable
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.locked ? root.unlock() : (root.owned ? root.equip() : root.buy())
+                onClicked: root.locked   ? root.unlock()
+                         : root.owned     ? root.equip()
+                         : root.affordable ? root.buy()
+                                          : root.needCoins()
             }
         }
     }

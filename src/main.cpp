@@ -96,6 +96,13 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appDebug", false);
 #endif
 
+    // Dev-only license simulation: SN_LICSET=pro|trial|free|neterr forces the
+    // LicenseController's tier for headless testing/screenshots (see Main.qml's
+    // Component.onCompleted). The debug setter only exists in debug builds, so this
+    // is inert in Release even if the env var is set.
+    engine.rootContext()->setContextProperty(
+        "snLicTier", QString::fromUtf8(qgetenv("SN_LICSET")));
+
     // Dev builds shout about QML errors. Without this they are swallowed: a bad
     // binding just yields a blank/failed load with no clue why (this has bitten us
     // twice — a duplicate id, and a nested layer.effect rendering nothing).

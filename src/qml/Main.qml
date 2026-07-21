@@ -61,6 +61,13 @@ ApplicationWindow {
     property bool lastRunWasBest: false   // did the finished run set a record?
     property bool lbNickAsked: false      // once true, stop auto-prompting for a leaderboard nickname
 
+    // Supporter status follows the LIVE license (the license layer caches it offline,
+    // so a real buyer stays a Supporter without a connection). This — not the persisted
+    // profile.supporter flag — drives the About screen and the Store's exclusive items,
+    // so the real purchase state (and the SN_LICSET dev hook) actually control it.
+    // profile.supporter is kept only as the one-time "Coin bundle already granted" guard.
+    readonly property bool isSupporter: LicenseController.hasPaidAccess
+
     // The looping background tracks (procedurally generated — see tools/make_music.py).
     readonly property var musicTracks: [
         { name: qsTr("Canopy Calm"),   src: "qrc:/assets/sounds/music/canopy_calm.wav" },
@@ -211,6 +218,11 @@ ApplicationWindow {
         win.dailyYesterday = win._ymd(new Date(now.getTime() - 86400000));
         win.dailySeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
         win.dailyTarget = 8 + (win.dailySeed % 8);   // 8..15 apples
+        // Dev-only: force a simulated license tier for headless testing/screenshots
+        // (SN_LICSET=pro|trial|free|neterr). `debugSetTier` only exists in debug builds,
+        // so the guard makes this a no-op in Release.
+        if (snLicTier && LicenseController.debugSetTier)
+            LicenseController.debugSetTier(snLicTier);
     }
 
     // ── Sound ──
@@ -702,6 +714,10 @@ ApplicationWindow {
             Behavior on opacity { NumberAnimation { duration: 200 } }
             property int catIndex: 0
             readonly property string catSlot: cosmetics.slotList[catIndex]
+            // Not-enough-coins → Supporter upsell prompt.
+            property bool   coinPromptOpen: false
+            property string coinPromptName: ""
+            property int    coinPromptPrice: 0
 
             Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.55) }
 
@@ -741,9 +757,9 @@ ApplicationWindow {
                                     : cosmetics.catalogue(store.catSlot)[0].id
                             name: modelData.name
                             price: modelData.price
-                            locked: modelData.supporter === true && !profile.supporter
+                            locked: modelData.supporter === true && !win.isSupporter
                             owned: modelData.supporter === true
-                                   ? profile.supporter
+                                   ? win.isSupporter
                                    : (modelData.price === 0 || profile.owned.indexOf(modelData.id) >= 0)
                             equipped: eqId === modelData.id
                             affordable: profile.coins >= modelData.price
@@ -753,6 +769,11 @@ ApplicationWindow {
                             }
                             onEquip: profile.equip(store.catSlot, modelData.id)
                             onUnlock: win.navigate("about")   // go redeem Supporter
+                            onNeedCoins: {                    // can't afford → propose Supporter
+                                store.coinPromptName = modelData.name;
+                                store.coinPromptPrice = modelData.price;
+                                store.coinPromptOpen = true;
+                            }
                             // Previews render the REAL art (AppleArt is literally the same
                             // component the board draws), not abstract swatches.
                             preview: Component {
@@ -847,6 +868,60 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // ── Not-enough-coins → Supporter upsell ──
+            Rectangle {
+                anchors.fill: parent
+                visible: opacity > 0
+                opacity: store.coinPromptOpen ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 180 } }
+                color: Qt.rgba(0, 0, 0, 0.55)
+                MouseArea { anchors.fill: parent; onClicked: store.coinPromptOpen = false }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 360; radius: Theme.rlg
+                    color: Theme.cardTan; border.width: 3; border.color: Theme.cardEdge
+                    implicitHeight: cpCol.implicitHeight + 40
+                    transformOrigin: Item.Center
+                    scale: store.coinPromptOpen ? 1 : 0.9
+                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                    MouseArea { anchors.fill: parent }   // absorb clicks so the card doesn't dismiss
+
+                    Column {
+                        id: cpCol
+                        anchors.centerIn: parent; width: parent.width - 40; spacing: 14
+                        Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "coin"; size: 46 }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: qsTr("Not enough coins")
+                            color: Theme.inkStrong; font.family: Theme.ui; font.pixelSize: 22; font.weight: Font.Bold
+                        }
+                        Text {
+                            width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                            text: qsTr("%1 costs %2 coins — you have %3.")
+                                  .arg(store.coinPromptName).arg(store.coinPromptPrice).arg(profile.coins)
+                            color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 14
+                        }
+                        Text {
+                            width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                            text: qsTr("Become a Supporter to get an 800-coin bundle and every exclusive cosmetic.")
+                            color: Theme.inkStrong; font.family: Theme.ui; font.pixelSize: 15; font.weight: Font.DemiBold
+                        }
+                        PillButton {
+                            width: parent.width
+                            text: qsTr("Become a Supporter"); fontSize: 17
+                            onClicked: { store.coinPromptOpen = false; win.navigate("about"); }
+                        }
+                        PillButton {
+                            width: parent.width
+                            text: qsTr("Maybe later"); raised: false
+                            fill: Theme.insetTan; ink: Theme.inkStrong
+                            onClicked: store.coinPromptOpen = false
                         }
                     }
                 }
@@ -1279,9 +1354,86 @@ ApplicationWindow {
                         width: parent.width - 40
                         spacing: 12
 
+                        // ── Reusable, obviously-interactive bits (no hidden text-clicks) ──
+                        // A clear secondary button (bordered tan pill) with an optional spinner.
+                        component ActionChip: Rectangle {
+                            id: chip
+                            property alias label: chipLbl.text
+                            property string glyph: ""
+                            property bool busy: false
+                            signal tapped
+                            implicitWidth: chipRow.implicitWidth + 30
+                            implicitHeight: 40
+                            radius: height / 2
+                            color: chipMa.pressed ? Theme.insetDeep
+                                 : chipMa.containsMouse ? Qt.lighter(Theme.insetTan, 1.06) : Theme.insetTan
+                            border.width: 2; border.color: Theme.insetEdge
+                            Row {
+                                id: chipRow; anchors.centerIn: parent; spacing: 6
+                                Icon {
+                                    visible: chip.glyph !== ""; name: chip.glyph; size: 16
+                                    color: Theme.inkStrong; anchors.verticalCenter: parent.verticalCenter
+                                    RotationAnimation on rotation {
+                                        from: 0; to: 360; duration: 800; loops: Animation.Infinite
+                                        running: chip.busy; onRunningChanged: if (!running) rotation = 0
+                                    }
+                                }
+                                Text {
+                                    id: chipLbl; color: Theme.inkStrong; font.family: Theme.ui
+                                    font.pixelSize: 14; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                            MouseArea {
+                                id: chipMa; anchors.fill: parent; hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor; onClicked: chip.tapped()
+                            }
+                        }
+
+                        // A caption + the Supporter ID in a selectable field + a real Copy button.
+                        component IdCopyBlock: Column {
+                            property string caption: ""
+                            width: parent ? parent.width : 320
+                            spacing: 6
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                                text: caption
+                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 12; font.weight: Font.DemiBold
+                            }
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
+                                Rectangle {
+                                    width: idField.implicitWidth + 24; height: 36; radius: Theme.rsm
+                                    color: Theme.insetTan; border.width: 2; border.color: Theme.insetEdge
+                                    TextInput {
+                                        id: idField; anchors.centerIn: parent
+                                        text: LicenseController.accountId
+                                        readOnly: true; selectByMouse: true
+                                        color: Theme.inkStrong; font.family: Theme.ui
+                                        font.pixelSize: 13; font.weight: Font.DemiBold
+                                    }
+                                }
+                                Rectangle {
+                                    width: cpLbl.implicitWidth + 28; height: 36; radius: Theme.rsm
+                                    color: cpMa.pressed ? Theme.primaryDeep
+                                         : cpMa.containsMouse ? Qt.lighter(Theme.primary, 1.05) : Theme.primary
+                                    Text { id: cpLbl; anchors.centerIn: parent; text: qsTr("Copy")
+                                           color: Theme.inkStrong; font.family: Theme.ui; font.pixelSize: 13; font.weight: Font.Bold }
+                                    MouseArea {
+                                        id: cpMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                        onClicked: { idField.selectAll(); idField.copy();
+                                                     achToast.show(qsTr("Supporter ID copied"), "check"); }
+                                    }
+                                }
+                            }
+                        }
+
                         Column {                                   // not yet a supporter
-                            visible: !profile.supporter
+                            id: buyCol
+                            visible: !win.isSupporter
                             width: parent.width; spacing: 12
+                            property bool restoreTried: false
+
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "coin"; size: 24; anchors.verticalCenter: parent.verticalCenter }
@@ -1299,38 +1451,37 @@ ApplicationWindow {
                                 text: qsTr("Become a Supporter"); fontSize: 18
                                 onClicked: win.becomeSupporter()      // opens the KTechpit checkout
                             }
-                            // Already bought (another machine, or before a reinstall)? Re-check the
-                            // license server for this device's Supporter ID.
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: LicenseController.checking ? qsTr("Checking your purchase…")
-                                                                 : qsTr("Already purchased? Restore")
-                                color: Theme.title; font.family: Theme.ui
-                                font.pixelSize: 14; font.weight: Font.DemiBold
-                                MouseArea {
-                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                    enabled: !LicenseController.checking
-                                    onClicked: LicenseController.refresh()
-                                }
+                                text: qsTr("Already bought it?")
+                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 13; font.weight: Font.DemiBold
                             }
-                            // The anonymous Supporter ID (tie a purchase to this install; also
-                            // used to manage/restore from the web portal).
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width; horizontalAlignment: Text.AlignHCenter
-                                elide: Text.ElideMiddle
-                                text: qsTr("Supporter ID: ") + LicenseController.accountId
-                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 11
-                                MouseArea {
-                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                                    onClicked: LicenseController.openPortal()   // manage / restore on the web
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter; spacing: 10
+                                ActionChip {
+                                    glyph: "restart"; busy: LicenseController.checking
+                                    label: LicenseController.checking ? qsTr("Checking…") : qsTr("Restore")
+                                    onTapped: { buyCol.restoreTried = true; LicenseController.refresh(); }
                                 }
+                                ActionChip { label: qsTr("Open portal"); onTapped: LicenseController.openPortal() }
+                            }
+                            Text {
+                                visible: buyCol.restoreTried && !win.isSupporter && !LicenseController.checking
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                                text: qsTr("No purchase found for this Supporter ID yet.")
+                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 12
+                            }
+
+                            IdCopyBlock {
+                                caption: qsTr("Your Supporter ID — paste this on the portal to restore or migrate")
                             }
                         }
 
                         Column {                                   // already a supporter
-                            visible: profile.supporter
-                            width: parent.width; spacing: 8
+                            visible: win.isSupporter
+                            width: parent.width; spacing: 10
                             Row {
                                 anchors.horizontalCenter: parent.horizontalCenter; spacing: 8
                                 Icon { name: "heart"; color: Theme.successInk; size: 26; anchors.verticalCenter: parent.verticalCenter }
@@ -1341,6 +1492,13 @@ ApplicationWindow {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: qsTr("Your exclusive cosmetics are waiting in the Store.")
                                 color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 14
+                            }
+                            IdCopyBlock {
+                                caption: qsTr("Your Supporter ID — copy it to migrate to another device")
+                            }
+                            ActionChip {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                label: qsTr("Open portal"); onTapped: LicenseController.openPortal()
                             }
                         }
                     }
