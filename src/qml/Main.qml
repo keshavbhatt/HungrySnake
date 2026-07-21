@@ -289,11 +289,18 @@ ApplicationWindow {
         }
     }
 
-    // Sky-plane atmosphere (stars / aurora) — behind the foliage and the board so it
-    // reads as the far background, not something painted over the snake.
+    // Scene atmosphere — ALL of it (stars/aurora AND snow/embers/motes/fireflies) sits
+    // behind the foliage and the board, so it reads as a far background and never
+    // distracts over the gameplay. The two planes only order the effects among
+    // themselves (sky behind air); both are behind the board.
     SceneFx {
         anchors.fill: parent
         plane: "back"
+        fx: cosmetics.sceneFx
+    }
+    SceneFx {
+        anchors.fill: parent
+        plane: "front"
         fx: cosmetics.sceneFx
     }
 
@@ -1867,13 +1874,6 @@ ApplicationWindow {
         Timer { id: hideTimer; interval: 2500; running: cursorHider.enabled; onTriggered: cursorHider.hidden = true }
     }
 
-    // Air-plane atmosphere (snow / embers / motes / fireflies) — drifts over the whole
-    // scene, board included, when the equipped scene calls for it. Purely visual.
-    SceneFx {
-        anchors.fill: parent
-        plane: "front"
-        fx: cosmetics.sceneFx
-    }
 
     // Transient notification (achievement unlocked / daily complete) — topmost.
     Toast {
