@@ -34,6 +34,18 @@ ApplicationWindow {
                                    : qsTr("Best posted to the leaderboard!"), "trophy");
         }
     }
+    // The Supporter Pack is verified by the KTechpit license backend. When it confirms
+    // a paid license, grant the benefits once (Coin bundle + exclusive cosmetics). We
+    // never revoke — the pack is "yours forever" — so this only ever unlocks.
+    Connections {
+        target: LicenseController
+        function onStatusChanged() {
+            if (LicenseController.hasPaidAccess && !profile.supporter) {
+                profile.unlockSupporter(800, cosmetics.supporterIds);
+                achToast.show(qsTr("Thanks for supporting Hungry Snake!"), "heart");
+            }
+        }
+    }
     // Re-check cosmetics-count achievements whenever the collection grows.
     Connections { target: profile; function onOwnedChanged() { achievements.check(); } }
 
@@ -100,11 +112,11 @@ ApplicationWindow {
         win.route = "home";
     }
 
-    // Redeem the Supporter unlock (generous Coin bundle + exclusive cosmetics).
-    // On a real build the KTechpit AccountAndLicense purchase gates this call.
+    // Start the Supporter Pack purchase: opens the KTechpit checkout in the browser.
+    // The actual grant happens only once the license backend verifies the purchase
+    // (see the LicenseController Connections below) — never optimistically here.
     function becomeSupporter() {
-        profile.unlockSupporter(800, cosmetics.supporterIds);
-        achToast.show(qsTr("Thanks for supporting Hungry Snake!"), "heart");
+        LicenseController.openCheckout();
     }
 
     // ── Daily challenge ──
@@ -1285,7 +1297,34 @@ ApplicationWindow {
                             PillButton {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: qsTr("Become a Supporter"); fontSize: 18
-                                onClicked: win.becomeSupporter()
+                                onClicked: win.becomeSupporter()      // opens the KTechpit checkout
+                            }
+                            // Already bought (another machine, or before a reinstall)? Re-check the
+                            // license server for this device's Supporter ID.
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: LicenseController.checking ? qsTr("Checking your purchase…")
+                                                                 : qsTr("Already purchased? Restore")
+                                color: Theme.title; font.family: Theme.ui
+                                font.pixelSize: 14; font.weight: Font.DemiBold
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    enabled: !LicenseController.checking
+                                    onClicked: LicenseController.refresh()
+                                }
+                            }
+                            // The anonymous Supporter ID (tie a purchase to this install; also
+                            // used to manage/restore from the web portal).
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width; horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideMiddle
+                                text: qsTr("Supporter ID: ") + LicenseController.accountId
+                                color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 11
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: LicenseController.openPortal()   // manage / restore on the web
+                                }
                             }
                         }
 

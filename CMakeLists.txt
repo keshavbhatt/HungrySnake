@@ -32,6 +32,10 @@ qt_standard_project_setup(REQUIRES 6.5)
 # Auto-generate qmldir entries for QML files kept in subdirectories.
 qt_policy(SET QTP0004 NEW)
 
+# ── Reusable account/license backend (the KTechpit "USS" client) ──────────────
+# App-agnostic static lib; the app-specific glue lives in src/licensing.
+add_subdirectory(modules/AccountAndLicense)
+
 # ── Configured build metadata header (app id / name / version) ────────────────
 configure_file(src/AppInfo.h.in ${CMAKE_BINARY_DIR}/generated/AppInfo.h @ONLY)
 
@@ -101,6 +105,8 @@ qt_add_qml_module(hungrysnake
         src/core/SnakeGame.h    src/core/SnakeGame.cpp
         src/core/Profile.h      src/core/Profile.cpp
         src/core/Leaderboard.h  src/core/Leaderboard.cpp
+        src/licensing/LicenseController.h  src/licensing/LicenseController.cpp
+        src/licensing/HungrySnakeLicenseConfig.h
 )
 
 # ── Bundled assets: app icon + sound effects + decorative foliage ─────────────
@@ -126,6 +132,7 @@ qt_add_resources(hungrysnake "appdata"
 target_include_directories(hungrysnake PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/licensing
     ${CMAKE_BINARY_DIR}/generated
 )
 
@@ -138,6 +145,7 @@ target_link_libraries(hungrysnake PRIVATE
     Qt6::Svg
     Qt6::Multimedia
     Qt6::Network
+    account_license          # reusable KTechpit account/license backend
 )
 
 target_compile_definitions(hungrysnake PRIVATE
