@@ -29,6 +29,15 @@ QtObject {
           head: "#f0715f", snout: "#c44a3a", light: "#ff9a86", dark: "#7a2a20", nose: "#93372a" },
         { id: "snake_shadow", name: qsTr("Shadow"), price: 340,
           head: "#4a5060", snout: "#33384a", light: "#6b7288", dark: "#1a1d26", nose: "#232735" },
+        // Scene-matched skins — pair with the like-named background for a cohesive view.
+        { id: "snake_sunset",   name: qsTr("Sunset"),   price: 260,
+          head: "#f0784a", snout: "#c8482e", light: "#ffbf5a", dark: "#7a2e58", nose: "#93382c" },
+        { id: "snake_midnight", name: qsTr("Midnight"), price: 300,
+          head: "#4a58a8", snout: "#333f7e", light: "#6f80d2", dark: "#191d48", nose: "#252c62" },
+        { id: "snake_frost",    name: qsTr("Frost"),    price: 300,
+          head: "#a9d8ee", snout: "#79aed0", light: "#e6f6ff", dark: "#4e7ea2", nose: "#5f92b0" },
+        { id: "snake_aurora",   name: qsTr("Aurora"),   price: 380,
+          head: "#38cf9e", snout: "#219a80", light: "#7ff0c2", dark: "#5a4fa4", nose: "#2c8270" },
         { id: "snake_gold",   name: qsTr("Golden"), price: 0, supporter: true,
           head: "#e0b23f", snout: "#b3891c", light: "#f3cc55", dark: "#7a5a12", nose: "#8f6b16" }
     ]
@@ -47,6 +56,13 @@ QtObject {
           a: "#f2c0d8", b: "#d998b8", gap: "#8a5570", frame: "#b06d90", frameHi: "#cf8aae" },
         { id: "board_dusk",  name: qsTr("Dusk"),   price: 340,
           a: "#7a6fa8", b: "#5b5286", gap: "#2e2846", frame: "#443c66", frameHi: "#5f5588" },
+        // Scene-matched boards.
+        { id: "board_coal",     name: qsTr("Coal"),     price: 300,
+          a: "#4a3a33", b: "#392b26", gap: "#1a100c", frame: "#2a1b15", frameHi: "#4a3226" },
+        { id: "board_glacier",  name: qsTr("Glacier"),  price: 300,
+          a: "#d2e4f2", b: "#b0cce0", gap: "#6d8ca6", frame: "#7fa1bb", frameHi: "#9dbdd5" },
+        { id: "board_nightfall",name: qsTr("Nightfall"),price: 320,
+          a: "#4a5698", b: "#353f78", gap: "#191d42", frame: "#2a3162", frameHi: "#3f4886" },
         { id: "board_obsidian", name: qsTr("Obsidian"), price: 0, supporter: true,
           a: "#3a3f4a", b: "#2a2e37", gap: "#e0b23f", frame: "#1a1d23", frameHi: "#e0b23f" }
     ]
@@ -58,6 +74,7 @@ QtObject {
         { id: "apple_lime",   name: qsTr("Lime"),   price: 140, body: "#8fd14a", leaf: "#4f9e2a" },
         { id: "apple_plum",   name: qsTr("Plum"),   price: 240, body: "#8a4fb0", leaf: "#57b845" },
         { id: "apple_melon",  name: qsTr("Melon"),  price: 280, body: "#f07f9a", leaf: "#57b845" },
+        { id: "apple_frost",  name: qsTr("Frost"),  price: 200, body: "#8fd0ea", leaf: "#bfe4f0" },
         { id: "apple_diamond",name: qsTr("Diamond"),price: 0, supporter: true, body: "#79dbe0", leaf: "#8bd0d0" }
     ]
 
