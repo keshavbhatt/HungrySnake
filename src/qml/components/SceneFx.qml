@@ -18,7 +18,7 @@ Item {
     StarField {
         anchors.fill: parent
         running: root.active && root.plane === "back" && root.fx === "stars"
-        showMoon: true
+        showMoon: false                    // the moon is a SceneScape artifact now (realistic)
         count: Math.max(10, Math.round(60 * root.density))
     }
     AuroraLayer {

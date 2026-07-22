@@ -84,6 +84,7 @@ set(SN_QML_FILES
     components/StarField.qml
     components/AuroraLayer.qml
     components/SceneFx.qml
+    components/SceneScape.qml
 )
 set(SN_QML_PATHS "")
 foreach(qml IN LISTS SN_QML_FILES)

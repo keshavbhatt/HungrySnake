@@ -113,6 +113,7 @@ signals:
     void ateBonus(int kind);  // a bonus food was eaten this frame (Food enum)
     void died();              // the run just ended
     void turned();            // a steer input was accepted (drives the turn blip)
+    void spedUp(int level);   // the speed just stepped up (level = 1,2,3…) — announce it
 
 private:
     void step();              // advance the render clock; enter whole cells as they pass

@@ -276,6 +276,7 @@ ApplicationWindow {
             if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // finish the daily on reaching its target
         }
+        function onSpedUp(level) { achToast.show(qsTr("Speed up!"), "sparkle"); }
         function onAteBonus(kind) {
             if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // a star's points can finish the daily too
@@ -321,6 +322,14 @@ ApplicationWindow {
             GradientStop { position: 0.55; color: cosmetics.sceneMid;    Behavior on color { ColorAnimation { duration: 400 } } }
             GradientStop { position: 1.0;  color: cosmetics.sceneBottom; Behavior on color { ColorAnimation { duration: 400 } } }
         }
+    }
+
+    // Per-scene static scenery (sun/hills, pine treeline, mountains, coal ridge, snow
+    // drifts, moon) — each scene's OWN artifacts, drawn behind the atmosphere particles
+    // so snow/embers/motes drift in front of it. Jungle uses the foliage layer instead.
+    SceneScape {
+        anchors.fill: parent
+        kind: cosmetics.sceneScape
     }
 
     // Scene atmosphere — ALL of it (stars/aurora AND snow/embers/motes/fireflies) sits

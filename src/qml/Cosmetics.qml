@@ -84,18 +84,20 @@ QtObject {
     // stars / embers / snow / aurora / none. `snow` is kept as a convenience bool for
     // the store preview; the in-game layer is driven by `fx`.
     readonly property var sceneSkins: [
+        // `leaf` (jungle foliage) is now Jungle-only; every other scene brings its own
+        // `scape` artifacts (SceneScape.qml) instead of reusing the forest leaves.
         { id: "scene_jungle",   name: qsTr("Jungle"),   price: 0,
-          top: "#437350", mid: "#284a37", bottom: "#0d211c", leaf: 1.0, snow: false, fx: "fireflies" },
+          top: "#437350", mid: "#284a37", bottom: "#0d211c", leaf: 1.0, snow: false, fx: "fireflies", scape: "none" },
         { id: "scene_sunset",   name: qsTr("Sunset"),   price: 500,
-          top: "#e8935a", mid: "#9c4a52", bottom: "#2a1730", leaf: 0.32, snow: false, fx: "motes" },
+          top: "#e8935a", mid: "#9c4a52", bottom: "#2a1730", leaf: 0.0, snow: false, fx: "motes", scape: "sunset" },
         { id: "scene_twilight", name: qsTr("Twilight"), price: 500,
-          top: "#4b5aa0", mid: "#2c2c68", bottom: "#12102c", leaf: 0.5,  snow: false, fx: "stars" },
+          top: "#4b5aa0", mid: "#2c2c68", bottom: "#12102c", leaf: 0.0, snow: false, fx: "stars", scape: "twilight" },
         { id: "scene_ember",    name: qsTr("Ember"),    price: 650,
-          top: "#5a2418", mid: "#3a140f", bottom: "#140705", leaf: 0.0,  snow: false, fx: "embers" },
+          top: "#5a2418", mid: "#3a140f", bottom: "#140705", leaf: 0.0, snow: false, fx: "embers", scape: "ember" },
         { id: "scene_snow",     name: qsTr("Snowfall"), price: 900,
-          top: "#48688a", mid: "#2e4a6c", bottom: "#132540", leaf: 0.0,  snow: true,  fx: "snow" },
+          top: "#48688a", mid: "#2e4a6c", bottom: "#132540", leaf: 0.0, snow: true,  fx: "snow", scape: "snow" },
         { id: "scene_aurora",   name: qsTr("Aurora"),   price: 0, supporter: true,
-          top: "#153f52", mid: "#1f6a5a", bottom: "#0c1030", leaf: 0.35, snow: false, fx: "aurora" }
+          top: "#153f52", mid: "#1f6a5a", bottom: "#0c1030", leaf: 0.0, snow: false, fx: "aurora", scape: "aurora" }
     ]
 
     // Exclusive cosmetics granted by the Supporter unlock (see the About screen).
@@ -163,5 +165,6 @@ QtObject {
     readonly property color sceneBottom: scene.bottom
     readonly property real  sceneLeaf:   scene.leaf     // 0..1 foliage visibility
     readonly property bool  sceneSnow:   scene.snow === true
-    readonly property string sceneFx:    scene.fx || "none"   // animated atmosphere (SceneFx.qml)
+    readonly property string sceneFx:    scene.fx || "none"      // animated atmosphere (SceneFx.qml)
+    readonly property string sceneScape: scene.scape || "none"   // static scenery (SceneScape.qml)
 }
