@@ -54,7 +54,8 @@ ApplicationWindow {
     property bool musicOn: true
     // Selected music track: -1 == Random (shuffle), else an index into musicTracks.
     property int  musicTrack: -1
-    property bool settingsOpen: false
+    property bool settingsOpen: false     // the audio/music Settings panel
+    property bool pauseOpen: false         // the in-game Pause menu (quick actions)
     // The best score at the moment the current run began — so, on death, we can
     // tell whether this run set a new best (game.best is already bumped by then).
     property int  bestAtRunStart: 0
@@ -82,15 +83,20 @@ ApplicationWindow {
     // in Random mode this is chosen fresh each time playback (re)starts).
     property int currentMusicIndex: 0
 
-    // Opening settings while a run is live pauses it (pause menu); closing resumes.
-    function openSettings() {
+    // The in-game Pause menu (quick actions) pauses the run; closing resumes.
+    function openPause() {
         if (game.status === SnakeGame.Playing) game.pause(true);
-        win.settingsOpen = true;
+        win.pauseOpen = true;
     }
-    function closeSettings() {
-        win.settingsOpen = false;
+    function closePause() {
+        win.pauseOpen = false;
         if (game.status === SnakeGame.Playing) game.pause(false);
     }
+    // The Settings panel (audio + music) is a SEPARATE dialog — opened from the Home
+    // tile or the Pause menu's Settings button. It doesn't touch the run (the Pause
+    // menu already paused it when reached from in-game), so it can layer over Pause.
+    function openSettings() { win.settingsOpen = true; }
+    function closeSettings() { win.settingsOpen = false; }
 
     // ── Screen router ──
     // Screens: "home" (landing hub), "game" (board + HUD), "store",
@@ -110,13 +116,13 @@ ApplicationWindow {
     }
     // Enter the board and start a fresh run.
     function playGame() {
-        win.settingsOpen = false; win.navStack = []; win.dailyActive = false;
+        win.settingsOpen = false; win.pauseOpen = false; win.navStack = []; win.dailyActive = false;
         win.route = "game"; game.start();
     }
     // Quit to the menu (pauses a live run so its clock stops behind the hub).
     function goHome() {
         if (game.status === SnakeGame.Playing) game.pause(true);
-        win.settingsOpen = false; win.navStack = []; win.dailyActive = false;
+        win.settingsOpen = false; win.pauseOpen = false; win.navStack = []; win.dailyActive = false;
         win.route = "home";
     }
 
@@ -143,7 +149,7 @@ ApplicationWindow {
              + "-" + ("0" + d.getDate()).slice(-2);
     }
     function playDaily() {
-        win.settingsOpen = false; win.navStack = [];
+        win.settingsOpen = false; win.pauseOpen = false; win.navStack = [];
         win.dailyActive = true;
         win.route = "game"; game.startSeeded(win.dailySeed);
     }
@@ -191,6 +197,16 @@ ApplicationWindow {
         bgm.stop();
         syncMusic();
     }
+    // Step the track selection through [Random, track0..trackN] (wraps). musicTrack
+    // is -1 for Random, else the track index. Drives the compact ◂ Track ▸ stepper.
+    function stepMusicTrack(dir) {
+        const count = win.musicTracks.length + 1;                 // +1 for Random
+        let cur = win.musicTrack === -1 ? 0 : win.musicTrack + 1;
+        cur = (cur + dir + count) % count;
+        win.musicTrack = cur === 0 ? -1 : cur - 1;
+    }
+    readonly property string musicTrackName:
+        win.musicTrack === -1 ? qsTr("Random") : win.musicTracks[win.musicTrack].name
 
     onMusicOnChanged: syncMusic()
     onMusicTrackChanged: restartMusic()
@@ -229,21 +245,8 @@ ApplicationWindow {
 
     // ── Sound ──
     SoundEffect { id: sfxCrash; source: "qrc:/assets/sounds/crash.wav"; volume: 0.8 }
-    // Apple-bite crunch — a set of variants; a random one plays each apple so bites
-    // never sound identical twice in a row.
-    SoundEffect { id: sfxEat0; source: "qrc:/assets/sounds/eat0.wav"; volume: 0.85 }
-    SoundEffect { id: sfxEat1; source: "qrc:/assets/sounds/eat1.wav"; volume: 0.85 }
-    SoundEffect { id: sfxEat2; source: "qrc:/assets/sounds/eat2.wav"; volume: 0.85 }
-    SoundEffect { id: sfxEat3; source: "qrc:/assets/sounds/eat3.wav"; volume: 0.85 }
-    readonly property var sfxEats: [sfxEat0, sfxEat1, sfxEat2, sfxEat3]
-    property int lastEat: -1
-    function playEat() {
-        if (!win.soundOn) return;
-        var i = Math.floor(Math.random() * win.sfxEats.length);
-        if (i === win.lastEat) i = (i + 1) % win.sfxEats.length;   // avoid an immediate repeat
-        win.lastEat = i;
-        win.sfxEats[i].play();
-    }
+    // Apple bite — a real recording (assets/sounds/eat.wav, not generated).
+    SoundEffect { id: sfxEat; source: "qrc:/assets/sounds/eat.wav"; volume: 0.85 }
     // A short pentatonic run: consecutive turns cycle these so it plays a rising
     // melody (Google-Snake style) rather than one repeated blip.
     SoundEffect { id: sfxTurn0; source: "qrc:/assets/sounds/turn0.wav"; volume: 0.6 }
@@ -270,11 +273,11 @@ ApplicationWindow {
             win.turnNote = (win.turnNote + 1) % win.sfxTurns.length;
         }
         function onAte()  {
-            win.playEat();
+            if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // finish the daily on reaching its target
         }
         function onAteBonus(kind) {
-            win.playEat();
+            if (win.soundOn) sfxEat.play();
             win.tryCompleteDaily();               // a star's points can finish the daily too
         }
         // Celebrate the moment this run first overtakes the previous best.
@@ -425,8 +428,8 @@ ApplicationWindow {
         anchors.fill: parent
         focus: true
         Keys.onPressed: (e) => {
-            // Steering is only live on the board (not the hub / sub-screens / pause).
-            const inGame = win.route === "game" && !win.settingsOpen;
+            // Steering is only live on the board (not the hub / sub-screens / dialogs).
+            const inGame = win.route === "game" && !win.settingsOpen && !win.pauseOpen;
             switch (e.key) {
             case Qt.Key_Up:    case Qt.Key_W: if (inGame) game.steer(SnakeGame.Up);    e.accepted = true; break;
             case Qt.Key_Down:  case Qt.Key_S: if (inGame) game.steer(SnakeGame.Down);  e.accepted = true; break;
@@ -434,8 +437,9 @@ ApplicationWindow {
             case Qt.Key_Right: case Qt.Key_D: if (inGame) game.steer(SnakeGame.Right); e.accepted = true; break;
             case Qt.Key_Space:
                 if (win.settingsOpen) win.closeSettings();
+                else if (win.pauseOpen) win.closePause();
                 else if (win.route === "home") win.playGame();
-                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openSettings();
+                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openPause();
                 else if (win.route === "game" && game.status === SnakeGame.Dead) game.restart();  // Play Again
                 e.accepted = true; break;
             case Qt.Key_Return: case Qt.Key_Enter:
@@ -444,7 +448,8 @@ ApplicationWindow {
                 e.accepted = true; break;
             case Qt.Key_Escape:
                 if (win.settingsOpen) win.closeSettings();
-                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openSettings();
+                else if (win.pauseOpen) win.closePause();
+                else if (win.route === "game" && game.status === SnakeGame.Playing) win.openPause();
                 else if (win.route !== "home") win.back();
                 e.accepted = true; break;
             }
@@ -473,9 +478,9 @@ ApplicationWindow {
             IconButton {
                 id: menuBtn
                 anchors { right: parent.right; rightMargin: 24; verticalCenter: parent.verticalCenter }
-                icon: "menu"
+                icon: "pause"
                 bg: Theme.hudWood; bgBorder: Theme.hudEdge; borderWidth: 3; color: Theme.cream
-                onClicked: win.openSettings()
+                onClicked: win.openPause()
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     shadowEnabled: true; shadowColor: Theme.shadow; shadowBlur: 0.6
@@ -1745,7 +1750,89 @@ ApplicationWindow {
         }
     }
 
-    // ── Settings / pause dialog (kit tan card) ──
+    // Shared dialog shadow.
+    component DialogShadow: MultiEffect {
+        shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
+        shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
+    }
+
+    // ── Pause menu (in-game quick actions) ──
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.45)
+        visible: opacity > 0
+        opacity: win.pauseOpen ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        MouseArea { anchors.fill: parent; onClicked: win.closePause() }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 320; radius: Theme.rlg
+            color: Theme.cardTan; border.width: 3; border.color: Theme.cardEdge
+            implicitHeight: pcol.implicitHeight + 44
+            transformOrigin: Item.Center
+            scale: win.pauseOpen ? 1.0 : 0.9
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
+            layer.enabled: true
+            layer.effect: DialogShadow {}
+            MouseArea { anchors.fill: parent }
+
+            Column {
+                id: pcol
+                anchors.centerIn: parent
+                width: parent.width - 44
+                spacing: 12
+
+                Item {
+                    width: parent.width; height: 38
+                    Text {
+                        anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("Paused"); color: Theme.inkStrong; font.family: Theme.ui
+                        font.pixelSize: 24; font.weight: Font.Bold
+                    }
+                    IconButton {
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        icon: "close"; iconSize: 18; implicitWidth: 40; implicitHeight: 40
+                        onClicked: win.closePause()
+                    }
+                }
+
+                PillButton {
+                    width: parent.width; icon: "play"; text: qsTr("Resume"); fontSize: 18
+                    onClicked: win.closePause()
+                }
+                Row {
+                    width: parent.width; spacing: 10
+                    PillButton {
+                        width: (parent.width - parent.spacing) / 2
+                        icon: "restart"; text: qsTr("Restart"); raised: false
+                        fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
+                        onClicked: { game.restart(); win.closePause(); }
+                    }
+                    PillButton {
+                        width: (parent.width - parent.spacing) / 2
+                        icon: "home"; text: qsTr("Home"); raised: false
+                        fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
+                        onClicked: win.goHome()
+                    }
+                }
+                PillButton {
+                    width: parent.width; icon: "gear"; text: qsTr("Settings"); raised: false
+                    fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
+                    onClicked: win.openSettings()
+                }
+
+                Text {
+                    width: parent.width; horizontalAlignment: Text.AlignHCenter; topPadding: 2
+                    text: qsTr("Space or Esc to resume")
+                    color: Theme.inkSoft; font.pixelSize: 13
+                }
+            }
+        }
+    }
+
+    // ── Settings (audio + music) — a SEPARATE dialog, opened from the Home tile or the
+    // Pause menu's Settings button. Declared after Pause so it layers on top of it. ──
     Rectangle {
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.45)
@@ -1756,40 +1843,32 @@ ApplicationWindow {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 348
-            radius: Theme.rlg
-            color: Theme.cardTan
-            border.width: 3
-            border.color: Theme.cardEdge
+            width: 360; radius: Theme.rlg
+            color: Theme.cardTan; border.width: 3; border.color: Theme.cardEdge
             implicitHeight: scol.implicitHeight + 44
             transformOrigin: Item.Center
             scale: win.settingsOpen ? 1.0 : 0.9
             Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
             layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true; shadowColor: "#000000"; shadowBlur: 1.0
-                shadowOpacity: 0.5; shadowVerticalOffset: 16; autoPaddingEnabled: true
-            }
-            MouseArea { anchors.fill: parent }   // absorb clicks so they don't dismiss
+            layer.effect: DialogShadow {}
+            MouseArea { anchors.fill: parent }
 
             Column {
                 id: scol
                 anchors.centerIn: parent
                 width: parent.width - 44
-                spacing: 6
+                spacing: 8
 
                 Item {
-                    width: parent.width; height: 46
+                    width: parent.width; height: 38
                     Text {
                         anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                        text: game.status === SnakeGame.Playing ? qsTr("Paused") : qsTr("Settings")
-                        color: Theme.inkStrong; font.family: Theme.ui
+                        text: qsTr("Settings"); color: Theme.inkStrong; font.family: Theme.ui
                         font.pixelSize: 24; font.weight: Font.Bold
                     }
                     IconButton {
                         anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                        icon: "close"; iconSize: 18
-                        implicitWidth: 40; implicitHeight: 40
+                        icon: "close"; iconSize: 18; implicitWidth: 40; implicitHeight: 40
                         onClicked: win.closeSettings()
                     }
                 }
@@ -1798,44 +1877,37 @@ ApplicationWindow {
                 ToggleRow { label: qsTr("Turn sound"); checked: win.turnSoundOn; onToggled: win.turnSoundOn = !win.turnSoundOn }
                 ToggleRow { label: qsTr("Music"); checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
 
-                // ── Track selector: Random + one chip per track ──
+                Text {
+                    width: parent.width; topPadding: 6
+                    text: qsTr("Music track"); color: Theme.inkSoft
+                    font.family: Theme.ui; font.pixelSize: 13; font.weight: Font.DemiBold
+                    opacity: win.musicOn ? 1.0 : 0.4
+                }
+                // Track selector: Random + one chip per track.
                 Item {
                     width: parent.width
                     implicitHeight: trackFlow.implicitHeight
                     opacity: win.musicOn ? 1.0 : 0.4
                     Behavior on opacity { NumberAnimation { duration: 160 } }
-
                     Flow {
                         id: trackFlow
-                        width: parent.width
-                        spacing: 8
-
+                        width: parent.width; spacing: 8
                         Repeater {
                             model: [{ label: qsTr("Random"), idx: -1 }].concat(
-                                       win.musicTracks.map(function (t, i) {
-                                           return { label: t.name, idx: i };
-                                       }))
+                                       win.musicTracks.map(function (t, i) { return { label: t.name, idx: i }; }))
                             delegate: Rectangle {
                                 required property var modelData
                                 readonly property bool sel: win.musicTrack === modelData.idx
-                                height: 34
-                                width: chipLabel.implicitWidth + 30
-                                radius: height / 2
+                                height: 34; width: chipLabel.implicitWidth + 30; radius: height / 2
                                 color: sel ? Theme.primary : Theme.insetTan
-                                border.width: 2
-                                border.color: sel ? Theme.primaryDeep : Theme.insetEdge
+                                border.width: 2; border.color: sel ? Theme.primaryDeep : Theme.insetEdge
                                 Behavior on color { ColorAnimation { duration: 140 } }
                                 Text {
-                                    id: chipLabel
-                                    anchors.centerIn: parent
-                                    text: modelData.label
-                                    color: Theme.inkStrong   // dark ink both states (white on green was 2.3:1)
-                                    font.pixelSize: 14
-                                    font.weight: Font.DemiBold
+                                    id: chipLabel; anchors.centerIn: parent; text: modelData.label
+                                    color: Theme.inkStrong; font.family: Theme.ui; font.pixelSize: 14; font.weight: Font.DemiBold
                                 }
                                 MouseArea {
-                                    anchors.fill: parent
-                                    enabled: win.musicOn
+                                    anchors.fill: parent; enabled: win.musicOn
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: win.musicTrack = modelData.idx
                                 }
@@ -1844,41 +1916,8 @@ ApplicationWindow {
                     }
                 }
 
-                Item { width: 1; height: 8 }
-
-                PillButton {
-                    width: parent.width
-                    text: game.status === SnakeGame.Playing ? qsTr("Resume") : qsTr("Close")
-                    onClicked: win.closeSettings()
-                }
-                PillButton {
-                    width: parent.width
-                    visible: win.route === "game"     // restarting only makes sense mid-game
-                    text: qsTr("Restart")
-                    raised: false
-                    fill: Theme.insetTan
-                    ink: Theme.inkStrong
-                    weight: Font.DemiBold
-                    onClicked: { game.restart(); win.closeSettings(); }
-                }
-                PillButton {
-                    width: parent.width
-                    visible: win.route === "game"     // quit the run back to the hub
-                    text: qsTr("Main Menu")
-                    raised: false
-                    fill: Theme.insetTan
-                    ink: Theme.inkStrong
-                    weight: Font.DemiBold
-                    onClicked: win.goHome()
-                }
-
-                Text {
-                    width: parent.width; horizontalAlignment: Text.AlignHCenter
-                    topPadding: 2
-                    text: qsTr("Space or Esc to resume")
-                    color: Theme.inkSoft
-                    font.pixelSize: 13
-                }
+                Item { width: 1; height: 6 }
+                PillButton { width: parent.width; text: qsTr("Done"); fontSize: 17; onClicked: win.closeSettings() }
             }
         }
     }
@@ -1894,7 +1933,8 @@ ApplicationWindow {
         // hover from every button beneath it (clicks still pass via Qt.NoButton, which
         // is why press worked but hover didn't) — so it must be inert on menus/dialogs.
         // It's also the only place the cursor should auto-hide anyway.
-        enabled: win.route === "game" && game.status === SnakeGame.Playing && !win.settingsOpen
+        enabled: win.route === "game" && game.status === SnakeGame.Playing
+                 && !win.settingsOpen && !win.pauseOpen
         hoverEnabled: enabled
         propagateComposedEvents: true
         property bool hidden: false
