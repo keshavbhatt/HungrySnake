@@ -91,10 +91,51 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
-    <release version="0.1.0" date="2026-07-17">
+    <release version="3.0.0" date="2026-07-22">
       <description>
-        <p>First public preview of Hungry Snake.</p>
-        <p>Smooth jungle-themed Snake with a cosmetics Store, earnable Coins, a Daily Challenge with streaks, achievements and six looping soundtracks.</p>
+        <p>A big look-and-feel update.</p>
+        <p>New Supporter Pack unlocks a set of exclusive cosmetics, including the animated Aurora scene, the Golden snake and the Obsidian board.</p>
+        <p>Adds coordinated, scene-matched snakes, boards and apples so you can build a single cohesive look, plus hand-curated per-scene scenery — a realistic moon, drifting embers and mountain ranges instead of the same forest leaves everywhere.</p>
+        <p>The Game Over card is clearer (Play Again and Home), the speed ramp now climbs gently and announces each step, and there is an optional key-press sound.</p>
+      </description>
+    </release>
+    <release version="2.2.0" date="2026-06-24">
+      <description>
+        <p>Compete with everyone.</p>
+        <p>Adds an opt-in global leaderboard: pick a nickname, post your best run and see your rank straight after a high score.</p>
+        <p>The Pause and Settings menus are now separate, and the difficulty ramp is smoother and easier to read.</p>
+      </description>
+    </release>
+    <release version="2.1.0" date="2026-05-13">
+      <description>
+        <p>Restyle the whole board.</p>
+        <p>New background Scenes — Sunset, Twilight, Ember and Snowfall — each with its own animated atmosphere drifting behind the play field.</p>
+        <p>The Store has been reorganised by price and given a readability and contrast pass throughout.</p>
+      </description>
+    </release>
+    <release version="2.0.0" date="2026-04-02">
+      <description>
+        <p>Reasons to come back every day.</p>
+        <p>Adds a fresh Daily Challenge with a streak to keep alive, and Achievements that pay out Coins as you hit lifetime and single-run milestones.</p>
+        <p>Six looping soundtracks join the crunchy eat and crash effects — all toggleable.</p>
+      </description>
+    </release>
+    <release version="1.2.0" date="2026-02-19">
+      <description>
+        <p>More ways to dress up your run.</p>
+        <p>Adds apple styles and bonus-food skins to the Store, and polishes text legibility across the game.</p>
+      </description>
+    </release>
+    <release version="1.1.0" date="2026-01-14">
+      <description>
+        <p>Earn and spend.</p>
+        <p>You now collect Coins just by playing and can spend them in a new cosmetics Store on snake skins and board themes. Sound effects can be toggled on or off.</p>
+      </description>
+    </release>
+    <release version="1.0.0" date="2025-12-08">
+      <description>
+        <p>First public release of Hungry Snake.</p>
+        <p>A smooth, jungle-themed take on classic Snake: guide a glossy cartoon snake around a wooden board, gobble apples and grow, with a best-score trophy and crunchy eat and crash effects. Fully offline.</p>
       </description>
     </release>
   </releases>

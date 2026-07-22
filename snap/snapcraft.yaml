@@ -28,19 +28,14 @@ apps:
       - x11
       - desktop
       - desktop-legacy
-      # Music + sound effects are looping SoundEffects (QAudioSink) — no
-      # MediaPlayer/ffmpeg — so only the audio-output service is needed.
       - audio-playback
       - alsa
-      # NOTE: no `network` plug — the game is fully offline. Add it only when the
-      # Supporter unlock is wired to the ktechpit USS licence check (see
-      # docs/ROADMAP.md §6); today that grant is applied locally.
+      - network
 
 parts:
   hungrysnake:
     source: .
     plugin: cmake
-    # Pull summary / description / licence from the bundled AppStream metainfo.
     parse-info:
       - usr/share/metainfo/com.ktechpit.hungrysnake.metainfo.xml
     build-packages:
@@ -51,8 +46,6 @@ parts:
       - -DCMAKE_INSTALL_PREFIX=/usr
     override-build: |
       craftctl default
-
-      # Point the desktop entry at the snap's packaged icon.
       sed -i \
         "s|^Icon=.*|Icon=\${SNAP}/meta/gui/icon.png|" \
         ${CRAFT_PART_INSTALL}/usr/share/applications/com.ktechpit.hungrysnake.desktop
