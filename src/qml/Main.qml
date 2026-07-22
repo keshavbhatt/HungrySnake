@@ -50,6 +50,7 @@ ApplicationWindow {
     Connections { target: profile; function onOwnedChanged() { achievements.check(); } }
 
     property bool soundOn: true
+    property bool turnSoundOn: false      // the per-turn blip is opt-in (off by default)
     property bool musicOn: true
     // Selected music track: -1 == Random (shuffle), else an index into musicTracks.
     property int  musicTrack: -1
@@ -205,6 +206,7 @@ ApplicationWindow {
         category: "HungrySnake"
         property alias best: game.best
         property alias soundOn: win.soundOn
+        property alias turnSoundOn: win.turnSoundOn
         property alias musicOn: win.musicOn
         property alias musicTrack: win.musicTrack
         property alias lbNickAsked: win.lbNickAsked
@@ -226,8 +228,31 @@ ApplicationWindow {
     }
 
     // ── Sound ──
-    SoundEffect { id: sfxEat;   source: "qrc:/assets/sounds/eat.wav";   volume: 0.7 }
     SoundEffect { id: sfxCrash; source: "qrc:/assets/sounds/crash.wav"; volume: 0.8 }
+    // Apple-bite crunch — a set of variants; a random one plays each apple so bites
+    // never sound identical twice in a row.
+    SoundEffect { id: sfxEat0; source: "qrc:/assets/sounds/eat0.wav"; volume: 0.85 }
+    SoundEffect { id: sfxEat1; source: "qrc:/assets/sounds/eat1.wav"; volume: 0.85 }
+    SoundEffect { id: sfxEat2; source: "qrc:/assets/sounds/eat2.wav"; volume: 0.85 }
+    SoundEffect { id: sfxEat3; source: "qrc:/assets/sounds/eat3.wav"; volume: 0.85 }
+    readonly property var sfxEats: [sfxEat0, sfxEat1, sfxEat2, sfxEat3]
+    property int lastEat: -1
+    function playEat() {
+        if (!win.soundOn) return;
+        var i = Math.floor(Math.random() * win.sfxEats.length);
+        if (i === win.lastEat) i = (i + 1) % win.sfxEats.length;   // avoid an immediate repeat
+        win.lastEat = i;
+        win.sfxEats[i].play();
+    }
+    // A short pentatonic run: consecutive turns cycle these so it plays a rising
+    // melody (Google-Snake style) rather than one repeated blip.
+    SoundEffect { id: sfxTurn0; source: "qrc:/assets/sounds/turn0.wav"; volume: 0.6 }
+    SoundEffect { id: sfxTurn1; source: "qrc:/assets/sounds/turn1.wav"; volume: 0.6 }
+    SoundEffect { id: sfxTurn2; source: "qrc:/assets/sounds/turn2.wav"; volume: 0.6 }
+    SoundEffect { id: sfxTurn3; source: "qrc:/assets/sounds/turn3.wav"; volume: 0.6 }
+    SoundEffect { id: sfxTurn4; source: "qrc:/assets/sounds/turn4.wav"; volume: 0.6 }
+    readonly property var sfxTurns: [sfxTurn0, sfxTurn1, sfxTurn2, sfxTurn3, sfxTurn4]
+    property int turnNote: 0
 
     // ── Background music: one looping SoundEffect (stays on the light QAudioSink
     // path — no MediaPlayer/ffmpeg). The source is swapped by syncMusic(). ──
@@ -239,12 +264,17 @@ ApplicationWindow {
 
     Connections {
         target: game
+        function onTurned() {                                      // arrow-press blip (cycles pitch)
+            if (!win.soundOn || !win.turnSoundOn) return;          // opt-in, off by default
+            win.sfxTurns[win.turnNote].play();
+            win.turnNote = (win.turnNote + 1) % win.sfxTurns.length;
+        }
         function onAte()  {
-            if (win.soundOn) sfxEat.play();
+            win.playEat();
             win.tryCompleteDaily();               // finish the daily on reaching its target
         }
         function onAteBonus(kind) {
-            if (win.soundOn) sfxEat.play();
+            win.playEat();
             win.tryCompleteDaily();               // a star's points can finish the daily too
         }
         // Celebrate the moment this run first overtakes the previous best.
@@ -271,6 +301,7 @@ ApplicationWindow {
             if (game.status === SnakeGame.Playing) {
                 win.bestAtRunStart = game.best;            // snapshot for the new-best check
                 win.newBestFired = false;                  // reset the celebration for this run
+                win.turnNote = 0;                          // restart the turn melody from the low note
                 // On a fresh run in Random mode, reshuffle for a new tune.
                 if (win.musicOn && win.musicTrack < 0)
                     win.restartMusic();
@@ -1764,6 +1795,7 @@ ApplicationWindow {
                 }
 
                 ToggleRow { label: qsTr("Sound"); checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
+                ToggleRow { label: qsTr("Turn sound"); checked: win.turnSoundOn; onToggled: win.turnSoundOn = !win.turnSoundOn }
                 ToggleRow { label: qsTr("Music"); checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
 
                 // ── Track selector: Random + one chip per track ──

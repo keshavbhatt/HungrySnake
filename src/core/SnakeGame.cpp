@@ -205,6 +205,7 @@ void SnakeGame::steer(Direction dir)
         if (dir != opposite(m_dir)) {
             m_dir = dir;
             retarget();
+            emit turned();
         }
         m_clock.restart();
         m_timer.start();
@@ -216,8 +217,10 @@ void SnakeGame::steer(Direction dir)
     const int ref = m_turns.empty() ? m_dir : m_turns.back();
     if (dir == ref || dir == opposite(ref))
         return;
-    if (m_turns.size() < 2)
+    if (m_turns.size() < 2) {
         m_turns.push_back(dir);
+        emit turned();
+    }
 }
 
 void SnakeGame::step()

@@ -112,6 +112,7 @@ signals:
     void bonusChanged();      // bonus food spawned / eaten / expired
     void ateBonus(int kind);  // a bonus food was eaten this frame (Food enum)
     void died();              // the run just ended
+    void turned();            // a steer input was accepted (drives the turn blip)
 
 private:
     void step();              // advance the render clock; enter whole cells as they pass
