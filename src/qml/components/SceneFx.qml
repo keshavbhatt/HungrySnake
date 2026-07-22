@@ -19,7 +19,7 @@ Item {
         anchors.fill: parent
         running: root.active && root.plane === "back" && root.fx === "stars"
         showMoon: true
-        count: Math.max(10, Math.round(90 * root.density))
+        count: Math.max(10, Math.round(60 * root.density))
     }
     AuroraLayer {
         anchors.fill: parent
@@ -42,18 +42,20 @@ Item {
         direction: -1; durMin: 11000; durMax: 20000; swayMax: 34
         flicker: false; baseOpacity: 0.5
     }
-    // Rising embers — hot, fast-ish, flickering.
+    // Rising embers — hot, flickering. Fewer and slower than before (they were too
+    // fast/busy, and cheaper to render behind the board).
     ParticleField {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "embers"
-        count: Math.max(6, Math.round(46 * root.density)); minSize: 2.5; maxSize: 7
+        count: Math.max(6, Math.round(28 * root.density)); minSize: 2.5; maxSize: 7
         core: "#ffd98a"; glow: "#ff5a1e"
-        direction: -1; durMin: 5000; durMax: 11000; swayMax: 46
+        direction: -1; durMin: 8500; durMax: 16000; swayMax: 32
         flicker: true; baseOpacity: 0.92
     }
     SnowLayer {
         anchors.fill: parent
         running: root.active && root.plane === "front" && root.fx === "snow"
-        count: Math.max(8, Math.round(64 * root.density))
+        count: Math.max(8, Math.round(44 * root.density))
+        fallMin: 8000; fallMax: 18000                     // drift a bit more gently
     }
 }
