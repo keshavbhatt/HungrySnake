@@ -345,6 +345,7 @@ ApplicationWindow {
     Item {
         anchors.fill: parent
         opacity: cosmetics.sceneLeaf
+        visible: opacity > 0            // scenes with leaf 0 (Ember, Snowfall) skip it entirely
         Behavior on opacity { NumberAnimation { duration: 400 } }
 
         component Leaf: Image {

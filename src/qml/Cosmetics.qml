@@ -91,7 +91,7 @@ QtObject {
         { id: "scene_twilight", name: qsTr("Twilight"), price: 500,
           top: "#4b5aa0", mid: "#2c2c68", bottom: "#12102c", leaf: 0.5,  snow: false, fx: "stars" },
         { id: "scene_ember",    name: qsTr("Ember"),    price: 650,
-          top: "#5a2418", mid: "#3a140f", bottom: "#140705", leaf: 0.4,  snow: false, fx: "embers" },
+          top: "#5a2418", mid: "#3a140f", bottom: "#140705", leaf: 0.0,  snow: false, fx: "embers" },
         { id: "scene_snow",     name: qsTr("Snowfall"), price: 900,
           top: "#48688a", mid: "#2e4a6c", bottom: "#132540", leaf: 0.0,  snow: true,  fx: "snow" },
         { id: "scene_aurora",   name: qsTr("Aurora"),   price: 0, supporter: true,
