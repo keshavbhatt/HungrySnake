@@ -186,13 +186,18 @@ int main(int argc, char *argv[])
                     t->setInterval(16);
                     QObject::connect(t, &QTimer::timeout, &app, [game]() { seekApple(game); });
                     t->start();
+                    const int longEats = qEnvironmentVariableIntValue("SN_LONG_EATS") > 0
+                                       ? qEnvironmentVariableIntValue("SN_LONG_EATS") : 6;
+                    const int longDelay = qEnvironmentVariableIntValue("SN_LONG_DELAY") > 0
+                                        ? qEnvironmentVariableIntValue("SN_LONG_DELAY") : 40;
                     auto *eaten = new int(0);
-                    QObject::connect(game, &SnakeGame::ate, &app, [w, shot, &app, eaten]() {
-                        if (++(*eaten) >= 6) {
+                    QObject::connect(game, &SnakeGame::ate, &app,
+                        [w, shot, &app, eaten, longEats, longDelay]() {
+                        if (++(*eaten) >= longEats) {
                             static bool once = false;
                             if (once) return;
                             once = true;
-                            QTimer::singleShot(40, [w, shot, &app] {
+                            QTimer::singleShot(longDelay, [w, shot, &app] {
                                 w->grabWindow().save(QString::fromUtf8(shot));
                                 app.quit();
                             });
