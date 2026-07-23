@@ -10,6 +10,7 @@ import "components"
 ApplicationWindow {
     id: win
     visible: true
+    visibility: Window.FullScreen   // the game always launches fullscreen
     width: 960
     height: 640
     minimumWidth: 720
@@ -52,6 +53,9 @@ ApplicationWindow {
     property bool soundOn: true
     property bool turnSoundOn: false      // the per-turn blip is opt-in (off by default)
     property bool musicOn: true
+    // The game always launches fullscreen (see the window's `visibility` above). F11
+    // still toggles for the current session, but the choice is not persisted.
+    readonly property bool isFullscreen: win.visibility === Window.FullScreen
     // Selected music track: -1 == Random (shuffle), else an index into musicTracks.
     property int  musicTrack: -1
     property bool settingsOpen: false     // the audio/music Settings panel
@@ -97,6 +101,15 @@ ApplicationWindow {
     // menu already paused it when reached from in-game), so it can layer over Pause.
     function openSettings() { win.settingsOpen = true; }
     function closeSettings() { win.settingsOpen = false; }
+
+    // F11 toggles fullscreen for the current session only (not persisted — the next
+    // launch is always fullscreen).
+    function setFullscreen(on) { win.visibility = on ? Window.FullScreen : Window.Windowed; }
+    function toggleFullscreen() { win.setFullscreen(!win.isFullscreen); }
+
+    // Quit outright. Fullscreen hides the window's close button, so the game needs its
+    // own exit (the Home "Quit" tile and Ctrl+Q both call this).
+    function quitApp() { Qt.quit(); }
 
     // ── Screen router ──
     // Screens: "home" (landing hub), "game" (board + HUD), "store",
@@ -456,6 +469,11 @@ ApplicationWindow {
                 if (win.route === "home") win.playGame();
                 else if (win.route === "game" && (game.status === SnakeGame.Dead || game.status === SnakeGame.Ready)) game.start();
                 e.accepted = true; break;
+            case Qt.Key_F11:
+                win.toggleFullscreen(); e.accepted = true; break;
+            case Qt.Key_Q:
+                if (e.modifiers & Qt.ControlModifier) { win.quitApp(); e.accepted = true; }
+                break;
             case Qt.Key_Escape:
                 if (win.settingsOpen) win.closeSettings();
                 else if (win.pauseOpen) win.closePause();
@@ -719,6 +737,7 @@ ApplicationWindow {
                 HomeTile { icon: "ranks";    label: qsTr("Ranks");    onClicked: win.navigate("leaderboard") }
                 HomeTile { icon: "gear";     label: qsTr("Settings"); onClicked: win.openSettings() }
                 HomeTile { icon: "heart";    label: qsTr("Support");  onClicked: win.navigate("about") }
+                HomeTile { icon: "power";    label: qsTr("Quit");     onClicked: win.quitApp() }
             }
         }
     }
@@ -1576,9 +1595,12 @@ ApplicationWindow {
         property bool active: false
         // Coins-earned count-up shown on the card (animates 0 → what this run earned).
         property int shownCoins: 0
-        onDeadChanged: { if (dead) overDelay.restart(); else active = false; }
+        // Leaving Dead (Play Again / Home) must cancel any pending reveal, otherwise the
+        // delayed timer fires on the now-live game and the card gets stuck open with no
+        // way to dismiss it (restart() no-ops once status is already Playing).
+        onDeadChanged: { if (dead) overDelay.restart(); else { overDelay.stop(); active = false; } }
         onActiveChanged: if (active) coinCount.restart()
-        Timer { id: overDelay; interval: 430; onTriggered: overlay.active = true }
+        Timer { id: overDelay; interval: 430; onTriggered: overlay.active = overlay.dead }
         NumberAnimation {
             id: coinCount; target: overlay; property: "shownCoins"
             from: 0; to: profile.lastRunCoins; duration: 650; easing.type: Easing.OutCubic

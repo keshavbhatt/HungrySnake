@@ -39,7 +39,8 @@ Item {
         // Winner's podium (2-1-3) — a monochrome ranks/leaderboard glyph matching the
         // other line icons (the full-colour trophy lives in _rich for HUD/celebrations).
         "ranks":   '<rect x="3" y="12" width="5.6" height="9" rx="1"/><rect x="9.2" y="7" width="5.6" height="14" rx="1"/><rect x="15.4" y="15" width="5.6" height="6" rx="1"/>',
-        "edit":    '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>'
+        "edit":    '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',
+        "power":   '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2.5" x2="12" y2="12"/>'
     })
 
     // Filled, full-colour icons that match the game art (flat + saturated) — used
