@@ -243,6 +243,10 @@ ApplicationWindow {
     Component.onCompleted: {
         keyLayer.forceActiveFocus();
         syncMusic();
+        // Fetch the global board at launch so the player's rank is known everywhere
+        // (the Home pill), not only after they open the Ranks screen. Only meaningful
+        // once they've joined with a nickname.
+        if (leaderboard.hasNickname) leaderboard.refresh();
         // Resolve today's daily challenge (constant for the session).
         var now = new Date();
         win.dailyToday = win._ymd(now);
@@ -614,6 +618,7 @@ ApplicationWindow {
 
         // Top bar: a Best-score pill (left) + a Coins pill (right), both on wood.
         Rectangle {
+            id: bestPill
             anchors { top: parent.top; left: parent.left; topMargin: 22; leftMargin: 30 }
             height: 40; radius: height / 2
             width: bestRow.implicitWidth + 34
@@ -626,6 +631,31 @@ ApplicationWindow {
                 Text { anchors.verticalCenter: parent.verticalCenter
                        text: qsTr("Best · ") + game.best
                        color: Theme.cream; font.family: Theme.ui; font.pixelSize: 15; font.weight: Font.DemiBold }
+            }
+        }
+        // Persistent global-rank pill — shown once the player holds a ranked best, so
+        // their standing is visible on the hub, not just inside the Ranks screen. Tap
+        // to open the full leaderboard.
+        Rectangle {
+            id: rankPill
+            visible: leaderboard.playerRank > 0
+            anchors { top: bestPill.bottom; left: parent.left; topMargin: 10; leftMargin: 30 }
+            height: 40; radius: height / 2
+            width: rankRow.implicitWidth + 32
+            color: rankMa.containsMouse ? Qt.lighter(Theme.hudWood, 1.12) : Theme.hudWood
+            Behavior on color { ColorAnimation { duration: 120 } }
+            border.width: 3; border.color: Theme.hudEdge
+            Row {
+                id: rankRow
+                anchors.centerIn: parent; spacing: 7
+                Icon { anchors.verticalCenter: parent.verticalCenter; name: "ranks"; size: 20; color: Theme.gold }
+                Text { anchors.verticalCenter: parent.verticalCenter
+                       text: (leaderboard.usingMock ? qsTr("Demo #") : qsTr("Rank #")) + leaderboard.playerRank
+                       color: Theme.cream; font.family: Theme.ui; font.pixelSize: 15; font.weight: Font.DemiBold }
+            }
+            MouseArea {
+                id: rankMa; anchors.fill: parent; hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor; onClicked: win.navigate("leaderboard")
             }
         }
         Rectangle {
