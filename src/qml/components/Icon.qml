@@ -92,6 +92,8 @@ Item {
         opacity: root._rich[root.name] !== undefined ? 1.0 : root.color.a
         sourceSize.width: root.size * 2
         sourceSize.height: root.size * 2
-        source: "data:image/svg+xml;base64," + Qt.btoa(root._svg())
+        // URL-encoded (not base64) data URI: sidesteps the deprecated Qt.btoa(string)
+        // overload, and encodeURIComponent escapes the '#' in the SVG colour attrs.
+        source: "data:image/svg+xml;utf8," + encodeURIComponent(root._svg())
     }
 }
