@@ -19,16 +19,28 @@
     <p>
       The snake glides smoothly between cells rather than snapping, turns are
       buffered so quick taps never get dropped, and each run starts only when you
-      press a key — so you are never thrown straight into a crash.
+      press a key — so you are never thrown straight into a crash. The difficulty
+      climbs gently and announces each speed-up, so long runs stay controllable.
+    </p>
+    <p>
+      Earn Coins just by playing and spend them in the Store on a deep set of
+      cosmetics — snake skins, board themes, apple styles, bonus-food looks and
+      fully animated background scenes — many colour-matched so you can build one
+      coordinated look. Chase the Daily Challenge, collect Achievements, and post
+      your best to the opt-in global leaderboard to see where you rank.
     </p>
     <ul>
       <li>Smooth, glide-between-cells movement with a cute, expressive snake that blinks, flicks its tongue and watches the apple</li>
-      <li>Earn Coins just by playing, then spend them in the Store on snake skins, board themes and apple styles</li>
+      <li>Timed bonus foods — a golden star for extra points, a mint leaf that trims your tail when things get tight</li>
+      <li>Earn Coins just by playing, then spend them in the Store on snake skins, board themes, apple styles, bonus-food looks and animated scenes</li>
+      <li>Coordinated, scene-matched cosmetics so you can put together a cohesive view</li>
+      <li>Six hand-crafted background scenes — jungle, sunset, twilight, ember, snowfall and aurora — each with its own drifting atmosphere</li>
       <li>A fresh Daily Challenge every day with a streak to keep alive</li>
-      <li>Achievements that pay out as you hit lifetime and single-run milestones</li>
-      <li>Six looping soundtracks plus crunchy eat and crash effects — all toggleable</li>
-      <li>Free to play with no ads: every cosmetic can be unlocked just by playing</li>
-      <li>Fully offline — play anywhere, anytime</li>
+      <li>Achievements that pay out Coins as you hit lifetime and single-run milestones</li>
+      <li>An opt-in global leaderboard — pick a nickname, post your best run and see your worldwide rank</li>
+      <li>Six looping soundtracks plus crunchy eat and crash effects, an optional key-press blip, and a performance mode for older machines — all toggleable</li>
+      <li>Free to play with no ads: every standard cosmetic can be unlocked just by playing, with an optional Supporter Pack for a few exclusive extras</li>
+      <li>Fully offline gameplay — the leaderboard is the only online part</li>
     </ul>
   </description>
 
