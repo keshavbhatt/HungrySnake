@@ -193,12 +193,22 @@ ApplicationWindow {
         if (win.musicTrack < 0) return pickRandomIndex();      // Random / shuffle
         return Math.max(0, Math.min(win.musicTrack, musicTracks.length - 1));
     }
-    // Play only while music is enabled and the window is on-screen (foreground).
+    // True once the window has held keyboard focus at least once. Used to make the
+    // focus-pause below safe on Wayland compositors that never mark a freshly-created
+    // fullscreen surface as `active` — until the first real focus, we don't treat
+    // "not active" as backgrounded (otherwise the music would never start there).
+    property bool hasFocusedOnce: false
+
+    // Play while music is enabled and the window is on-screen (not minimized/hidden) AND
+    // in the foreground. Once the window has genuinely been focused, losing focus (the
+    // player alt-tabs to another window) pauses the music; it resumes when we're focused
+    // again. Before that first focus, we fall back to visibility alone so startup isn't
+    // blocked on compositors that launch a fullscreen surface without focus.
     function syncMusic() {
-        var shouldPlay = win.musicOn
-                      && win.active                       // window has focus
-                      && win.visibility !== Window.Minimized
-                      && win.visibility !== Window.Hidden;
+        var onScreen = win.visibility !== Window.Minimized
+                    && win.visibility !== Window.Hidden;
+        var foreground = win.active || !win.hasFocusedOnce;
+        var shouldPlay = win.musicOn && onScreen && foreground;
         if (shouldPlay) {
             if (!bgm.playing) {
                 win.currentMusicIndex = resolveMusicIndex();
@@ -228,7 +238,7 @@ ApplicationWindow {
     onMusicOnChanged: syncMusic()
     onMusicTrackChanged: restartMusic()
     onVisibilityChanged: syncMusic()
-    onActiveChanged: syncMusic()
+    onActiveChanged: { if (win.active) win.hasFocusedOnce = true; syncMusic(); }
     // Any navigation re-arms the keyboard handler. Without this, a text field (e.g. the
     // leaderboard nickname editor) that grabbed focus keeps it, so the game would get no
     // arrow/space input after you leave that screen.
