@@ -1,10 +1,11 @@
 # Hungry Snake
 
-A smooth, jungle-themed take on the classic **Snake** for the desktop. Guide a
+A smooth, colourful take on the classic **Snake** for the desktop. Guide a
 gliding cartoon snake around a wooden board, eat apples to grow, and don't run
 into the walls or your own tail. Earn Coins as you play and spend them on a deep
-catalogue of cosmetics; chase a Daily Challenge, collect Achievements, and post
-your best to a global leaderboard.
+catalogue of cosmetics — including six switchable background scenes; chase a
+Daily Challenge, collect Achievements, and post your best to a global
+leaderboard.
 
 Built with **Qt 6 Quick (QML) + C++20 / CMake**, mirroring the sibling
 *ArrowEscape* scaffold. Ships as a strictly-confined snap.

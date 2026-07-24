@@ -4,7 +4,7 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>LicenseRef-proprietary=https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/LICENSE</project_license>
   <name>Hungry Snake</name>
-  <summary>A juicy, jungle-themed take on classic Snake</summary>
+  <summary>Grow a hungry snake, gobble apples, and climb the global leaderboard</summary>
 
   <developer id="com.ktechpit">
     <name>Keshav Bhatt</name>
@@ -12,22 +12,27 @@
 
   <description>
     <p>
-      Hungry Snake is a polished, jungle-themed take on the game you already know:
-      guide a glossy cartoon snake around a wooden board, gobble apples, and grow.
-      Hit a wall or your own tail and the run is over.
+      Hungry Snake is a bright, cartoon arcade game. You guide a glossy snake
+      around a wooden board, gobbling apples to grow ever longer — the catch is
+      that your own tail keeps getting in the way. Clip a wall or bite yourself
+      and the run is over, so every apple is a small gamble on how much board you
+      can still weave through.
     </p>
     <p>
-      The snake glides smoothly between cells rather than snapping, turns are
-      buffered so quick taps never get dropped, and each run starts only when you
-      press a key — so you are never thrown straight into a crash. The difficulty
-      climbs gently and announces each speed-up, so long runs stay controllable.
+      The snake glides smoothly from cell to cell instead of snapping, turns are
+      buffered so quick taps never get dropped, and each run only starts once you
+      steer — you are never thrown straight into a crash. Speed climbs slowly and
+      announces every step-up, so even a very long snake stays controllable.
+      Golden stars drop in for bonus points, and a mint leaf will trim your tail
+      when you have painted yourself into a corner.
     </p>
     <p>
-      Earn Coins just by playing and spend them in the Store on a deep set of
-      cosmetics — snake skins, board themes, apple styles, bonus-food looks and
-      fully animated background scenes — many colour-matched so you can build one
-      coordinated look. Chase the Daily Challenge, collect Achievements, and post
-      your best to the opt-in global leaderboard to see where you rank.
+      Every run pays out Coins, and the Store turns them into a deep wardrobe:
+      snake skins, board themes, apple styles, bonus-food looks and fully animated
+      background scenes, many colour-matched so you can assemble one coordinated
+      look. Keep a Daily Challenge streak alive, unlock Achievements that pay out
+      more Coins, and post your best to the opt-in global leaderboard to see how
+      you rank worldwide.
     </p>
     <ul>
       <li>Smooth, glide-between-cells movement with a cute, expressive snake that blinks, flicks its tongue and watches the apple</li>
@@ -147,7 +152,7 @@
     <release version="1.0.0" date="2025-12-08">
       <description>
         <p>First public release of Hungry Snake.</p>
-        <p>A smooth, jungle-themed take on classic Snake: guide a glossy cartoon snake around a wooden board, gobble apples and grow, with a best-score trophy and crunchy eat and crash effects. Fully offline.</p>
+        <p>Guide a glossy cartoon snake around a wooden board, gobble apples and grow, with a best-score trophy and crunchy eat and crash effects. Fully offline.</p>
       </description>
     </release>
   </releases>
