@@ -53,6 +53,10 @@ ApplicationWindow {
     property bool soundOn: true
     property bool turnSoundOn: false      // the per-turn blip is opt-in (off by default)
     property bool musicOn: true
+    // Performance mode for low-end machines: drops the continuously-animated decoration
+    // (drifting scene particles + swaying foliage) that costs the most per frame, while
+    // leaving the gameplay and the scene's colours/scenery intact. Persisted.
+    property bool perfMode: false
     // The game always launches fullscreen (see the window's `visibility` above). F11
     // still toggles for the current session, but the choice is not persisted.
     readonly property bool isFullscreen: win.visibility === Window.FullScreen
@@ -239,6 +243,7 @@ ApplicationWindow {
         property alias musicOn: win.musicOn
         property alias musicTrack: win.musicTrack
         property alias lbNickAsked: win.lbNickAsked
+        property alias perfMode: win.perfMode
     }
     Component.onCompleted: {
         keyLayer.forceActiveFocus();
@@ -357,11 +362,13 @@ ApplicationWindow {
         anchors.fill: parent
         plane: "back"
         fx: cosmetics.sceneFx
+        active: !win.perfMode          // performance mode drops the drifting particles
     }
     SceneFx {
         anchors.fill: parent
         plane: "front"
         fx: cosmetics.sceneFx
+        active: !win.perfMode
     }
 
     // ── Decorative foliage framing the scene ──
@@ -399,17 +406,17 @@ ApplicationWindow {
             rotation: baseRot + sway + sway2
             scale: 1 + breathe
             SequentialAnimation on sway {
-                loops: Animation.Infinite; running: true
+                loops: Animation.Infinite; running: !win.perfMode
                 NumberAnimation { from: -swayAmt; to: swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
                 NumberAnimation { from: swayAmt; to: -swayAmt; duration: swayMs; easing.type: Easing.InOutSine }
             }
             SequentialAnimation on sway2 {
-                loops: Animation.Infinite; running: true
+                loops: Animation.Infinite; running: !win.perfMode
                 NumberAnimation { from: -sway2Amt; to: sway2Amt; duration: sway2Ms; easing.type: Easing.InOutSine }
                 NumberAnimation { from: sway2Amt; to: -sway2Amt; duration: sway2Ms; easing.type: Easing.InOutSine }
             }
             SequentialAnimation on breathe {
-                loops: Animation.Infinite; running: true
+                loops: Animation.Infinite; running: !win.perfMode
                 NumberAnimation { from: -breatheAmt; to: breatheAmt; duration: breatheMs; easing.type: Easing.InOutSine }
                 NumberAnimation { from: breatheAmt; to: -breatheAmt; duration: breatheMs; easing.type: Easing.InOutSine }
             }
@@ -1976,6 +1983,16 @@ ApplicationWindow {
                             }
                         }
                     }
+                }
+
+                Item { width: 1; height: 8 }
+                ToggleRow { label: qsTr("Performance mode"); checked: win.perfMode
+                            onToggled: win.perfMode = !win.perfMode }
+                Text {
+                    width: parent.width
+                    text: qsTr("Turns off background animations for smoother play on older machines.")
+                    color: Theme.inkSoft; wrapMode: Text.WordWrap
+                    font.family: Theme.ui; font.pixelSize: 12; font.weight: Font.DemiBold
                 }
 
                 Item { width: 1; height: 6 }
