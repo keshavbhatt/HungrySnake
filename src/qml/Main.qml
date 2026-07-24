@@ -111,8 +111,12 @@ ApplicationWindow {
     function setFullscreen(on) { win.visibility = on ? Window.FullScreen : Window.Windowed; }
     function toggleFullscreen() { win.setFullscreen(!win.isFullscreen); }
 
-    // Quit outright. Fullscreen hides the window's close button, so the game needs its
-    // own exit (the Home "Quit" tile and Ctrl+Q both call this).
+    // Quit flow. Fullscreen hides the window's close button, so the game needs its own
+    // exit. User-facing quit actions (Home "Quit" tile, the Pause menu's Quit button,
+    // and Esc on the home screen) go through a confirm dialog; Ctrl+Q is the immediate
+    // power-user shortcut. `quitApp()` is the actual exit.
+    property bool quitConfirmOpen: false
+    function confirmQuit() { win.quitConfirmOpen = true; }
     function quitApp() { Qt.quit(); }
 
     // ── Screen router ──
@@ -472,6 +476,13 @@ ApplicationWindow {
         anchors.fill: parent
         focus: true
         Keys.onPressed: (e) => {
+            // The quit-confirm dialog is modal to the keyboard: Esc cancels, Enter quits,
+            // everything else is swallowed so nothing acts underneath it.
+            if (win.quitConfirmOpen) {
+                if (e.key === Qt.Key_Escape) win.quitConfirmOpen = false;
+                else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) win.quitApp();
+                e.accepted = true; return;
+            }
             // Steering is only live on the board (not the hub / sub-screens / dialogs).
             const inGame = win.route === "game" && !win.settingsOpen && !win.pauseOpen;
             switch (e.key) {
@@ -500,6 +511,7 @@ ApplicationWindow {
                 else if (win.pauseOpen) win.closePause();
                 else if (win.route === "game" && game.status === SnakeGame.Playing) win.openPause();
                 else if (win.route !== "home") win.back();
+                else win.confirmQuit();               // on the home screen, Esc asks to quit
                 e.accepted = true; break;
             }
         }
@@ -784,7 +796,7 @@ ApplicationWindow {
                 HomeTile { icon: "ranks";    label: qsTr("Ranks");    onClicked: win.navigate("leaderboard") }
                 HomeTile { icon: "gear";     label: qsTr("Settings"); onClicked: win.openSettings() }
                 HomeTile { icon: "heart";    label: qsTr("Support");  onClicked: win.navigate("about") }
-                HomeTile { icon: "power";    label: qsTr("Quit");     onClicked: win.quitApp() }
+                HomeTile { icon: "power";    label: qsTr("Quit");     onClicked: win.confirmQuit() }
             }
         }
     }
@@ -1900,6 +1912,11 @@ ApplicationWindow {
                     fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
                     onClicked: win.openSettings()
                 }
+                PillButton {
+                    width: parent.width; icon: "power"; text: qsTr("Quit game"); raised: false
+                    fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
+                    onClicked: win.confirmQuit()
+                }
 
                 Text {
                     width: parent.width; horizontalAlignment: Text.AlignHCenter; topPadding: 2
@@ -2007,6 +2024,65 @@ ApplicationWindow {
 
                 Item { width: 1; height: 6 }
                 PillButton { width: parent.width; text: qsTr("Done"); fontSize: 17; onClicked: win.closeSettings() }
+            }
+        }
+    }
+
+    // ── Quit confirmation — the single gate for user-facing quit actions (Home Quit
+    // tile, Pause menu Quit, Esc on the home screen). Declared last so it layers above
+    // every other dialog. ──
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.5)
+        visible: opacity > 0
+        opacity: win.quitConfirmOpen ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        MouseArea { anchors.fill: parent; onClicked: win.quitConfirmOpen = false }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 340; radius: Theme.rlg
+            color: Theme.cardTan; border.width: 3; border.color: Theme.cardEdge
+            implicitHeight: qcol.implicitHeight + 44
+            transformOrigin: Item.Center
+            scale: win.quitConfirmOpen ? 1.0 : 0.9
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
+            layer.enabled: true
+            layer.effect: DialogShadow {}
+            MouseArea { anchors.fill: parent }
+
+            Column {
+                id: qcol
+                anchors.centerIn: parent
+                width: parent.width - 44
+                spacing: 14
+
+                Text {
+                    width: parent.width; horizontalAlignment: Text.AlignHCenter
+                    text: qsTr("Quit Hungry Snake?"); color: Theme.inkStrong
+                    font.family: Theme.ui; font.pixelSize: 22; font.weight: Font.Bold
+                }
+                Text {
+                    width: parent.width; horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    text: qsTr("Your Coins and best score are saved.")
+                    color: Theme.inkSoft; font.family: Theme.ui; font.pixelSize: 14
+                }
+
+                Row {
+                    width: parent.width; spacing: 10
+                    PillButton {
+                        width: (parent.width - parent.spacing) / 2
+                        text: qsTr("Cancel"); raised: false
+                        fill: Theme.insetTan; ink: Theme.inkStrong; weight: Font.DemiBold
+                        onClicked: win.quitConfirmOpen = false
+                    }
+                    PillButton {
+                        width: (parent.width - parent.spacing) / 2
+                        icon: "power"; text: qsTr("Quit")
+                        onClicked: win.quitApp()
+                    }
+                }
             }
         }
     }
