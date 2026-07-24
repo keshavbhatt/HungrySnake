@@ -197,35 +197,51 @@ ApplicationWindow {
         if (win.musicTrack < 0) return pickRandomIndex();      // Random / shuffle
         return Math.max(0, Math.min(win.musicTrack, musicTracks.length - 1));
     }
-    // True once the window has held keyboard focus at least once. Used to make the
-    // focus-pause below safe on Wayland compositors that never mark a freshly-created
-    // fullscreen surface as `active` — until the first real focus, we don't treat
-    // "not active" as backgrounded (otherwise the music would never start there).
-    property bool hasFocusedOnce: false
+    // Foreground detection for the focus-pause. We use the APPLICATION-wide active state
+    // (Qt.application.state), not a single window's `active`/keyboard-focus flag: several
+    // Wayland compositors leave a fullscreen surface's window.active stuck false even
+    // while it is clearly the on-top, interacted-with window — which previously left the
+    // music unable to start. Qt.application.state == Active is the reliable "app is in the
+    // foreground" signal. We only treat the app as backgrounded once it has been active at
+    // least once, so a compositor that is slow to report Active at startup never blocks it.
+    readonly property bool appActive: Qt.application.state === Qt.ApplicationActive
+    property bool everActive: false
+    onAppActiveChanged: { if (win.appActive) win.everActive = true; syncMusic(); }
 
     // Play while music is enabled and the window is on-screen (not minimized/hidden) AND
-    // in the foreground. Once the window has genuinely been focused, losing focus (the
-    // player alt-tabs to another window) pauses the music; it resumes when we're focused
-    // again. Before that first focus, we fall back to visibility alone so startup isn't
-    // blocked on compositors that launch a fullscreen surface without focus.
+    // the app is in the foreground. Backgrounding the app (alt-tab / minimise) pauses the
+    // music; returning to it resumes. Before the app has ever been active we fall back to
+    // visibility alone, so startup is never blocked waiting on a focus signal.
     function syncMusic() {
+        // PRELOAD: make sure a track is loaded even while music is off, so the sample is
+        // already `Ready` by the time the player enables music. This is the crux of the
+        // "turn music on and nothing happens" bug: SoundEffect loads asynchronously, and a
+        // play() issued during that load is silently dropped — so if we only started
+        // loading at toggle time, the very first play could be lost with no retry. Loading
+        // up front means toggling on hits the reliable "already Ready → play()" path.
+        if (String(bgm.source) === "") {
+            win.currentMusicIndex = resolveMusicIndex();
+            bgm.source = musicTracks[win.currentMusicIndex].src;
+        }
+
         var onScreen = win.visibility !== Window.Minimized
                     && win.visibility !== Window.Hidden;
-        var foreground = win.active || !win.hasFocusedOnce;
-        var shouldPlay = win.musicOn && onScreen && foreground;
-        if (shouldPlay) {
-            if (!bgm.playing) {
-                win.currentMusicIndex = resolveMusicIndex();
-                bgm.source = musicTracks[win.currentMusicIndex].src;
+        var foreground = win.appActive || !win.everActive;
+        win._musicWantsPlay = win.musicOn && onScreen && foreground;
+        if (win._musicWantsPlay) {
+            // Play now if loaded; if the preload hasn't finished yet, bgm.onStatusChanged
+            // starts it the moment it turns Ready (belt-and-suspenders for the load race).
+            if (bgm.status === SoundEffect.Ready && !bgm.playing)
                 bgm.play();
-            }
         } else {
             bgm.stop();
         }
     }
-    // Switch tracks live (e.g. the user changed the selection while playing).
+    // Switch tracks live (e.g. the user changed the selection while playing). Clearing the
+    // source forces syncMusic() to re-pick the (possibly new) track and reload it.
     function restartMusic() {
         bgm.stop();
+        bgm.source = "";
         syncMusic();
     }
     // Step the track selection through [Random, track0..trackN] (wraps). musicTrack
@@ -242,7 +258,6 @@ ApplicationWindow {
     onMusicOnChanged: syncMusic()
     onMusicTrackChanged: restartMusic()
     onVisibilityChanged: syncMusic()
-    onActiveChanged: { if (win.active) win.hasFocusedOnce = true; syncMusic(); }
     // Any navigation re-arms the keyboard handler. Without this, a text field (e.g. the
     // leaderboard nickname editor) that grabbed focus keeps it, so the game would get no
     // arrow/space input after you leave that screen.
@@ -295,10 +310,18 @@ ApplicationWindow {
 
     // ── Background music: one looping SoundEffect (stays on the light QAudioSink
     // path — no MediaPlayer/ffmpeg). The source is swapped by syncMusic(). ──
+    // `_musicWantsPlay` is the desired state; playback is (re)started here rather than
+    // inline so it survives the async load: calling play() while the sample is still
+    // Loading is silently dropped by SoundEffect, so we (re)issue it when it turns Ready.
+    property bool _musicWantsPlay: false
     SoundEffect {
         id: bgm
         loops: SoundEffect.Infinite
         volume: 0.7
+        onStatusChanged: {
+            if (status === SoundEffect.Ready && win._musicWantsPlay && !playing)
+                play();
+        }
     }
 
     Connections {
