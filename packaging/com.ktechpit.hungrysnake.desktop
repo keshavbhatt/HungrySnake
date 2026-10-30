@@ -2,10 +2,10 @@
 Type=Application
 Name=Hungry Snake
 GenericName=Snake Game
-Comment=A juicy, jungle-themed take on classic Snake — gobble apples, grow, don't crash
+Comment=Classic arcade snake game: eat apples, grow longer and don't crash
 Exec=hungrysnake
 Icon=com.ktechpit.hungrysnake
 Terminal=false
 Categories=Game;ArcadeGame;Qt;
-Keywords=snake;arcade;apples;retro;casual;hungrysnake;
+Keywords=snake;snake game;worm;arcade;retro;casual;nibbles;apples;hungrysnake;
 StartupNotify=true

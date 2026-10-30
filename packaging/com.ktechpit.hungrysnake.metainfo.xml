@@ -1,83 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Written for search (FlathubSEO/docs/flathub-search-algorithm.md): the name already
+  carries "snake", the summary is at most 35 characters with "arcade snake game" adjacent,
+  the first three keywords are single words of at most 10 characters (only those reach
+  the Flathub web index), and the description carries every target phrase in plain form.
+-->
 <component type="desktop-application">
   <id>com.ktechpit.hungrysnake</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later AND LicenseRef-proprietary=https://github.com/keshavbhatt/HungrySnake/blob/main/LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt</project_license>
-  <name>Hungry Snake</name>
-  <summary>Grow a hungry snake, gobble apples, and climb the global leaderboard</summary>
 
   <developer id="com.ktechpit">
     <name>Keshav Bhatt</name>
   </developer>
 
-  <description>
-    <p>
-      Hungry Snake is a bright, cartoon arcade game. You guide a glossy snake
-      around a wooden board, gobbling apples to grow ever longer — the catch is
-      that your own tail keeps getting in the way. Clip a wall or bite yourself
-      and the run is over, so every apple is a small gamble on how much board you
-      can still weave through.
-    </p>
-    <p>
-      The snake glides smoothly from cell to cell instead of snapping, turns are
-      buffered so quick taps never get dropped, and each run only starts once you
-      steer — you are never thrown straight into a crash. Speed climbs slowly and
-      announces every step-up, so even a very long snake stays controllable.
-      Golden stars drop in for bonus points, and a mint leaf will trim your tail
-      when you have painted yourself into a corner.
-    </p>
-    <p>
-      Every run pays out Coins, and the Store turns them into a deep wardrobe:
-      snake skins, board themes, apple styles, bonus-food looks and fully animated
-      background scenes, many colour-matched so you can assemble one coordinated
-      look. Keep a Daily Challenge streak alive, unlock Achievements that pay out
-      more Coins, and post your best to the opt-in global leaderboard to see how
-      you rank worldwide.
-    </p>
-    <ul>
-      <li>Smooth, glide-between-cells movement with a cute, expressive snake that blinks, flicks its tongue and watches the apple</li>
-      <li>Timed bonus foods — a golden star for extra points, a mint leaf that trims your tail when things get tight</li>
-      <li>Earn Coins just by playing, then spend them in the Store on snake skins, board themes, apple styles, bonus-food looks and animated scenes</li>
-      <li>Coordinated, scene-matched cosmetics so you can put together a cohesive view</li>
-      <li>Six hand-crafted background scenes — jungle, sunset, twilight, ember, snowfall and aurora — each with its own drifting atmosphere</li>
-      <li>A fresh Daily Challenge every day with a streak to keep alive</li>
-      <li>Achievements that pay out Coins as you hit lifetime and single-run milestones</li>
-      <li>An opt-in global leaderboard — pick a nickname, post your best run and see your worldwide rank</li>
-      <li>Six looping soundtracks plus crunchy eat and crash effects, an optional key-press blip, and a performance mode for older machines — all toggleable</li>
-      <li>Free to play with no ads: every standard cosmetic can be unlocked just by playing, with an optional Supporter Pack for a few exclusive extras</li>
-      <li>Fully offline gameplay — the leaderboard is the only online part</li>
-    </ul>
-  </description>
-
-  <launchable type="desktop-id">com.ktechpit.hungrysnake.desktop</launchable>
+  <name>Hungry Snake</name>
+  <summary>Classic arcade snake game</summary>
 
   <branding>
     <color type="primary" scheme_preference="light">#437350</color>
     <color type="primary" scheme_preference="dark">#0d211c</color>
   </branding>
 
-  <!-- TODO(release): these images must exist in the hungrysnake-packaging repo
-       before publishing — capture them from a real (non-headless) run. -->
+  <description>
+    <p>
+      Hungry Snake is a classic snake game for Linux with a bright, cartoon arcade look. Guide
+      a cute snake around a wooden board, eat apples, grow longer and don't bite your own tail
+      or hit a wall. It is the retro worm game you remember, rebuilt with smooth movement,
+      jungle scenery and plenty to unlock. Free, open source and ad-free.
+    </p>
+    <p>Gameplay:</p>
+    <ul>
+      <li>Smooth snake movement that glides between cells, with buffered turns so quick key presses are never lost</li>
+      <li>A run starts only when you steer, and the speed climbs gently and announces each step, so even a long snake stays in control</li>
+      <li>Bonus food: a golden star for extra points and a mint leaf that trims your tail when you are boxed in</li>
+      <li>A cute, expressive snake that blinks, flicks its tongue and watches the apple</li>
+    </ul>
+    <p>Unlock and customize:</p>
+    <ul>
+      <li>Earn Coins just by playing and spend them in the Store on snake skins, board themes, apple styles and bonus food looks</li>
+      <li>Six animated background scenes: jungle, sunset, twilight, ember, snowfall and aurora</li>
+      <li>Scene-matched snakes, boards and apples that combine into one coordinated look</li>
+      <li>Every standard cosmetic unlocks by playing; an optional Supporter Pack adds a few exclusive extras</li>
+    </ul>
+    <p>Challenges and leaderboard:</p>
+    <ul>
+      <li>A new Daily Challenge every day with a streak to keep alive</li>
+      <li>Achievements that pay out Coins for lifetime and single-run milestones</li>
+      <li>An opt-in online leaderboard: pick a nickname, post your high score and see your global rank</li>
+    </ul>
+    <p>Made for the desktop:</p>
+    <ul>
+      <li>Play with the arrow keys or WASD, use the mouse in menus, and toggle fullscreen with F11</li>
+      <li>Six relaxing music tracks, crunchy sound effects and a performance mode for older PCs and laptops</li>
+      <li>Offline gameplay with no account needed; the leaderboard is the only online part</li>
+    </ul>
+    <p>
+      A modern take on Snake, Nibbles and other worm games for anyone who likes casual, retro
+      and offline arcade games. Works on Ubuntu, Fedora, Debian, Arch, openSUSE and other
+      Linux distributions, on Wayland and X11.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">com.ktechpit.hungrysnake.desktop</launchable>
+
   <screenshots>
     <screenshot type="default">
+      <caption>The jungle home screen: jump straight into a run</caption>
       <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/01-home.png</image>
-      <caption>The jungle home screen — jump straight into a run</caption>
     </screenshot>
     <screenshot>
+      <caption>Glide around the board, eat apples and grow</caption>
       <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/02-play.png</image>
-      <caption>Glide around the board, gobble apples and grow</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/03-store.png</image>
       <caption>Spend the Coins you earn on snake skins, boards and apples</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/03-store.png</image>
     </screenshot>
     <screenshot>
+      <caption>A new Daily Challenge every day, with a streak to keep alive</caption>
       <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/04-daily.png</image>
-      <caption>A new Daily Challenge every day — keep your streak alive</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/05-achievements.png</image>
       <caption>Achievements pay out Coins as you hit milestones</caption>
+      <image>https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/05-achievements.png</image>
     </screenshot>
   </screenshots>
 
@@ -86,6 +92,7 @@
   <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=hungrysnake</url>
   <url type="bugtracker">https://github.com/keshavbhatt/HungrySnake/issues</url>
   <url type="vcs-browser">https://github.com/keshavbhatt/HungrySnake</url>
+  <url type="contribute">https://github.com/keshavbhatt/HungrySnake</url>
   <url type="donation">https://www.paypal.me/keshavnrj/9</url>
 
   <provides>
@@ -97,15 +104,39 @@
     <category>ArcadeGame</category>
   </categories>
 
+  <requires>
+    <display_length compare="ge">720</display_length>
+  </requires>
+  <recommends>
+    <control>keyboard</control>
+  </recommends>
+  <supports>
+    <control>pointing</control>
+  </supports>
+
   <keywords>
-    <keyword>snake</keyword>
+    <keyword>game</keyword>
     <keyword>arcade</keyword>
-    <keyword>apples</keyword>
+    <keyword>worm</keyword>
+    <keyword>snake</keyword>
     <keyword>retro</keyword>
     <keyword>casual</keyword>
+    <keyword>nibbles</keyword>
+    <keyword>apples</keyword>
+    <keyword>snake game</keyword>
+    <keyword>classic snake</keyword>
+    <keyword>worm game</keyword>
+    <keyword>arcade game</keyword>
+    <keyword>retro game</keyword>
+    <keyword>casual game</keyword>
+    <keyword>offline game</keyword>
+    <keyword>leaderboard</keyword>
   </keywords>
 
-  <content_rating type="oars-1.1"/>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-info">mild</content_attribute>
+    <content_attribute id="money-purchasing">intense</content_attribute>
+  </content_rating>
 
   <releases>
     <release version="3.1.0" date="2026-10-30">
@@ -119,7 +150,7 @@
       <description>
         <p>A big look-and-feel update.</p>
         <p>New Supporter Pack unlocks a set of exclusive cosmetics, including the animated Aurora scene, the Golden snake and the Obsidian board.</p>
-        <p>Adds coordinated, scene-matched snakes, boards and apples so you can build a single cohesive look, plus hand-curated per-scene scenery — a realistic moon, drifting embers and mountain ranges instead of the same forest leaves everywhere.</p>
+        <p>Adds coordinated, scene-matched snakes, boards and apples so you can build a single cohesive look, plus hand-curated per-scene scenery: a realistic moon, drifting embers and mountain ranges instead of the same forest leaves everywhere.</p>
         <p>The Game Over card is clearer (Play Again and Home), the speed ramp now climbs gently and announces each step, and there is an optional key-press sound.</p>
       </description>
     </release>
@@ -133,7 +164,7 @@
     <release version="2.1.0" date="2026-05-13">
       <description>
         <p>Restyle the whole board.</p>
-        <p>New background Scenes — Sunset, Twilight, Ember and Snowfall — each with its own animated atmosphere drifting behind the play field.</p>
+        <p>New background Scenes (Sunset, Twilight, Ember and Snowfall), each with its own animated atmosphere drifting behind the play field.</p>
         <p>The Store has been reorganised by price and given a readability and contrast pass throughout.</p>
       </description>
     </release>
@@ -141,7 +172,7 @@
       <description>
         <p>Reasons to come back every day.</p>
         <p>Adds a fresh Daily Challenge with a streak to keep alive, and Achievements that pay out Coins as you hit lifetime and single-run milestones.</p>
-        <p>Six looping soundtracks join the crunchy eat and crash effects — all toggleable.</p>
+        <p>Six looping soundtracks join the crunchy eat and crash effects, all toggleable.</p>
       </description>
     </release>
     <release version="1.2.0" date="2026-02-19">
