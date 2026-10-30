@@ -39,6 +39,7 @@ parts:
     parse-info:
       - usr/share/metainfo/com.ktechpit.hungrysnake.metainfo.xml
     build-packages:
+      - git # the version names the commit
       - libxkbcommon-dev
       - libpulse-dev
     cmake-parameters:
@@ -46,6 +47,14 @@ parts:
       - -DCMAKE_INSTALL_PREFIX=/usr
     override-build: |
       craftctl default
+      # The version comes from the CMake project. A build that is not exactly a version tag
+      # (edge) carries the commit: 3.1.0+git1a2b3c4.
+      VER=$(grep -m1 '^CMAKE_PROJECT_VERSION:STATIC=' "${CRAFT_PART_BUILD}/CMakeCache.txt" | cut -d= -f2 | tr -d '[:space:]')
+      if ! git -c safe.directory="*" -C "${CRAFT_PART_SRC}" describe --exact-match --tags --match "v${VER}" >/dev/null 2>&1; then
+        HASH=$(git -c safe.directory="*" -C "${CRAFT_PART_SRC}" rev-parse --short=7 HEAD 2>/dev/null || true)
+        [ -n "${HASH}" ] && VER="${VER}+git${HASH}"
+      fi
+      craftctl set version="${VER}"
       sed -i \
         "s|^Icon=.*|Icon=\${SNAP}/meta/gui/icon.png|" \
         ${CRAFT_PART_INSTALL}/usr/share/applications/com.ktechpit.hungrysnake.desktop
