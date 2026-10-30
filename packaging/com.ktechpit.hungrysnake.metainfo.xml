@@ -108,6 +108,13 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="3.1.0" date="2026-10-30">
+      <description>
+        <p>Hungry Snake is now open source under the GNU GPL, version 3 or later.</p>
+        <p>Adds fullscreen, a performance mode for low-end machines and a quit confirmation, and Home now shows your global rank with a shortcut to the leaderboard.</p>
+        <p>Music playback is smoother: tracks are preloaded and pause when the game is in the background.</p>
+      </description>
+    </release>
     <release version="3.0.0" date="2026-07-22">
       <description>
         <p>A big look-and-feel update.</p>

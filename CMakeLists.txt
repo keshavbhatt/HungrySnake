@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(HungrySnake
-    VERSION 3.0.0
+    VERSION 3.1.0
     DESCRIPTION "A smooth, jungle-themed take on the classic Snake"
     HOMEPAGE_URL "https://ktechpit.com"
     LANGUAGES CXX)
