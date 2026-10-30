@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/banner.png" alt="Hungry Snake: a classic arcade snake game for Linux" width="100%">
+  <img src="screenshots/banner.png" alt="Hungry Snake: a classic arcade snake game for Linux" width="100%">
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/02-play.png" alt="A Hungry Snake run on the jungle board" width="100%">
+  <img src="screenshots/02-play.png" alt="A Hungry Snake run on the jungle board" width="100%">
 </p>
 
 ## Install
@@ -62,12 +62,12 @@ sudo snap install hungrysnake
 
 <table>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/01-home.png" alt="The home screen"></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/03-store.png" alt="The Store with snake skins, boards and apples"></td>
+    <td width="50%"><img src="screenshots/01-home.png" alt="The home screen"></td>
+    <td width="50%"><img src="screenshots/03-store.png" alt="The Store with snake skins, boards and apples"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/04-daily.png" alt="The Daily Challenge"></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/screenshots/05-achievements.png" alt="Achievements"></td>
+    <td width="50%"><img src="screenshots/04-daily.png" alt="The Daily Challenge"></td>
+    <td width="50%"><img src="screenshots/05-achievements.png" alt="Achievements"></td>
   </tr>
 </table>
 
@@ -99,8 +99,8 @@ them with `-DSN_SUPABASE_URL=... -DSN_SUPABASE_ANON_KEY=...`, or leave them empt
 an offline mock leaderboard. `backend/supabase_setup.sql` sets up your own backend.
 
 To build the snap, run `snapcraft`. It takes its summary, description and licence from
-`packaging/com.ktechpit.hungrysnake.metainfo.xml`. Store art (icons, screenshots, banner)
-lives in [hungrysnake-packaging](https://github.com/keshavbhatt/hungrysnake-packaging).
+`packaging/com.ktechpit.hungrysnake.metainfo.xml`. The banner (`banner.svg` is its source)
+and the store screenshots live in `screenshots/`.
 
 ### Project layout
 
