@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Written for search (FlathubSEO/docs/flathub-search-algorithm.md): the name already
-  carries "snake", the summary is at most 35 characters with "arcade snake game" adjacent,
-  the first three keywords are single words of at most 10 characters (only those reach
-  the Flathub web index), and the description carries every target phrase in plain form.
--->
 <component type="desktop-application">
   <id>com.ktechpit.hungrysnake</id>
   <metadata_license>CC0-1.0</metadata_license>
