@@ -173,3 +173,9 @@ install(FILES assets/icons/${SN_APP_ID}.svg
 # The bundled typefaces are SIL Open Font License — the licence must ship with them.
 install(FILES assets/fonts/Fredoka-OFL.txt assets/fonts/TitanOne-OFL.txt
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${SN_APP_ID}/fonts)
+
+# Licence texts: the GPL for the game, plus the licensing module's own terms.
+install(FILES LICENSE LICENSING.md
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${SN_APP_ID})
+install(DIRECTORY LICENSES
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${SN_APP_ID})

@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>com.ktechpit.hungrysnake</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>LicenseRef-proprietary=https://raw.githubusercontent.com/keshavbhatt/hungrysnake-packaging/main/LICENSE</project_license>
+  <project_license>GPL-3.0-or-later AND LicenseRef-proprietary=https://github.com/keshavbhatt/HungrySnake/blob/main/LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt</project_license>
   <name>Hungry Snake</name>
   <summary>Grow a hungry snake, gobble apples, and climb the global leaderboard</summary>
 
@@ -84,8 +84,8 @@
   <icon type="stock">com.ktechpit.hungrysnake</icon>
 
   <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=hungrysnake</url>
-  <url type="bugtracker">https://github.com/keshavbhatt/hungrysnake-packaging/issues</url>
-  <url type="vcs-browser">https://github.com/keshavbhatt/hungrysnake-packaging</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/HungrySnake/issues</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/HungrySnake</url>
   <url type="donation">https://www.paypal.me/keshavnrj/9</url>
 
   <provides>

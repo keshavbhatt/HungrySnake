@@ -1663,6 +1663,17 @@ ApplicationWindow {
                     text: qsTr("Made by KTechpit • Built with Qt Quick")
                     color: Theme.textDim; font.family: Theme.ui; font.pixelSize: 13
                 }
+                // The GPL's "Appropriate Legal Notices" (v3, section 5d), in one line and a link.
+                Text {
+                    width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                    textFormat: Text.StyledText
+                    text: qsTr("Copyright 2026 Keshav Bhatt. Free software under the GNU GPL v3 or later, with no warranty; the account and licence module has its own terms. <a href=\"%1\">Licences</a>")
+                          .arg("https://github.com/keshavbhatt/HungrySnake/blob/main/LICENSING.md")
+                    color: Theme.textDim; linkColor: Theme.text
+                    font.family: Theme.ui; font.pixelSize: 11
+                    onLinkActivated: (link) => Qt.openUrlExternally(link)
+                    HoverHandler { cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor }
+                }
             }
         }
     }
