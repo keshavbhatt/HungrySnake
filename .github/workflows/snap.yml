@@ -2,7 +2,11 @@
 #   push to main        -> edge      (version 3.1.0+git<hash>)
 #   version tag v1.2.3  -> stable    (version 1.2.3; the tag must match project(VERSION))
 # Edge is where a build is checked before it is tagged: snap install hungrysnake --edge.
-# Both architectures build natively, amd64 and arm64, each on its own runner.
+# amd64 builds natively on its own runner. arm64 is paused: KDE's kde-qt6-core24-sdk build
+# snap (used by the kde-neon-6 extension) has no arm64 release in the store since
+# November 2026. Once it does, add ubuntu-24.04-arm back to the matrix and arm64 back to
+# platforms in snap/snapcraft.yaml:
+#   snap info kde-qt6-core24-sdk    (on an arm64 machine, or check the store's channel map)
 # Nothing is kept on GitHub (no workflow artifact, no release file).
 #
 # Publishing needs the SNAPCRAFT_STORE_CREDENTIALS secret and the repo variable
@@ -36,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        runner: [ubuntu-24.04]   # ubuntu-24.04-arm paused, see the note at the top
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
