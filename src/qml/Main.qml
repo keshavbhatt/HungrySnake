@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Effects
 import QtCore
-import QtMultimedia
 import HungrySnake
 import "components"
 
@@ -214,11 +213,7 @@ ApplicationWindow {
     // visibility alone, so startup is never blocked waiting on a focus signal.
     function syncMusic() {
         // PRELOAD: make sure a track is loaded even while music is off, so the sample is
-        // already `Ready` by the time the player enables music. This is the crux of the
-        // "turn music on and nothing happens" bug: SoundEffect loads asynchronously, and a
-        // play() issued during that load is silently dropped — so if we only started
-        // loading at toggle time, the very first play could be lost with no retry. Loading
-        // up front means toggling on hits the reliable "already Ready → play()" path.
+        // already `Ready` by the time the player enables music.
         if (String(bgm.source) === "") {
             win.currentMusicIndex = resolveMusicIndex();
             bgm.source = musicTracks[win.currentMusicIndex].src;
@@ -229,9 +224,8 @@ ApplicationWindow {
         var foreground = win.appActive || !win.everActive;
         win._musicWantsPlay = win.musicOn && onScreen && foreground;
         if (win._musicWantsPlay) {
-            // Play now if loaded; if the preload hasn't finished yet, bgm.onStatusChanged
-            // starts it the moment it turns Ready (belt-and-suspenders for the load race).
-            if (bgm.status === SoundEffect.Ready && !bgm.playing)
+            // Play now if loaded; otherwise bgm.onStatusChanged starts it once it is Ready.
+            if (bgm.status === GameSound.Ready && !bgm.playing)
                 bgm.play();
         } else {
             bgm.stop();
@@ -295,31 +289,32 @@ ApplicationWindow {
     }
 
     // ── Sound ──
-    SoundEffect { id: sfxCrash; source: "qrc:/assets/sounds/crash.wav"; volume: 0.8 }
+    // GameSound (src/core/GameSound.h), not SoundEffect: Qt marks SoundEffect streams as
+    // system sounds, which desktops with system sounds turned off mute.
+    GameSound { id: sfxCrash; source: "qrc:/assets/sounds/crash.wav"; volume: 0.8 }
     // Apple bite — a real recording (assets/sounds/eat.wav, not generated).
-    SoundEffect { id: sfxEat; source: "qrc:/assets/sounds/eat.wav"; volume: 0.85 }
+    GameSound { id: sfxEat; source: "qrc:/assets/sounds/eat.wav"; volume: 0.85 }
     // A short pentatonic run: consecutive turns cycle these so it plays a rising
     // melody (Google-Snake style) rather than one repeated blip.
-    SoundEffect { id: sfxTurn0; source: "qrc:/assets/sounds/turn0.wav"; volume: 0.6 }
-    SoundEffect { id: sfxTurn1; source: "qrc:/assets/sounds/turn1.wav"; volume: 0.6 }
-    SoundEffect { id: sfxTurn2; source: "qrc:/assets/sounds/turn2.wav"; volume: 0.6 }
-    SoundEffect { id: sfxTurn3; source: "qrc:/assets/sounds/turn3.wav"; volume: 0.6 }
-    SoundEffect { id: sfxTurn4; source: "qrc:/assets/sounds/turn4.wav"; volume: 0.6 }
+    GameSound { id: sfxTurn0; source: "qrc:/assets/sounds/turn0.wav"; volume: 0.6 }
+    GameSound { id: sfxTurn1; source: "qrc:/assets/sounds/turn1.wav"; volume: 0.6 }
+    GameSound { id: sfxTurn2; source: "qrc:/assets/sounds/turn2.wav"; volume: 0.6 }
+    GameSound { id: sfxTurn3; source: "qrc:/assets/sounds/turn3.wav"; volume: 0.6 }
+    GameSound { id: sfxTurn4; source: "qrc:/assets/sounds/turn4.wav"; volume: 0.6 }
     readonly property var sfxTurns: [sfxTurn0, sfxTurn1, sfxTurn2, sfxTurn3, sfxTurn4]
     property int turnNote: 0
 
-    // ── Background music: one looping SoundEffect (stays on the light QAudioSink
-    // path — no MediaPlayer/ffmpeg). The source is swapped by syncMusic(). ──
-    // `_musicWantsPlay` is the desired state; playback is (re)started here rather than
-    // inline so it survives the async load: calling play() while the sample is still
-    // Loading is silently dropped by SoundEffect, so we (re)issue it when it turns Ready.
+    // ── Background music: one looping GameSound (a plain WAV through the shared game
+    // audio stream, no MediaPlayer/ffmpeg). The source is swapped by syncMusic(). ──
+    // `_musicWantsPlay` is the desired state; playback also (re)starts here when the
+    // track turns Ready.
     property bool _musicWantsPlay: false
-    SoundEffect {
+    GameSound {
         id: bgm
-        loops: SoundEffect.Infinite
+        loops: GameSound.Infinite
         volume: 0.7
         onStatusChanged: {
-            if (status === SoundEffect.Ready && win._musicWantsPlay && !playing)
+            if (status === GameSound.Ready && win._musicWantsPlay && !playing)
                 play();
         }
     }

@@ -115,6 +115,7 @@ src/
                          bonus food spawning, stepped speed, score, collisions, 60 Hz clock
     Profile.*            Coins, lifetime stats, owned and equipped cosmetics
     Leaderboard.*        global ranks over Supabase REST, with an offline mock
+    GameSound.*          sound effects and music, mixed into one ordinary audio stream
   licensing/
     LicenseController.*  app glue over AccountAndLicense (Supporter Pack)
   qml/

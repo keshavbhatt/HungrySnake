@@ -133,6 +133,11 @@
   </content_rating>
 
   <releases>
+    <release version="3.1.2" date="2026-11-11">
+      <description>
+        <p>Sound effects and music now play when the desktop's system sounds are turned off. They were muted along with notification sounds before.</p>
+      </description>
+    </release>
     <release version="3.1.1" date="2026-10-30">
       <description>
         <p>A refreshed store listing with a clearer description and the screenshots now hosted with the source code.</p>

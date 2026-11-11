@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(HungrySnake
-    VERSION 3.1.1
+    VERSION 3.1.2
     DESCRIPTION "A smooth, jungle-themed take on the classic Snake"
     HOMEPAGE_URL "https://ktechpit.com"
     LANGUAGES CXX)
@@ -106,6 +106,7 @@ qt_add_qml_module(hungrysnake
         src/core/SnakeGame.h    src/core/SnakeGame.cpp
         src/core/Profile.h      src/core/Profile.cpp
         src/core/Leaderboard.h  src/core/Leaderboard.cpp
+        src/core/GameSound.h    src/core/GameSound.cpp
         src/licensing/LicenseController.h  src/licensing/LicenseController.cpp
         src/licensing/HungrySnakeLicenseConfig.h
 )
